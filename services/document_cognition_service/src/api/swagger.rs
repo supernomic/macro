@@ -21,6 +21,10 @@ use agent_identity::inbound::axum_router::{
     self as agent_identity_api, CreatePrincipalRequest, IdentityErrorBody, MintTokenRequest,
     MintTokenResponse, PrincipalResponse,
 };
+use agent_ledger::inbound::axum_router::{
+    self as agent_ledger_api, AppendEventsRequest, EventResponse, LedgerErrorBody, NewEventBody,
+    OpenSessionRequest, RecordOutcomeRequest, SessionMappingResponse, VerifyChainResponse,
+};
 use ai_projections::domain::model::{Expiry, ProjectionStatus, RefreshCadence, TargetType};
 use ai_projections::inbound::axum_router::upsert_projection::{
     ProjectionStateResponse, UpsertProjectionRequest,
@@ -95,6 +99,15 @@ use utoipa::OpenApi;
             agent_identity_api::disable_principal_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             agent_identity_api::mint_token_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             agent_identity_api::revoke_token_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::open_session_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::find_session_by_thread_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::append_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::list_session_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::record_outcome_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::verify_chain_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::query_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::agent_query_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_ledger_api::export_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             import_api::get_state_handler,
             import_api::run_import_handler,
             import_api::retry_gather_handler,
@@ -197,6 +210,16 @@ use utoipa::OpenApi;
                 MintTokenRequest,
                 MintTokenResponse,
                 IdentityErrorBody,
+
+                // Agent ledger
+                OpenSessionRequest,
+                SessionMappingResponse,
+                AppendEventsRequest,
+                NewEventBody,
+                EventResponse,
+                RecordOutcomeRequest,
+                VerifyChainResponse,
+                LedgerErrorBody,
 
                 // Import pipeline
                 import::domain::models::ImportState,

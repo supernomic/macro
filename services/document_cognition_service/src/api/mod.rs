@@ -73,6 +73,8 @@ pub async fn setup_and_serve(state: ApiContext) -> anyhow::Result<()> {
 fn api_router(api_context: ApiContext) -> Router {
     let memory_service = api_context.memory_service.clone();
     let agent_identity_service = api_context.agent_identity_service.clone();
+    let agent_ledger_service = api_context.agent_ledger_service.clone();
+    let agent_ledger_facade = api_context.agent_ledger_facade.clone();
     let usage_service = api_context.usage_service.clone();
     let ai_projections_service = api_context.ai_projections_service.clone();
     let import_service = api_context.import_service.clone();
@@ -101,7 +103,15 @@ fn api_router(api_context: ApiContext) -> Router {
         ))
         .merge(agent_identity::inbound::axum_router::agent_identity_router(
             agent_identity::inbound::axum_router::AgentIdentityRouterState {
-                service: agent_identity_service,
+                service: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(agent_ledger::inbound::axum_router::agent_ledger_router(
+            agent_ledger::inbound::axum_router::AgentLedgerRouterState {
+                facade: agent_ledger_facade,
+                ledger: agent_ledger_service,
+                identity: agent_identity_service,
                 authorization_state: authorization_state.clone(),
             },
         ))

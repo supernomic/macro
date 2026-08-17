@@ -178,8 +178,11 @@ dependencies = [
 name = "agent_ledger"
 version = "0.1.0"
 dependencies = [
+ "agent_identity",
+ "axum",
  "chrono",
  "hex",
+ "macro_authorization",
  "macro_uuid",
  "serde",
  "serde_json",
@@ -188,6 +191,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "utoipa",
  "workspace-hack",
 ]
 
@@ -4367,6 +4371,7 @@ version = "0.1.0"
 dependencies = [
  "agent",
  "agent_identity",
+ "agent_ledger",
  "aho-corasick",
  "ai_projections",
  "ai_tools",

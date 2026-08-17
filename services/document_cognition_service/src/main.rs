@@ -545,6 +545,18 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized agent identity service");
 
+    // Build the session ledger service and agent-facing facade
+    let agent_ledger_service = agent_ledger::domain::service::LedgerServiceImpl::new(
+        agent_ledger::outbound::PgLedgerRepo::new(db.clone()),
+    );
+    let agent_ledger_facade = Arc::new(agent_ledger::domain::facade::AgentLedgerFacade::new(
+        agent_ledger_service.clone(),
+        agent_ledger::outbound::PgSessionMappingRepo::new(db.clone()),
+    ));
+    let agent_ledger_service = Arc::new(agent_ledger_service);
+
+    tracing::info!("initialized agent ledger service");
+
     // Build the AI cost service. It backs both the admin query/pricing router
     // and the usage recorder threaded through the tool service context.
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
@@ -674,6 +686,8 @@ async fn main() -> anyhow::Result<()> {
         document_tool_context,
         memory_service,
         agent_identity_service,
+        agent_ledger_service,
+        agent_ledger_facade,
         usage_service,
         ai_projections_service,
         properties_tool_context,

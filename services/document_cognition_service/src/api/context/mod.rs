@@ -82,6 +82,17 @@ pub type DcsAgentIdentityService = agent_identity::domain::service::AgentIdentit
     agent_identity::outbound::PgAgentIdentityRepo,
 >;
 
+/// The session ledger service wired to the Postgres ledger repo.
+pub type DcsAgentLedgerService =
+    agent_ledger::domain::service::LedgerServiceImpl<agent_ledger::outbound::PgLedgerRepo>;
+
+/// The agent-facing ledger facade (scope + tenancy policy) over the ledger
+/// service and the Postgres session-mapping repo.
+pub type DcsAgentLedgerFacade = agent_ledger::domain::facade::AgentLedgerFacade<
+    DcsAgentLedgerService,
+    agent_ledger::outbound::PgSessionMappingRepo,
+>;
+
 /// The AI cost service wired to the Postgres usage repo.
 pub type DcsUsageService =
     ai_usage::domain::service::UsageServiceImpl<ai_usage::outbound::PgUsageRepo>;
@@ -138,6 +149,8 @@ pub struct ApiContext {
     pub document_tool_context: ToolDocumentToolContext,
     pub memory_service: Arc<DcsMemoryService>,
     pub agent_identity_service: Arc<DcsAgentIdentityService>,
+    pub agent_ledger_service: Arc<DcsAgentLedgerService>,
+    pub agent_ledger_facade: Arc<DcsAgentLedgerFacade>,
     pub usage_service: Arc<DcsUsageService>,
     pub ai_projections_service: Arc<DcsAiProjectionService>,
     pub properties_tool_context: ToolPropertiesToolContext,

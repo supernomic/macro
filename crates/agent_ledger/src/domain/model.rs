@@ -505,6 +505,12 @@ pub enum LedgerError {
     /// The session was not found.
     #[error("session not found")]
     SessionNotFound,
+    /// The caller's token lacks a required scope.
+    #[error("missing required scope: {required}")]
+    MissingScope {
+        /// The scope that was required.
+        required: String,
+    },
     /// A payload could not be serialized.
     #[error("payload serialization failed")]
     Serialization(#[source] serde_json::Error),

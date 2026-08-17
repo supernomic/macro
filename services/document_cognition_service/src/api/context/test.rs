@@ -434,6 +434,15 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         ),
     );
 
+    let agent_ledger_service = agent_ledger::domain::service::LedgerServiceImpl::new(
+        agent_ledger::outbound::PgLedgerRepo::new(pool.clone()),
+    );
+    let agent_ledger_facade = Arc::new(agent_ledger::domain::facade::AgentLedgerFacade::new(
+        agent_ledger_service.clone(),
+        agent_ledger::outbound::PgSessionMappingRepo::new(pool.clone()),
+    ));
+    let agent_ledger_service = Arc::new(agent_ledger_service);
+
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
         ai_usage::outbound::PgUsageRepo::new(pool.clone()),
     ));
@@ -506,6 +515,8 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         document_tool_context: document_tool_context.clone(),
         memory_service,
         agent_identity_service,
+        agent_ledger_service,
+        agent_ledger_facade,
         usage_service,
         ai_projections_service,
         properties_tool_context,

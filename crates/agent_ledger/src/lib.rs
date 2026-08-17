@@ -18,4 +18,5 @@
 #![deny(missing_docs)]
 
 pub mod domain;
+pub mod inbound;
 pub mod outbound;

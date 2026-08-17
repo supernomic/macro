@@ -86,6 +86,7 @@ import = { path = "../../crates/import" }
 mcp_client = { path = "../../crates/mcp_client" }
 model-error-response = { path = "../../crates/model-error-response" }
 agent_identity = { path = "../../crates/agent_identity" }
+agent_ledger = { path = "../../crates/agent_ledger" }
 memory = { path = "../../crates/memory" }
 onboarding = { path = "../../crates/onboarding" }
 model = { path = "../../crates/model" }
