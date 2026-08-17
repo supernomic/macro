@@ -106,18 +106,39 @@ export function sessionContextFor(opts: {
   return ctx;
 }
 
-let superAgentRuntime: AgentRuntime | undefined;
+const runtimes = new Map<string, AgentRuntime>();
+
+/**
+ * Build (or reuse) the runtime for one agent principal. Each principal gets
+ * one SDK client and one ledger client for the process lifetime, keyed by
+ * slug.
+ */
+export function runtimeFor(spec: {
+  agentSlug: string;
+  token: () => string;
+  compositionId: string;
+}): AgentRuntime {
+  let runtime = runtimes.get(spec.agentSlug);
+  if (!runtime) {
+    runtime = {
+      agentSlug: spec.agentSlug,
+      macro: macroClientFor(spec.token),
+      ledger: new LedgerClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      compositionId: spec.compositionId,
+    };
+    runtimes.set(spec.agentSlug, runtime);
+  }
+  return runtime;
+}
 
 /** The super agent's runtime (token from `MACRO_SUPER_AGENT_TOKEN`). */
 export function superAgentRuntimeInstance(): AgentRuntime {
-  superAgentRuntime ??= {
+  return runtimeFor({
     agentSlug: 'super-agent',
-    macro: macroClientFor(config.superAgentToken),
-    ledger: new LedgerClient({
-      baseUrl: config.ledgerBaseUrl,
-      token: config.superAgentToken,
-    }),
+    token: config.superAgentToken,
     compositionId: config.superAgentCompositionId,
-  };
-  return superAgentRuntime;
+  });
 }

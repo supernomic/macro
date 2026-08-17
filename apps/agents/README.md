@@ -57,6 +57,23 @@ make it reply only when it adds clear value — its sole way to speak is the
 `reply_in_slack_thread` tool, so not calling it is a non-reply), or
 `silent`. Set `SLACK_DEFAULT_CHANNEL_MODE` / `SLACK_CHANNEL_MODES`.
 
+## Domain agents
+
+Domain specialists (TechOps first) are Flue subagents the super agent
+delegates to via the built-in `task` tool. Each domain is declared in
+`src/domains/` and runs under its own Macro agent principal:
+
+```bash
+# Mint the domain principal + token via Macro's agent-identity admin API
+# (internal-only endpoints on document-cognition-service), then:
+MACRO_TECHOPS_AGENT_TOKEN=mat_...
+```
+
+The token's scopes are the domain's effective tool allowlist, enforced at
+Macro's API boundary. Leave the variable unset to disable the domain — the
+model is never offered a specialist that isn't configured. See
+`CONTRIBUTING.md` ("Domain agents") for the full conventions.
+
 ## Durability
 
 - Flue conversation state: Postgres via `src/db.ts` when

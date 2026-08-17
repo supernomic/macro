@@ -61,6 +61,14 @@ export const config = {
     'super-agent/v1',
   ),
 
+  /**
+   * Optional agent bearer token for a domain agent principal, read from
+   * `MACRO_<SLUG>_AGENT_TOKEN` (slug uppercased, dashes as underscores).
+   * A domain agent whose token is absent is not mounted.
+   */
+  domainAgentToken: (slug: string): string | undefined =>
+    process.env[`MACRO_${slug.toUpperCase().replace(/-/g, '_')}_AGENT_TOKEN`],
+
   /** Slack signing secret for inbound event verification. */
   slackSigningSecret: () => required('SLACK_SIGNING_SECRET'),
 

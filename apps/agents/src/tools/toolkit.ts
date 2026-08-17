@@ -11,7 +11,10 @@
 import { defineTool, type JsonValue } from '@flue/runtime';
 import type { Macro } from '@macro/sdk';
 import type * as v from 'valibot';
-import type { MacroSessionContext } from '../sessions/macro-session.ts';
+import type {
+  AgentRuntime,
+  MacroSessionContext,
+} from '../sessions/macro-session.ts';
 
 /**
  * Structured tool failure. Thrown by tool bodies; the wrapper records it on
@@ -90,6 +93,18 @@ export function defineMacroTool<
   return def;
 }
 
+/** Options for {@link bindMacroTools}. */
+export interface BindMacroToolsOptions {
+  /**
+   * Runtime whose credentials execute the tools and whose slug is recorded
+   * as the ledger actor. Defaults to the session's own runtime. Domain
+   * delegates pass their own runtime: Macro then enforces the domain
+   * token's scopes at the API boundary while the events still land on the
+   * parent conversation's session (same org, distinct actor).
+   */
+  actor?: AgentRuntime;
+}
+
 /**
  * Bind Macro tools to one conversation's session context, producing Flue
  * tool definitions ready for `useTool`.
@@ -102,14 +117,16 @@ export function defineMacroTool<
 export function bindMacroTools(
   session: MacroSessionContext,
   tools: readonly MacroToolDef[],
+  options?: BindMacroToolsOptions,
 ) {
+  const actor = options?.actor ?? session.runtime;
   return tools.map((tool) =>
     defineTool({
       name: tool.name,
       description: tool.description,
       input: tool.input,
       async run({ data, toolCallId, signal }) {
-        const agentId = session.runtime.agentSlug;
+        const agentId = actor.agentSlug;
         const [callEvent] = await session.append({
           payload: {
             type: 'tool_call',
@@ -126,7 +143,7 @@ export function bindMacroTools(
           ? `${callEvent.session_id}:${callEvent.seq}`
           : `${toolCallId}`;
         const ctx: MacroToolContext = {
-          macro: session.runtime.macro,
+          macro: actor.macro,
           session,
           idempotencyKey,
           signal,

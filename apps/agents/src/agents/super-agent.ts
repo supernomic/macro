@@ -11,9 +11,10 @@
  * binds the reply tool and anchors the Macro session to the thread.
  */
 
-import { useInitialData, useModel, useTool } from '@flue/runtime';
+import { useInitialData, useModel, useSubagent, useTool } from '@flue/runtime';
 import * as v from 'valibot';
 import { config } from '../config.ts';
+import { DOMAIN_AGENTS, domainRuntime } from '../domains/registry.ts';
 import {
   sessionContextFor,
   superAgentRuntimeInstance,
@@ -37,6 +38,15 @@ Ground rules:
   arrives in a later capability; until then, an honest handoff summary is
   the correct ending.)
 - Be concise. Answer first, cite sources after.`;
+
+const DELEGATION_INSTRUCTIONS = `
+
+Domain specialists: for requests squarely inside a specialist's domain,
+delegate via the task tool instead of working it yourself. The specialist
+starts with a fresh context — your task prompt is its entire briefing, so
+include who is asking, the full problem, and anything already tried or
+learned in this conversation. Relay its answer with your own judgment;
+you stay accountable for what the user receives.`;
 
 const SLACK_INSTRUCTIONS = `
 
@@ -82,7 +92,39 @@ export function SuperAgent({ id }: { id: string }) {
     useTool(tool);
   }
 
-  return slack ? INSTRUCTIONS + SLACK_INSTRUCTIONS : INSTRUCTIONS;
+  // Domain specialists (techops first). Only domains whose principal token
+  // is configured are offered; the delegate's tools run under the domain's
+  // own scoped token while its trace lands on this conversation's session.
+  let anyDomains = false;
+  for (const spec of DOMAIN_AGENTS) {
+    const runtime = domainRuntime(spec);
+    if (!runtime) {
+      continue;
+    }
+    anyDomains = true;
+    useSubagent({
+      name: spec.slug,
+      description: spec.description,
+      ...(spec.model ? { model: spec.model } : {}),
+      agent: () => {
+        for (const tool of bindMacroTools(session, spec.tools, {
+          actor: runtime,
+        })) {
+          useTool(tool);
+        }
+        return spec.instructions;
+      },
+    });
+  }
+
+  let instructions = INSTRUCTIONS;
+  if (anyDomains) {
+    instructions += DELEGATION_INSTRUCTIONS;
+  }
+  if (slack) {
+    instructions += SLACK_INSTRUCTIONS;
+  }
+  return instructions;
 }
 
 SuperAgent.agentName = 'super-agent';

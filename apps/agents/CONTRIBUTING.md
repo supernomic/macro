@@ -110,6 +110,32 @@ Rules:
 - Feedback is immutable in-log; editable ratings live in Macro's sidecar
   table, not in the ledger.
 
+## Domain agents
+
+Domain agents are Flue subagents of the super agent (fresh context, own
+instructions, own tools; only the final answer returns). Declared in
+`src/domains/` as `DomainAgentSpec` values and registered in
+`src/domains/registry.ts`.
+
+- **One principal per domain.** Each domain has its own Macro agent
+  principal; its `mat_...` token comes from `MACRO_<SLUG>_AGENT_TOKEN` and
+  carries exactly the scopes the domain's tool allowlist needs. The
+  allowlist is therefore enforced at Macro's API boundary, not just by
+  which tools we mount. No token ⇒ the domain is not offered to the model.
+- **One session per conversation.** Delegate tool calls are bound with
+  `bindMacroTools(session, tools, { actor: domainRuntime })`: they execute
+  under the domain's credentials but their `tool/call` / `tool/result`
+  events land on the parent conversation's ledger session with the domain
+  slug as `actor_id`.
+- **Instructions must stand alone.** A delegate never sees the parent
+  conversation; the spec's `instructions` plus the super agent's task
+  prompt are its entire world. The super agent's prompt tells it to brief
+  completely.
+- **Composition pins.** Every spec carries its own `compositionId`
+  (e.g. `techops-agent/v1`); bump it on any instructions/tool/model change.
+- Consult the version-matched Flue docs before changing delegation
+  mechanics: `./node_modules/.bin/flue docs read guide/subagents`.
+
 ## Instrumentation
 
 - Braintrust spans wrap every turn and tool call with the Macro session id,
@@ -133,6 +159,7 @@ apps/agents/
     app.ts         # Hono application (agent mounts + channel ingress)
     config.ts      # env configuration (tokens, hosts, composition pins)
     agents/        # agent compositions (super agent, domain overlays)
+    domains/       # domain agent specs (registry + one file per domain)
     channels/      # Slack + native channel wiring
     ledger/        # ledger client + TS mirror of the event vocabulary
     macro/         # @macro/sdk client factory for agent principals
