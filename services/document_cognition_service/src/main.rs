@@ -536,6 +536,15 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized memory service");
 
+    // Build the agent identity service (agent principals + scoped API tokens)
+    let agent_identity_service = Arc::new(
+        agent_identity::domain::service::AgentIdentityServiceImpl::new(
+            agent_identity::outbound::PgAgentIdentityRepo::new(db.clone()),
+        ),
+    );
+
+    tracing::info!("initialized agent identity service");
+
     // Build the AI cost service. It backs both the admin query/pricing router
     // and the usage recorder threaded through the tool service context.
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
@@ -664,6 +673,7 @@ async fn main() -> anyhow::Result<()> {
         stream_repo,
         document_tool_context,
         memory_service,
+        agent_identity_service,
         usage_service,
         ai_projections_service,
         properties_tool_context,

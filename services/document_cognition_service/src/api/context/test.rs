@@ -428,6 +428,12 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         all_tools,
     ));
 
+    let agent_identity_service = Arc::new(
+        agent_identity::domain::service::AgentIdentityServiceImpl::new(
+            agent_identity::outbound::PgAgentIdentityRepo::new(pool.clone()),
+        ),
+    );
+
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
         ai_usage::outbound::PgUsageRepo::new(pool.clone()),
     ));
@@ -499,6 +505,7 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         stream_repo: MockStreamRepo::new(),
         document_tool_context: document_tool_context.clone(),
         memory_service,
+        agent_identity_service,
         usage_service,
         ai_projections_service,
         properties_tool_context,

@@ -72,6 +72,7 @@ pub async fn setup_and_serve(state: ApiContext) -> anyhow::Result<()> {
 
 fn api_router(api_context: ApiContext) -> Router {
     let memory_service = api_context.memory_service.clone();
+    let agent_identity_service = api_context.agent_identity_service.clone();
     let usage_service = api_context.usage_service.clone();
     let ai_projections_service = api_context.ai_projections_service.clone();
     let import_service = api_context.import_service.clone();
@@ -95,6 +96,12 @@ fn api_router(api_context: ApiContext) -> Router {
         .merge(memory::inbound::axum_router::memory_router(
             memory::inbound::axum_router::MemoryRouterState {
                 service: memory_service,
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(agent_identity::inbound::axum_router::agent_identity_router(
+            agent_identity::inbound::axum_router::AgentIdentityRouterState {
+                service: agent_identity_service,
                 authorization_state: authorization_state.clone(),
             },
         ))

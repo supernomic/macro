@@ -17,6 +17,10 @@ use crate::model::{
     response::attachments::GetChatsForAttachmentResponse,
     stream::{ChatStream, SendChatMessagePayload, StreamError, ToolSet},
 };
+use agent_identity::inbound::axum_router::{
+    self as agent_identity_api, CreatePrincipalRequest, IdentityErrorBody, MintTokenRequest,
+    MintTokenResponse, PrincipalResponse,
+};
 use ai_projections::domain::model::{Expiry, ProjectionStatus, RefreshCadence, TargetType};
 use ai_projections::inbound::axum_router::upsert_projection::{
     ProjectionStateResponse, UpsertProjectionRequest,
@@ -86,6 +90,11 @@ use utoipa::OpenApi;
             stream_stop::stop_chat_stream,
             structured_completion::structured_completion,
             memory_api::get_memory_handler,
+            agent_identity_api::create_principal_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_identity_api::list_principals_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_identity_api::disable_principal_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_identity_api::mint_token_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            agent_identity_api::revoke_token_handler::<crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             import_api::get_state_handler,
             import_api::run_import_handler,
             import_api::retry_gather_handler,
@@ -181,6 +190,13 @@ use utoipa::OpenApi;
                 // Memory
                 MemoryResponse,
                 MemoryErrorBody,
+
+                // Agent identity
+                CreatePrincipalRequest,
+                PrincipalResponse,
+                MintTokenRequest,
+                MintTokenResponse,
+                IdentityErrorBody,
 
                 // Import pipeline
                 import::domain::models::ImportState,

@@ -77,6 +77,11 @@ pub(crate) type NotificationIngressType = SqsNotificationIngress<SqsQueue>;
 pub type DcsMemoryService =
     memory::domain::service::MemoryServiceImpl<memory::outbound::pg_memory_repo::PgMemoryRepo>;
 
+/// The agent identity service wired to the Postgres identity repo.
+pub type DcsAgentIdentityService = agent_identity::domain::service::AgentIdentityServiceImpl<
+    agent_identity::outbound::PgAgentIdentityRepo,
+>;
+
 /// The AI cost service wired to the Postgres usage repo.
 pub type DcsUsageService =
     ai_usage::domain::service::UsageServiceImpl<ai_usage::outbound::PgUsageRepo>;
@@ -132,6 +137,7 @@ pub struct ApiContext {
     pub stream_repo: Arc<dyn StreamRepo>,
     pub document_tool_context: ToolDocumentToolContext,
     pub memory_service: Arc<DcsMemoryService>,
+    pub agent_identity_service: Arc<DcsAgentIdentityService>,
     pub usage_service: Arc<DcsUsageService>,
     pub ai_projections_service: Arc<DcsAiProjectionService>,
     pub properties_tool_context: ToolPropertiesToolContext,
