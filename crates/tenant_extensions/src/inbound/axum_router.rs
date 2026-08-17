@@ -8,7 +8,8 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Json, Router};
 use macro_authorization::{
-    InternalOnly, MacroAuthorizationExtractor, MacroAuthorizationService, MacroAuthorizationState,
+    InternalAuthorization, InternalOnly, MacroAuthorizationExtractor, MacroAuthorizationService,
+    MacroAuthorizationState,
 };
 use macro_uuid::Uuid;
 use serde::{Deserialize, Serialize};
@@ -63,6 +64,14 @@ fn error_response(e: ExtensionError) -> Response {
         }),
     )
         .into_response()
+}
+
+/// Internal-only actor: verified `acting_user`, never `.user`. Fallback `"internal"`.
+fn internal_actor(auth: &InternalAuthorization) -> String {
+    auth.acting_user
+        .as_ref()
+        .map(|u| u.macro_user_id.as_ref().to_string())
+        .unwrap_or_else(|| "internal".to_string())
 }
 
 /// Register body.
@@ -125,13 +134,14 @@ where
 #[tracing::instrument(skip_all)]
 pub async fn register_extension_handler<A, Auth>(
     State(state): State<ExtensionRouterState<A, Auth>>,
-    _internal: MacroAuthorizationExtractor<Auth, InternalOnly>,
+    internal: MacroAuthorizationExtractor<Auth, InternalOnly>,
     Json(body): Json<RegisterExtensionRequest>,
 ) -> Response
 where
     A: ExtensionService,
     Auth: MacroAuthorizationService,
 {
+    let actor = internal_actor(&internal.authorization);
     match state
         .service
         .register(
@@ -145,6 +155,7 @@ where
                 artifact_hash: body.artifact_hash,
                 scopes: body.scopes,
             },
+            &actor,
         )
         .await
     {
@@ -170,12 +181,7 @@ where
     A: ExtensionService,
     Auth: MacroAuthorizationService,
 {
-    let actor = internal
-        .authorization
-        .acting_user
-        .as_ref()
-        .map(|u| u.macro_user_id.as_ref().to_string())
-        .unwrap_or_else(|| "internal".to_string());
+    let actor = internal_actor(&internal.authorization);
     match state.service.activate(id, &actor).await {
         Ok(ext) => Json(ext).into_response(),
         Err(e) => error_response(e),
@@ -199,12 +205,7 @@ where
     A: ExtensionService,
     Auth: MacroAuthorizationService,
 {
-    let actor = internal
-        .authorization
-        .acting_user
-        .as_ref()
-        .map(|u| u.macro_user_id.as_ref().to_string())
-        .unwrap_or_else(|| "internal".to_string());
+    let actor = internal_actor(&internal.authorization);
     match state.service.rollback(id, &actor).await {
         Ok(ext) => Json(ext).into_response(),
         Err(e) => error_response(e),
@@ -221,14 +222,15 @@ where
 #[tracing::instrument(skip_all)]
 pub async fn disable_extension_handler<A, Auth>(
     State(state): State<ExtensionRouterState<A, Auth>>,
-    _internal: MacroAuthorizationExtractor<Auth, InternalOnly>,
+    internal: MacroAuthorizationExtractor<Auth, InternalOnly>,
     Path(id): Path<Uuid>,
 ) -> Response
 where
     A: ExtensionService,
     Auth: MacroAuthorizationService,
 {
-    match state.service.disable(id).await {
+    let actor = internal_actor(&internal.authorization);
+    match state.service.disable(id, &actor).await {
         Ok(ext) => Json(ext).into_response(),
         Err(e) => error_response(e),
     }

@@ -131,7 +131,8 @@ pub struct UpsertKnowledge {
     pub okf_sources: Vec<String>,
     /// Generated flag.
     pub okf_generated: bool,
-    /// Human-authored flag. Once true, generated upserts are refused.
+    /// Human-authored flag. Once true, generated and other non-human upserts
+    /// are refused.
     pub human_authored: bool,
 }
 

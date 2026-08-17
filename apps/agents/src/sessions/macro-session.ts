@@ -44,8 +44,6 @@ export interface AgentRuntime {
   graph: GraphClient;
   /** Cached governed-skill catalog (filled asynchronously after boot). */
   skillsCatalog: SkillCatalogEntry[];
-  /** Conversation ids that already have a `request_header` pin. */
-  pinnedHeaderConversations: Set<string>;
   /** Pinned composition id for this agent definition. */
   compositionId: string;
 }
@@ -68,8 +66,14 @@ export class MacroSessionContext {
   };
   private mapping: Promise<SessionMapping> | undefined;
   private appendChain: Promise<unknown> = Promise.resolve();
-  /** Skill id → version already logged as `skill_injected` on this session. */
+  /**
+   * Skill id → version already logged as `skill_injected` on THIS
+   * conversation. Never process-global: two conversations injecting the
+   * same skill each record their own event, and a version bump re-logs.
+   */
   private readonly injectedSkillVersions = new Map<string, string>();
+  /** Whether this conversation has already pinned a `request_header`. */
+  private headerPinned = false;
 
   constructor(opts: {
     runtime: AgentRuntime;
@@ -132,10 +136,10 @@ export class MacroSessionContext {
    * reconstructable request header for this agent definition.
    */
   pinRequestHeader(): void {
-    if (this.runtime.pinnedHeaderConversations.has(this.conversationId)) {
+    if (this.headerPinned) {
       return;
     }
-    this.runtime.pinnedHeaderConversations.add(this.conversationId);
+    this.headerPinned = true;
     const skillVersions: Record<string, string> = {};
     for (const skill of this.runtime.skillsCatalog) {
       skillVersions[skill.slug] = skill.version;
@@ -221,7 +225,6 @@ export function runtimeFor(spec: {
         token: spec.token,
       }),
       skillsCatalog: [],
-      pinnedHeaderConversations: new Set<string>(),
       compositionId: spec.compositionId,
     };
     runtimes.set(spec.agentSlug, runtime);

@@ -48,9 +48,24 @@ impl<R: MirrorRepo, C: ExternalTicketClient> MirrorService for MirrorServiceImpl
             ));
         }
         self.client.push_summary(&request).await?;
+        // Reuse the live row's id. Minting a fresh UUID on every upsert would
+        // ignore the existing identity; Postgres ON CONFLICT does not rewrite
+        // `id`, but the domain must not depend on that accident.
+        let existing = self
+            .repo
+            .find_active(
+                org_id,
+                &request.native_entity_type,
+                &request.native_entity_id,
+                request.provider,
+            )
+            .await?;
         let now = Utc::now();
         let row = TicketMirror {
-            id: macro_uuid::generate_uuid_v7(),
+            id: existing
+                .as_ref()
+                .map(|m| m.id)
+                .unwrap_or_else(macro_uuid::generate_uuid_v7),
             org_id,
             provider: request.provider,
             native_entity_type: request.native_entity_type,

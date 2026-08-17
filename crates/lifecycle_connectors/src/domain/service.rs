@@ -89,9 +89,9 @@ impl<R: ConnectorRepo, G: GraphIngest> ConnectorService for ConnectorServiceImpl
             .ok_or(ConnectorError::NotFound)?;
         let mut stored = Vec::new();
         for rec in records {
-            if rec.external_id.trim().is_empty() {
+            if rec.external_id.trim().is_empty() || rec.display_name.trim().is_empty() {
                 return Err(ConnectorError::InvalidRequest(
-                    "external_id is required".to_string(),
+                    "external_id and display_name are required".to_string(),
                 ));
             }
             let node = self
@@ -110,8 +110,7 @@ impl<R: ConnectorRepo, G: GraphIngest> ConnectorService for ConnectorServiceImpl
                         native_entity_id: Some(rec.external_id.clone()),
                     },
                 )
-                .await
-                .map_err(|e| ConnectorError::Graph(e.to_string()))?;
+                .await?;
             let row = ConnectorRecord {
                 id: macro_uuid::generate_uuid_v7(),
                 account_id,

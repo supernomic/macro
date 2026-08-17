@@ -39,13 +39,16 @@ impl ConsentRepo for MemConsent {
     }
 }
 
-#[tokio::test]
-async fn rejects_negative_seq() {
-    let svc = FeedbackServiceImpl::new(
+fn svc() -> FeedbackServiceImpl<MemRatings, MemConsent> {
+    FeedbackServiceImpl::new(
         MemRatings(Mutex::new(vec![])),
         MemConsent(Mutex::new(vec![])),
-    );
-    let err = svc
+    )
+}
+
+#[tokio::test]
+async fn rejects_negative_seq() {
+    let err = svc()
         .rate(
             macro_uuid::generate_uuid_v7(),
             -1,
@@ -56,4 +59,51 @@ async fn rejects_negative_seq() {
         .await
         .unwrap_err();
     assert!(matches!(err, FeedbackError::InvalidRequest(_)));
+}
+
+#[tokio::test]
+async fn rejects_empty_rated_by() {
+    let err = svc()
+        .rate(
+            macro_uuid::generate_uuid_v7(),
+            0,
+            RatingValue::Down,
+            None,
+            "   ".into(),
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, FeedbackError::InvalidRequest(_)));
+}
+
+#[tokio::test]
+async fn rejects_empty_set_by_on_consent() {
+    let err = svc()
+        .set_consent(
+            macro_uuid::generate_uuid_v7(),
+            Some(1),
+            FeedbackSharingMode::FeedbackOnly,
+            "".into(),
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, FeedbackError::InvalidRequest(_)));
+}
+
+#[tokio::test]
+async fn upserts_sidecar_rating_without_touching_a_ledger() {
+    let rec = svc()
+        .rate(
+            macro_uuid::generate_uuid_v7(),
+            0,
+            RatingValue::Up,
+            Some("note".into()),
+            "  user-1  ".into(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(rec.target_seq, 0);
+    assert_eq!(rec.rating, RatingValue::Up);
+    assert_eq!(rec.rated_by, "user-1");
+    assert_eq!(rec.note.as_deref(), Some("note"));
 }

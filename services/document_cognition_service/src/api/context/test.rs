@@ -479,6 +479,8 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
     );
     let skill_governance_service = Arc::new(skill_governance_service);
 
+    // Same as main.rs: clone graph_service into the facade and ingest
+    // adapter before wrapping the leftover in Arc.
     let graph_service = entity_graph::domain::service::GraphServiceImpl::new(
         entity_graph::outbound::PgGraphRepo::new(pool.clone()),
     );

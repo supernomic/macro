@@ -566,7 +566,7 @@ async fn main() -> anyhow::Result<()> {
         escalations::outbound::PgEscalationRepo::new(db.clone()),
         escalation_routing.as_ref().clone(),
         escalations::outbound::PgTeamMembership::new(db.clone()),
-        escalations::outbound::HttpCallbackClient::new(escalation_callback_token),
+        escalations::outbound::HttpCallbackClient::new(escalation_callback_token.clone()),
         escalations::outbound::NoopNotifier,
     ));
     let escalation_facade = Arc::new(escalations::domain::facade::AgentEscalationFacade::new(
@@ -583,10 +583,7 @@ async fn main() -> anyhow::Result<()> {
         approvals::outbound::PgApprovalRepo::new(db.clone()),
         approval_policies.as_ref().clone(),
         approvals::outbound::PgTeamMembership::new(db.clone()),
-        approvals::outbound::HttpCallbackClient::new(
-            crate::config::EscalationCallbackToken::new()
-                .and_then(|t| t.value().map(str::to_string)),
-        ),
+        approvals::outbound::HttpCallbackClient::new(escalation_callback_token),
         approvals::outbound::NoopNotifier,
         approvals::domain::model::PolicyFloor::builtin(),
     ));
@@ -609,6 +606,9 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized skill governance service");
 
+    // Facade and connector ingest both take GraphService by value. Clone
+    // before wrapping the leftover in Arc so they share the same pool-backed
+    // repo rather than fighting over a moved value.
     let graph_service = entity_graph::domain::service::GraphServiceImpl::new(
         entity_graph::outbound::PgGraphRepo::new(db.clone()),
     );

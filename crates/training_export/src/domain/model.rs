@@ -40,7 +40,11 @@ impl Projection {
     }
 }
 
-/// Telemetry sharing consent (dsh).
+/// Telemetry sharing consent applied to an export job (dsh).
+///
+/// Named [`SharingMode`] (not `FeedbackSharingMode`) so OpenAPI/utoipa emits a
+/// distinct schema from the feedback sidecar's consent enum. utoipa's
+/// `schema(rename = ...)` is a field rename, not a component-name alias.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum SharingMode {

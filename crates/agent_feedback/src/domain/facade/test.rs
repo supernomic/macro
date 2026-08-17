@@ -112,3 +112,22 @@ async fn rate_and_list() {
         .unwrap();
     assert_eq!(list.len(), 1);
 }
+
+#[tokio::test]
+async fn rate_as_user_rejects_empty_rated_by() {
+    let facade = AgentFeedbackFacade::new(FeedbackServiceImpl::new(
+        MemRatings(Mutex::new(vec![])),
+        MemConsent(Mutex::new(vec![])),
+    ));
+    let err = facade
+        .rate_as_user(
+            macro_uuid::generate_uuid_v7(),
+            1,
+            RatingValue::None,
+            None,
+            " ".into(),
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, FeedbackError::InvalidRequest(_)));
+}

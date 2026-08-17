@@ -72,6 +72,7 @@ pub async fn setup_and_serve(state: ApiContext) -> anyhow::Result<()> {
 
 fn api_router(api_context: ApiContext) -> Router {
     let memory_service = api_context.memory_service.clone();
+    // Clone identity into every router except the last consumer (feedback).
     let agent_identity_service = api_context.agent_identity_service.clone();
     let agent_ledger_service = api_context.agent_ledger_service.clone();
     let agent_ledger_facade = api_context.agent_ledger_facade.clone();

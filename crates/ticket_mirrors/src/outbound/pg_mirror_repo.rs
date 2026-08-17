@@ -73,6 +73,8 @@ macro_rules! mirror_from_record {
 impl MirrorRepo for PgMirrorRepo {
     #[tracing::instrument(skip(self, mirror), err)]
     async fn upsert(&self, mirror: &TicketMirror) -> Result<TicketMirror> {
+        // ON CONFLICT does not rewrite `id` / native identity; RETURNING keeps
+        // the live row. Domain `find_active` also reuses that id before insert.
         let row = sqlx::query!(
             r#"
             INSERT INTO ticket_mirrors (

@@ -3,9 +3,12 @@
 #[cfg(test)]
 mod test;
 
+use std::collections::HashMap;
+
 use agent_ledger::domain::model::{AgentEvent, AgentEventPayload};
 use agent_ledger::domain::ports::EventFilter;
 use chrono::Utc;
+use macro_uuid::Uuid;
 
 use super::model::{ExportJob, ProjectedEvent, Projection, Result, SharingMode};
 use super::ports::{ExportJobRepo, LedgerReader};
@@ -24,6 +27,95 @@ pub trait ExportService: Send + Sync + 'static {
     ) -> impl Future<Output = Result<(ExportJob, Vec<ProjectedEvent>)>> + Send;
 }
 
+/// Per-session facts collected from the ledger before emitting rows.
+///
+/// Ledger queries return `occurred_at DESC`, so projection must not walk a
+/// running composition/parent pointer across the mixed stream.
+struct SessionMeta {
+    /// `(seq, composition_id)` from each `request/header`, sorted by seq.
+    headers: Vec<(i64, String)>,
+    /// `(seq, parent_session_id)` from `session/seed`, when present.
+    seed: Option<(i64, Uuid)>,
+    /// Inclusive seq ranges replaced by compaction.
+    compacted: Vec<(i64, i64)>,
+}
+
+impl SessionMeta {
+    fn composition_at(&self, seq: i64) -> Option<String> {
+        if self.headers.is_empty() {
+            return None;
+        }
+        // Latest header at or before this seq; events before the first header
+        // inherit that first composition so a pin keeps the whole session.
+        self.headers
+            .iter()
+            .rev()
+            .find(|(header_seq, _)| *header_seq <= seq)
+            .or(self.headers.first())
+            .map(|(_, composition_id)| composition_id.clone())
+    }
+
+    fn parent_at(&self, seq: i64) -> Option<Uuid> {
+        self.seed
+            .filter(|(seed_seq, _)| seq >= *seed_seq)
+            .map(|(_, parent)| parent)
+    }
+
+    fn is_compacted(&self, seq: i64) -> bool {
+        self.compacted
+            .iter()
+            .any(|(from, to)| seq >= *from && seq <= *to)
+    }
+}
+
+fn collect_session_meta(events: &[AgentEvent]) -> HashMap<Uuid, SessionMeta> {
+    let mut sessions: HashMap<Uuid, SessionMeta> = HashMap::new();
+    for event in events {
+        let meta = sessions.entry(event.session_id).or_insert(SessionMeta {
+            headers: Vec::new(),
+            seed: None,
+            compacted: Vec::new(),
+        });
+        match &event.payload {
+            AgentEventPayload::RequestHeader(header) => {
+                meta.headers
+                    .push((event.seq, header.composition_id.clone()));
+            }
+            AgentEventPayload::SessionSeed {
+                parent_session_id, ..
+            } => {
+                meta.seed = Some((event.seq, *parent_session_id));
+            }
+            AgentEventPayload::Compaction {
+                replaced_from_seq,
+                replaced_to_seq,
+                ..
+            } => {
+                meta.compacted.push((*replaced_from_seq, *replaced_to_seq));
+            }
+            _ => {}
+        }
+    }
+    for meta in sessions.values_mut() {
+        meta.headers.sort_by_key(|(seq, _)| *seq);
+    }
+    sessions
+}
+
+/// Keep rows whose carried `composition_id` matches `pin`.
+///
+/// Sessions that never logged `request/header` have `composition_id = None`
+/// and are excluded — a pin cannot match an unknown composition. Cross-session
+/// leakage is avoided because composition is resolved per session.
+pub fn filter_composition_pin(rows: Vec<ProjectedEvent>, pin: Option<&str>) -> Vec<ProjectedEvent> {
+    let Some(pin) = pin.filter(|s| !s.is_empty()) else {
+        return rows;
+    };
+    rows.into_iter()
+        .filter(|row| row.composition_id.as_deref() == Some(pin))
+        .collect()
+}
+
 /// Project a session's events according to `projection` and `sharing_mode`.
 pub fn project_events(
     events: &[AgentEvent],
@@ -33,44 +125,24 @@ pub fn project_events(
     if sharing_mode == SharingMode::Disabled {
         return Vec::new();
     }
-    let mut compacted: Vec<(i64, i64)> = Vec::new();
-    for event in events {
-        if let AgentEventPayload::Compaction {
-            replaced_from_seq,
-            replaced_to_seq,
-            ..
-        } = &event.payload
-        {
-            compacted.push((*replaced_from_seq, *replaced_to_seq));
-        }
-    }
-    let mut composition_id: Option<String> = None;
-    let mut parent_session_id: Option<macro_uuid::Uuid> = None;
+    let sessions = collect_session_meta(events);
+    let mut ordered: Vec<&AgentEvent> = events.iter().collect();
+    ordered.sort_by_key(|event| (event.session_id, event.seq));
+
     let mut out = Vec::new();
-    for event in events {
-        if let AgentEventPayload::RequestHeader(header) = &event.payload {
-            composition_id = Some(header.composition_id.clone());
-        }
-        if let AgentEventPayload::SessionSeed {
-            parent_session_id: parent,
-            ..
-        } = &event.payload
-        {
-            parent_session_id = Some(*parent);
-        }
+    for event in ordered {
         if sharing_mode == SharingMode::FeedbackOnly
             && !matches!(event.payload, AgentEventPayload::FeedbackRecord { .. })
         {
             continue;
         }
+        let meta = sessions.get(&event.session_id);
         let include = match projection {
             Projection::HumanTranscript => matches!(
                 event.payload,
                 AgentEventPayload::UserMessage { .. } | AgentEventPayload::AssistantMessage { .. }
             ),
-            Projection::ModelHistory => !compacted
-                .iter()
-                .any(|(from, to)| event.seq >= *from && event.seq <= *to),
+            Projection::ModelHistory => meta.is_none_or(|m| !m.is_compacted(event.seq)),
             Projection::TrainingExport => true,
         };
         if !include {
@@ -81,8 +153,8 @@ pub fn project_events(
             seq: event.seq,
             event_type: event.payload.event_type().to_string(),
             data: serde_json::to_value(&event.payload).unwrap_or(serde_json::json!({})),
-            composition_id: composition_id.clone(),
-            parent_session_id,
+            composition_id: meta.and_then(|m| m.composition_at(event.seq)),
+            parent_session_id: meta.and_then(|m| m.parent_at(event.seq)),
         });
     }
     out
@@ -129,24 +201,41 @@ impl<L: LedgerReader, J: ExportJobRepo> ExportService for ExportServiceImpl<L, J
             completed_at: None,
         };
         self.jobs.insert(&job).await?;
-        let events = self
-            .ledger
-            .query_events(EventFilter {
-                org_id,
-                occurred_after: from_occurred_at,
-                occurred_before: to_occurred_at,
-                limit: 10_000,
-                ..Default::default()
-            })
-            .await?;
-        let mut projected = project_events(&events, projection, sharing_mode);
-        if let Some(pin) = &composition_id {
-            projected.retain(|e| e.composition_id.as_ref() == Some(pin));
+        let result: Result<Vec<ProjectedEvent>> = async {
+            let events = self
+                .ledger
+                .query_events(EventFilter {
+                    org_id,
+                    occurred_after: from_occurred_at,
+                    occurred_before: to_occurred_at,
+                    limit: 10_000,
+                    ..Default::default()
+                })
+                .await?;
+            let projected = filter_composition_pin(
+                project_events(&events, projection, sharing_mode),
+                composition_id.as_deref(),
+            );
+            Ok(projected)
         }
-        job.status = "completed".to_string();
-        job.row_count = Some(projected.len() as i64);
-        job.completed_at = Some(Utc::now());
-        self.jobs.update(&job).await?;
-        Ok((job, projected))
+        .await;
+        match result {
+            Ok(projected) => {
+                job.status = "completed".to_string();
+                job.row_count = Some(projected.len() as i64);
+                job.completed_at = Some(Utc::now());
+                self.jobs.update(&job).await?;
+                Ok((job, projected))
+            }
+            Err(e) => {
+                job.status = "failed".to_string();
+                job.error = Some(e.to_string());
+                job.completed_at = Some(Utc::now());
+                if let Err(update_err) = self.jobs.update(&job).await {
+                    tracing::error!(error=?update_err, "failed to persist export job failure");
+                }
+                Err(e)
+            }
+        }
     }
 }

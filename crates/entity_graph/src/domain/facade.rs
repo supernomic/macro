@@ -1,4 +1,7 @@
-//! Agent-facing graph facade.
+//! Agent-facing graph facade: scope checks, then org-scoped service calls.
+
+#[cfg(test)]
+mod test;
 
 use agent_identity::domain::model::VerifiedAgent;
 use macro_uuid::Uuid;
@@ -35,18 +38,21 @@ impl<S: GraphService> AgentGraphFacade<S> {
     }
 
     /// Upsert a node in the agent's org.
+    #[tracing::instrument(skip(self, agent, node), fields(agent = %agent.principal.slug), err)]
     pub async fn upsert_node(&self, agent: &VerifiedAgent, node: UpsertNode) -> Result<GraphNode> {
         require_scope(agent, SCOPE_GRAPH_WRITE)?;
         self.service.upsert_node(agent.principal.org_id, node).await
     }
 
     /// Upsert an edge in the agent's org.
+    #[tracing::instrument(skip(self, agent, edge), fields(agent = %agent.principal.slug), err)]
     pub async fn upsert_edge(&self, agent: &VerifiedAgent, edge: UpsertEdge) -> Result<GraphEdge> {
         require_scope(agent, SCOPE_GRAPH_WRITE)?;
         self.service.upsert_edge(agent.principal.org_id, edge).await
     }
 
-    /// Neighbors of a node.
+    /// Neighbors of a node in the agent's org.
+    #[tracing::instrument(skip(self, agent), fields(agent = %agent.principal.slug), err)]
     pub async fn neighbors(
         &self,
         agent: &VerifiedAgent,
@@ -54,14 +60,13 @@ impl<S: GraphService> AgentGraphFacade<S> {
         relationship: Option<&str>,
     ) -> Result<Vec<(GraphEdge, GraphNode)>> {
         require_scope(agent, SCOPE_GRAPH_READ)?;
-        let node = self.service.get_node(node_id).await?;
-        if node.org_id != agent.principal.org_id {
-            return Err(GraphError::NotFound);
-        }
-        self.service.neighbors(node_id, relationship).await
+        self.service
+            .neighbors(agent.principal.org_id, node_id, relationship)
+            .await
     }
 
-    /// Upsert a knowledge document.
+    /// Upsert a knowledge document in the agent's org.
+    #[tracing::instrument(skip(self, agent, doc), fields(agent = %agent.principal.slug), err)]
     pub async fn upsert_knowledge(
         &self,
         agent: &VerifiedAgent,

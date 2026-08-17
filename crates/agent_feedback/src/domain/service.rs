@@ -74,7 +74,8 @@ impl<R: RatingRepo, C: ConsentRepo> FeedbackService for FeedbackServiceImpl<R, C
                 "target_seq must be >= 0".to_string(),
             ));
         }
-        if rated_by.trim().is_empty() {
+        let rated_by = rated_by.trim().to_string();
+        if rated_by.is_empty() {
             return Err(FeedbackError::InvalidRequest(
                 "rated_by is required".to_string(),
             ));
@@ -104,7 +105,8 @@ impl<R: RatingRepo, C: ConsentRepo> FeedbackService for FeedbackServiceImpl<R, C
         sharing_mode: FeedbackSharingMode,
         set_by: String,
     ) -> Result<ConsentRecord> {
-        if set_by.trim().is_empty() {
+        let set_by = set_by.trim().to_string();
+        if set_by.is_empty() {
             return Err(FeedbackError::InvalidRequest(
                 "set_by is required".to_string(),
             ));

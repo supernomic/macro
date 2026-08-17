@@ -14,31 +14,38 @@ use super::ports::GraphRepo;
 
 /// Domain service.
 pub trait GraphService: Send + Sync + 'static {
-    /// Upsert a node.
+    /// Upsert a node in `org_id`.
     fn upsert_node(
         &self,
         org_id: Option<i32>,
         node: UpsertNode,
     ) -> impl Future<Output = Result<GraphNode>> + Send;
 
-    /// Fetch a node.
-    fn get_node(&self, id: Uuid) -> impl Future<Output = Result<GraphNode>> + Send;
+    /// Fetch a node in `org_id`. Other orgs are [`GraphError::NotFound`].
+    fn get_node(
+        &self,
+        org_id: Option<i32>,
+        id: Uuid,
+    ) -> impl Future<Output = Result<GraphNode>> + Send;
 
-    /// Upsert an edge.
+    /// Upsert an edge in `org_id`. Both endpoints must already exist in that
+    /// org. Self-edges are rejected.
     fn upsert_edge(
         &self,
         org_id: Option<i32>,
         edge: UpsertEdge,
     ) -> impl Future<Output = Result<GraphEdge>> + Send;
 
-    /// Neighbors of a node.
+    /// Neighbors of a node in `org_id`.
     fn neighbors(
         &self,
+        org_id: Option<i32>,
         node_id: Uuid,
         relationship: Option<&str>,
     ) -> impl Future<Output = Result<Vec<(GraphEdge, GraphNode)>>> + Send;
 
-    /// Upsert knowledge. Generated updates never overwrite human-authored docs.
+    /// Upsert knowledge. Generated (and any non-human) updates never overwrite
+    /// human-authored documents.
     fn upsert_knowledge(
         &self,
         org_id: Option<i32>,
@@ -83,8 +90,12 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
     }
 
     #[tracing::instrument(skip(self), err)]
-    async fn get_node(&self, id: Uuid) -> Result<GraphNode> {
-        self.repo.get_node(id).await?.ok_or(GraphError::NotFound)
+    async fn get_node(&self, org_id: Option<i32>, id: Uuid) -> Result<GraphNode> {
+        let node = self.repo.get_node(id).await?.ok_or(GraphError::NotFound)?;
+        if node.org_id != org_id {
+            return Err(GraphError::NotFound);
+        }
+        Ok(node)
     }
 
     #[tracing::instrument(skip(self, edge), err)]
@@ -98,6 +109,19 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
             return Err(GraphError::InvalidRequest(
                 "relationship is required".to_string(),
             ));
+        }
+        let from = self
+            .repo
+            .get_node(edge.from_node_id)
+            .await?
+            .ok_or(GraphError::NotFound)?;
+        let to = self
+            .repo
+            .get_node(edge.to_node_id)
+            .await?
+            .ok_or(GraphError::NotFound)?;
+        if from.org_id != org_id || to.org_id != org_id {
+            return Err(GraphError::NotFound);
         }
         let record = GraphEdge {
             id: macro_uuid::generate_uuid_v7(),
@@ -114,10 +138,23 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
     #[tracing::instrument(skip(self), err)]
     async fn neighbors(
         &self,
+        org_id: Option<i32>,
         node_id: Uuid,
         relationship: Option<&str>,
     ) -> Result<Vec<(GraphEdge, GraphNode)>> {
-        self.repo.neighbors(node_id, relationship).await
+        let node = self
+            .repo
+            .get_node(node_id)
+            .await?
+            .ok_or(GraphError::NotFound)?;
+        if node.org_id != org_id {
+            return Err(GraphError::NotFound);
+        }
+        let pairs = self.repo.neighbors(node_id, relationship).await?;
+        Ok(pairs
+            .into_iter()
+            .filter(|(edge, neighbor)| edge.org_id == org_id && neighbor.org_id == org_id)
+            .collect())
     }
 
     #[tracing::instrument(skip(self, doc), err)]
@@ -130,7 +167,7 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
             return Err(GraphError::InvalidRequest("slug is required".to_string()));
         }
         if let Some(existing) = self.repo.get_knowledge(org_id, &doc.slug).await? {
-            if existing.human_authored && doc.okf_generated {
+            if existing.human_authored && (doc.okf_generated || !doc.human_authored) {
                 return Err(GraphError::HumanAuthoredProtected);
             }
             let mut updated = existing;

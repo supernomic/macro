@@ -4,7 +4,8 @@
  * Catalog fetch is kicked off when the runtime is built and cached on the
  * runtime. Each render mounts whatever is currently cached; the next turn
  * picks up newly arrived skills. Injection is recorded once per skill
- * version on this conversation's ledger (`skill_injected`).
+ * version on this conversation's ledger (`skill_injected`) — never
+ * process-global, and re-logged when the catalog version changes.
  */
 
 import { defineSkill, useSkill } from '@flue/runtime';

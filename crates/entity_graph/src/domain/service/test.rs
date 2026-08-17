@@ -18,17 +18,17 @@ struct Fake {
 impl GraphRepo for Fake {
     async fn upsert_node(&self, node: &GraphNode) -> Result<GraphNode> {
         let mut nodes = self.nodes.lock().unwrap();
-        if let (Some(t), Some(id)) = (&node.native_entity_type, &node.native_entity_id) {
-            if let Some(existing) = nodes.iter_mut().find(|n| {
+        if let (Some(t), Some(id)) = (&node.native_entity_type, &node.native_entity_id)
+            && let Some(existing) = nodes.iter_mut().find(|n| {
                 n.org_id == node.org_id
                     && n.native_entity_type.as_ref() == Some(t)
                     && n.native_entity_id.as_ref() == Some(id)
-            }) {
-                existing.display_name = node.display_name.clone();
-                existing.attributes = node.attributes.clone();
-                existing.updated_at = node.updated_at;
-                return Ok(existing.clone());
-            }
+            })
+        {
+            existing.display_name = node.display_name.clone();
+            existing.attributes = node.attributes.clone();
+            existing.updated_at = node.updated_at;
+            return Ok(existing.clone());
         }
         nodes.push(node.clone());
         Ok(node.clone())
@@ -157,7 +157,10 @@ async fn upsert_node_and_edge_and_neighbors() {
     )
     .await
     .unwrap();
-    let neighbors = svc.neighbors(person.id, Some("owns_device")).await.unwrap();
+    let neighbors = svc
+        .neighbors(Some(1), person.id, Some("owns_device"))
+        .await
+        .unwrap();
     assert_eq!(neighbors.len(), 1);
     assert_eq!(neighbors[0].1.display_name, "MacBook");
 }
@@ -224,4 +227,175 @@ async fn human_authored_knowledge_is_protected() {
         .await
         .unwrap_err();
     assert!(matches!(err, GraphError::HumanAuthoredProtected));
+}
+
+#[tokio::test]
+async fn non_human_upsert_cannot_overwrite_human_authored() {
+    let svc = svc();
+    svc.upsert_knowledge(
+        Some(1),
+        UpsertKnowledge {
+            slug: "vpn".into(),
+            title: "VPN".into(),
+            body: "human".into(),
+            okf_sources: vec![],
+            okf_generated: false,
+            human_authored: true,
+        },
+    )
+    .await
+    .unwrap();
+    let err = svc
+        .upsert_knowledge(
+            Some(1),
+            UpsertKnowledge {
+                slug: "vpn".into(),
+                title: "VPN".into(),
+                body: "machine".into(),
+                okf_sources: vec![],
+                okf_generated: false,
+                human_authored: false,
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, GraphError::HumanAuthoredProtected));
+}
+
+#[tokio::test]
+async fn human_can_update_human_authored_knowledge() {
+    let svc = svc();
+    svc.upsert_knowledge(
+        Some(1),
+        UpsertKnowledge {
+            slug: "vpn".into(),
+            title: "VPN".into(),
+            body: "human".into(),
+            okf_sources: vec![],
+            okf_generated: false,
+            human_authored: true,
+        },
+    )
+    .await
+    .unwrap();
+    let updated = svc
+        .upsert_knowledge(
+            Some(1),
+            UpsertKnowledge {
+                slug: "vpn".into(),
+                title: "VPN v2".into(),
+                body: "human-edited".into(),
+                okf_sources: vec![],
+                okf_generated: false,
+                human_authored: true,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(updated.body, "human-edited");
+    assert!(updated.human_authored);
+}
+
+#[tokio::test]
+async fn get_node_is_org_scoped() {
+    let svc = svc();
+    let node = svc
+        .upsert_node(
+            Some(1),
+            UpsertNode {
+                node_type: "Person".into(),
+                display_name: "Ada".into(),
+                attributes: json!({}),
+                native_entity_type: None,
+                native_entity_id: None,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(svc.get_node(Some(1), node.id).await.unwrap().id, node.id);
+    let err = svc.get_node(Some(2), node.id).await.unwrap_err();
+    assert!(matches!(err, GraphError::NotFound));
+}
+
+#[tokio::test]
+async fn cross_org_edge_rejected() {
+    let svc = svc();
+    let a = svc
+        .upsert_node(
+            Some(1),
+            UpsertNode {
+                node_type: "Person".into(),
+                display_name: "Ada".into(),
+                attributes: json!({}),
+                native_entity_type: None,
+                native_entity_id: None,
+            },
+        )
+        .await
+        .unwrap();
+    let b = svc
+        .upsert_node(
+            Some(2),
+            UpsertNode {
+                node_type: "Device".into(),
+                display_name: "Mac".into(),
+                attributes: json!({}),
+                native_entity_type: None,
+                native_entity_id: None,
+            },
+        )
+        .await
+        .unwrap();
+    let err = svc
+        .upsert_edge(
+            Some(1),
+            UpsertEdge {
+                from_node_id: a.id,
+                to_node_id: b.id,
+                relationship: "owns_device".into(),
+                attributes: json!({}),
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, GraphError::NotFound));
+}
+
+#[tokio::test]
+async fn neighbors_hide_other_org_nodes() {
+    let svc = svc();
+    let person = svc
+        .upsert_node(
+            Some(1),
+            UpsertNode {
+                node_type: "Person".into(),
+                display_name: "Ada".into(),
+                attributes: json!({}),
+                native_entity_type: None,
+                native_entity_id: None,
+            },
+        )
+        .await
+        .unwrap();
+    let err = svc.neighbors(Some(2), person.id, None).await.unwrap_err();
+    assert!(matches!(err, GraphError::NotFound));
+}
+
+#[tokio::test]
+async fn empty_node_fields_rejected() {
+    let svc = svc();
+    let err = svc
+        .upsert_node(
+            Some(1),
+            UpsertNode {
+                node_type: " ".into(),
+                display_name: "Ada".into(),
+                attributes: json!({}),
+                native_entity_type: None,
+                native_entity_id: None,
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(err, GraphError::InvalidRequest(_)));
 }

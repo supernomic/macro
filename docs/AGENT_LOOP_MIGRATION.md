@@ -16,7 +16,9 @@ only. Do not add new agent products, channels, or workflows there.
 
 When you must touch these, keep the change local (crash, authz, usage
 recording). Do not grow the toolset or prompt overlay as a way to ship new
-agent behavior.
+agent behavior. Do not add governed-skill injection, feedback capture, graph
+lookup, HITL resume, or eval/trace-refine tools to the Rust `ai_tools`
+toolset — those belong in Flue.
 
 ## What belongs in Flue (`apps/agents`)
 
@@ -28,6 +30,8 @@ agent behavior.
 
 New work starts with a Flue agent function, Macro-scoped `mat_...` token, and
 tools under `apps/agents/src/tools/`. Macro remains the system of record.
+`crates/agent` stays the in-process completion engine for existing DCS chat
+until cutover; it is not the place to prototype new agents.
 
 ## Cutover sketch for DCS chat
 

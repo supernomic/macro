@@ -53,8 +53,15 @@ pub trait SkillGovernanceService: Send + Sync + 'static {
         team_ids: &[Uuid],
     ) -> impl Future<Output = Result<Vec<SkillCatalogEntry>>> + Send;
 
-    /// Fetch one skill by id.
-    fn get_skill(&self, id: Uuid) -> impl Future<Output = Result<SkillRecord>> + Send;
+    /// Fetch one skill visible in the caller's tenancy. Platform skills are
+    /// global; org/user/team skills never leak across those boundaries.
+    fn get_skill(
+        &self,
+        org_id: Option<i32>,
+        user_id: Option<&str>,
+        team_ids: &[Uuid],
+        id: Uuid,
+    ) -> impl Future<Output = Result<SkillRecord>> + Send;
 
     /// Open a staged proposal. User-scope creates may auto-apply.
     fn propose(
@@ -145,7 +152,10 @@ where
             ProposalKind::Create => {
                 let skill = SkillRecord {
                     id: Self::new_id(),
-                    org_id: proposal.org_id,
+                    org_id: match proposal.target_scope {
+                        SkillScope::Platform => None,
+                        _ => proposal.org_id,
+                    },
                     scope: proposal.target_scope,
                     owner_user_id: proposal.owner_user_id.clone(),
                     owner_team_id: proposal.owner_team_id,
@@ -242,20 +252,58 @@ where
             }
         }
     }
+
+    async fn user_is_on_team(&self, user_id: &str, team_id: Uuid) -> Result<bool> {
+        Ok(self.teams.user_teams(user_id).await?.contains(&team_id))
+    }
+
+    /// Whether the caller may see this proposal. Internal callers see
+    /// everything; users see items they proposed, are assigned, or that sit
+    /// on one of their team queues.
+    async fn proposal_visible(&self, caller: &Caller, proposal: &SkillProposal) -> Result<bool> {
+        match caller {
+            Caller::Internal => Ok(true),
+            Caller::User(user_id) => {
+                if proposal.proposer_user_id.as_deref() == Some(user_id.as_str())
+                    || proposal.assignee_user_id.as_deref() == Some(user_id.as_str())
+                {
+                    return Ok(true);
+                }
+                if let Some(team_id) = proposal.assignee_team_id {
+                    return self.user_is_on_team(user_id, team_id).await;
+                }
+                Ok(false)
+            }
+        }
+    }
+
+    /// Whether the caller may decide or roll back this proposal. Internal
+    /// callers may; users must be the assignee or a member of the assignee
+    /// team. Proposers can see a proposal without acting on it.
+    async fn may_act(&self, caller: &Caller, proposal: &SkillProposal) -> Result<bool> {
+        match caller {
+            Caller::Internal => Ok(true),
+            Caller::User(user_id) => {
+                if proposal.assignee_user_id.as_deref() == Some(user_id.as_str()) {
+                    return Ok(true);
+                }
+                if let Some(team_id) = proposal.assignee_team_id {
+                    return self.user_is_on_team(user_id, team_id).await;
+                }
+                Ok(false)
+            }
+        }
+    }
 }
 
-/// Whether a skill belongs in this caller's catalog. Platform skills are
-/// global; org skills are tenant-wide; user/team skills are owner-scoped
-/// and never leak to other principals.
-fn visible_in_catalog(
+/// Tenancy for a skill record. Platform skills are global; org skills are
+/// tenant-wide; user and team skills are owner-scoped and never leak.
+fn in_caller_tenancy(
     skill: &SkillRecord,
     org_id: Option<i32>,
     user_id: Option<&str>,
     team_ids: &[Uuid],
 ) -> bool {
-    if skill.okf_status != OkfStatus::Active || skill.archived_at.is_some() {
-        return false;
-    }
     match skill.scope {
         SkillScope::Platform => true,
         SkillScope::Org => skill.org_id == org_id,
@@ -269,6 +317,18 @@ fn visible_in_catalog(
                     .is_some_and(|tid| team_ids.contains(&tid))
         }
     }
+}
+
+/// Whether a skill belongs in this caller's catalog.
+fn visible_in_catalog(
+    skill: &SkillRecord,
+    org_id: Option<i32>,
+    user_id: Option<&str>,
+    team_ids: &[Uuid],
+) -> bool {
+    skill.okf_status == OkfStatus::Active
+        && skill.archived_at.is_none()
+        && in_caller_tenancy(skill, org_id, user_id, team_ids)
 }
 
 impl<S, P, T> SkillGovernanceService for SkillGovernanceServiceImpl<S, P, T>
@@ -302,8 +362,22 @@ where
     }
 
     #[tracing::instrument(skip(self), err)]
-    async fn get_skill(&self, id: Uuid) -> Result<SkillRecord> {
-        self.skills.get(id).await?.ok_or(GovernanceError::NotFound)
+    async fn get_skill(
+        &self,
+        org_id: Option<i32>,
+        user_id: Option<&str>,
+        team_ids: &[Uuid],
+        id: Uuid,
+    ) -> Result<SkillRecord> {
+        let skill = self
+            .skills
+            .get(id)
+            .await?
+            .ok_or(GovernanceError::NotFound)?;
+        if !in_caller_tenancy(&skill, org_id, user_id, team_ids) {
+            return Err(GovernanceError::NotFound);
+        }
+        Ok(skill)
     }
 
     #[tracing::instrument(skip(self, proposal), err)]
@@ -325,6 +399,19 @@ where
             return Err(GovernanceError::InvalidRequest(
                 "patch/archive requires skill_id".to_string(),
             ));
+        }
+        match proposal.target_scope {
+            SkillScope::User if proposal.owner_user_id.is_none() => {
+                return Err(GovernanceError::InvalidRequest(
+                    "user-scope requires owner_user_id".to_string(),
+                ));
+            }
+            SkillScope::Team if proposal.owner_team_id.is_none() => {
+                return Err(GovernanceError::InvalidRequest(
+                    "team-scope requires owner_team_id".to_string(),
+                ));
+            }
+            _ => {}
         }
         let now = Utc::now();
         let mut row = SkillProposal {
@@ -356,12 +443,15 @@ where
             updated_at: now,
         };
 
-        // Personal-scope creates auto-apply; team/org always wait for review.
-        if !row.target_scope.requires_review() && row.kind == ProposalKind::Create {
-            let actor = proposer_user_id
-                .clone()
-                .or_else(|| row.proposer_agent_id.clone())
-                .unwrap_or_else(|| "system".to_string());
+        // Personal-scope creates auto-apply only when the proposing user owns
+        // the skill. Team / org / platform always wait for inbox review, as
+        // do agent-authored user-scope creates.
+        let own_personal_create = row.kind == ProposalKind::Create
+            && !row.target_scope.requires_review()
+            && proposer_user_id.is_some()
+            && row.owner_user_id == proposer_user_id;
+        if own_personal_create {
+            let actor = proposer_user_id.clone().expect("checked is_some");
             let (skill, snapshot_id) = self.apply_proposal(&row, &actor).await?;
             row.skill_id = Some(skill.id);
             row.snapshot_id = snapshot_id;
@@ -375,12 +465,17 @@ where
         Ok(row)
     }
 
-    #[tracing::instrument(skip(self), err)]
-    async fn get_proposal(&self, _caller: &Caller, id: Uuid) -> Result<SkillProposal> {
-        self.proposals
+    #[tracing::instrument(skip(self, caller), err)]
+    async fn get_proposal(&self, caller: &Caller, id: Uuid) -> Result<SkillProposal> {
+        let proposal = self
+            .proposals
             .get(id)
             .await?
-            .ok_or(GovernanceError::NotFound)
+            .ok_or(GovernanceError::NotFound)?;
+        if !self.proposal_visible(caller, &proposal).await? {
+            return Err(GovernanceError::NotFound);
+        }
+        Ok(proposal)
     }
 
     #[tracing::instrument(skip(self), err)]
@@ -426,12 +521,23 @@ where
             .get(id)
             .await?
             .ok_or(GovernanceError::NotFound)?;
+        if !self.proposal_visible(caller, &proposal).await? {
+            return Err(GovernanceError::NotFound);
+        }
+        if !self.may_act(caller, &proposal).await? {
+            return Err(GovernanceError::Forbidden(
+                "only the assignee or team can decide".to_string(),
+            ));
+        }
         if proposal.status != ProposalStatus::Pending {
             return Err(GovernanceError::InvalidStatus(
                 "proposal is not pending".to_string(),
             ));
         }
 
+        // Eval gate is optional: missing evals do not block. When a run
+        // exists for an org/team/platform proposal, a failing result blocks
+        // promotion. Rejection is never gated.
         if approved
             && proposal.target_scope.requires_review()
             && let Some(eval) = self.proposals.latest_eval_for_proposal(proposal.id).await?
@@ -475,6 +581,14 @@ where
             .get(id)
             .await?
             .ok_or(GovernanceError::NotFound)?;
+        if !self.proposal_visible(caller, &proposal).await? {
+            return Err(GovernanceError::NotFound);
+        }
+        if !self.may_act(caller, &proposal).await? {
+            return Err(GovernanceError::Forbidden(
+                "only the assignee or team can roll back".to_string(),
+            ));
+        }
         if proposal.status != ProposalStatus::Approved {
             return Err(GovernanceError::InvalidStatus(
                 "only approved proposals can be rolled back".to_string(),

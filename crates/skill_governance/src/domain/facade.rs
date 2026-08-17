@@ -9,7 +9,7 @@ use macro_uuid::Uuid;
 use super::model::{
     GovernanceError, NewProposal, Result, SkillCatalogEntry, SkillProposal, SkillRecord,
 };
-use super::service::SkillGovernanceService;
+use super::service::{Caller, SkillGovernanceService};
 
 /// Scope required to read the skill catalog.
 pub const SCOPE_SKILL_READ: &str = "skill:read";
@@ -45,15 +45,27 @@ impl<S: SkillGovernanceService> AgentSkillFacade<S> {
             .await
     }
 
-    /// Fetch one skill in the agent's org.
+    /// Fetch one skill visible to this agent: platform (global) and org
+    /// skills in the principal's tenant. Personal and team skills are not
+    /// injectable by agents and must not leak.
     #[tracing::instrument(skip(self, agent), fields(agent = %agent.principal.slug), err)]
     pub async fn get_skill(&self, agent: &VerifiedAgent, id: Uuid) -> Result<SkillRecord> {
         require_scope(agent, SCOPE_SKILL_READ)?;
-        let skill = self.service.get_skill(id).await?;
-        if skill.org_id != agent.principal.org_id {
+        self.service
+            .get_skill(agent.principal.org_id, None, &[], id)
+            .await
+    }
+
+    /// Fetch one proposal in the agent's org. Absence and cross-tenant
+    /// records are indistinguishable.
+    #[tracing::instrument(skip(self, agent), fields(agent = %agent.principal.slug), err)]
+    pub async fn get_proposal(&self, agent: &VerifiedAgent, id: Uuid) -> Result<SkillProposal> {
+        require_scope(agent, SCOPE_SKILL_READ)?;
+        let proposal = self.service.get_proposal(&Caller::Internal, id).await?;
+        if proposal.org_id != agent.principal.org_id {
             return Err(GovernanceError::NotFound);
         }
-        Ok(skill)
+        Ok(proposal)
     }
 
     /// Open a staged proposal as this agent. Tenancy is forced to the

@@ -41,6 +41,10 @@ impl RatingValue {
 }
 
 /// Telemetry sharing consent for a session (dsh).
+///
+/// Named [`FeedbackSharingMode`] (not `SharingMode`) so OpenAPI/utoipa emits a
+/// distinct schema from the training-export job's sharing-mode enum. utoipa's
+/// `schema(rename = ...)` is a field rename, not a component-name alias.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FeedbackSharingMode {

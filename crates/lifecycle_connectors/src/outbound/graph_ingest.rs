@@ -20,6 +20,7 @@ impl<S: GraphService> EntityGraphIngest<S> {
 }
 
 impl<S: GraphService> GraphIngest for EntityGraphIngest<S> {
+    #[tracing::instrument(skip(self, node), err)]
     async fn upsert_node(&self, org_id: Option<i32>, node: UpsertNode) -> Result<GraphNode> {
         self.inner
             .upsert_node(org_id, node)
