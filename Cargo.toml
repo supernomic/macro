@@ -4,6 +4,8 @@ resolver = "2"
 members = [
   "crates/activity",
   "crates/agent",
+  "crates/agent_identity",
+  "crates/agent_ledger",
   "crates/agent_runtime_protocol",
   "crates/ai_projections",
   "crates/ai_usage",

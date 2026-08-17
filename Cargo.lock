@@ -154,6 +154,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent_identity"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "chrono",
+ "hex",
+ "macro_uuid",
+ "rand 0.9.4",
+ "serde",
+ "sha2 0.10.9",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "agent_ledger"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "hex",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
 name = "agent_runtime_protocol"
 version = "0.1.0"
 dependencies = [
