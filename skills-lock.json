@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "better-github-skill": {
+      "source": "AVGVSTVS96/better-github-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "e02ab935a0197c6dd5ae6c4604b40ad94c6f1f58e97331907dc9c6074aec1008"
+    },
     "show-me": {
       "source": "humanlayer/skills",
       "sourceType": "github",
