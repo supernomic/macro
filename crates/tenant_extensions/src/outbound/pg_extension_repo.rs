@@ -211,6 +211,18 @@ impl ExtensionRepo for PgExtensionRepo {
         .transpose()
     }
 
+    #[tracing::instrument(skip(self), err)]
+    #[allow(clippy::disallowed_methods)] // query_scalar! needs `.sqlx` from prepare_db
+    async fn get_catalog(&self, org_id: i32) -> Result<Option<serde_json::Value>> {
+        let catalog = sqlx::query_scalar::<_, serde_json::Value>(
+            "SELECT catalog FROM tenant_extension_catalogs WHERE org_id = $1",
+        )
+        .bind(org_id)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(catalog)
+    }
+
     #[tracing::instrument(skip(self, catalog), err)]
     async fn upsert_catalog(
         &self,

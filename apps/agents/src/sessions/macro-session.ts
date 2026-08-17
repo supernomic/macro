@@ -44,6 +44,11 @@ export interface AgentRuntime {
   graph: GraphClient;
   /** Cached governed-skill catalog (filled asynchronously after boot). */
   skillsCatalog: SkillCatalogEntry[];
+  /**
+   * Resolves when the catalog fetch finishes — success or failure.
+   * An empty catalog after a failed fetch is still ready.
+   */
+  catalogReady: Promise<void>;
   /** Pinned composition id for this agent definition. */
   compositionId: string;
 }
@@ -74,6 +79,8 @@ export class MacroSessionContext {
   private readonly injectedSkillVersions = new Map<string, string>();
   /** Whether this conversation has already pinned a `request_header`. */
   private headerPinned = false;
+  /** In-flight pin so concurrent `useAgentStart` retries share one append. */
+  private headerPin: Promise<void> | undefined;
 
   constructor(opts: {
     runtime: AgentRuntime;
@@ -113,29 +120,47 @@ export class MacroSessionContext {
 
   /**
    * Append `skill_injected` the first time this conversation sees a given
-   * skill version. Re-logs if the catalog version changes.
+   * skill version. Re-logs if the catalog version changes. Ledger failures
+   * are logged and swallowed so a trace hiccup does not crash the turn.
    */
-  recordSkillInjection(skill: SkillCatalogEntry): void {
+  async recordSkillInjection(skill: SkillCatalogEntry): Promise<void> {
     if (this.injectedSkillVersions.get(skill.id) === skill.version) {
       return;
     }
     this.injectedSkillVersions.set(skill.id, skill.version);
-    void this.append({
-      payload: {
-        type: 'skill_injected',
-        data: { skill_id: skill.id, version: skill.version },
-      },
-      actor_kind: 'agent',
-      actor_id: this.runtime.agentSlug,
-    });
+    try {
+      await this.append({
+        payload: {
+          type: 'skill_injected',
+          data: { skill_id: skill.id, version: skill.version },
+        },
+        actor_kind: 'agent',
+        actor_id: this.runtime.agentSlug,
+      });
+    } catch (e) {
+      console.error('failed to record skill_injected in ledger', e);
+    }
   }
 
   /**
    * Pin this conversation's composition on the ledger once. Eval grouping
    * and training export join on `composition_id`; the snapshot is the
    * reconstructable request header for this agent definition.
+   *
+   * Waits for {@link AgentRuntime.catalogReady} so `skill_versions` reflects
+   * the fetched catalog (empty on fetch failure). Ledger failures are
+   * logged and swallowed so a trace hiccup does not crash the turn.
    */
-  pinRequestHeader(): void {
+  async pinRequestHeader(): Promise<void> {
+    if (this.headerPinned) {
+      return;
+    }
+    this.headerPin ??= this.pinRequestHeaderOnce();
+    return this.headerPin;
+  }
+
+  private async pinRequestHeaderOnce(): Promise<void> {
+    await this.runtime.catalogReady;
     if (this.headerPinned) {
       return;
     }
@@ -144,22 +169,26 @@ export class MacroSessionContext {
     for (const skill of this.runtime.skillsCatalog) {
       skillVersions[skill.slug] = skill.version;
     }
-    void this.append({
-      payload: {
-        type: 'request_header',
-        data: {
-          rendered_system_prompt: `composition:${this.runtime.compositionId}`,
-          tool_schemas: [],
-          provider: 'flue',
-          model: config.superAgentModel,
-          sampling: {},
-          skill_versions: skillVersions,
-          composition_id: this.runtime.compositionId,
+    try {
+      await this.append({
+        payload: {
+          type: 'request_header',
+          data: {
+            rendered_system_prompt: `composition:${this.runtime.compositionId}`,
+            tool_schemas: [],
+            provider: 'flue',
+            model: config.superAgentModel,
+            sampling: {},
+            skill_versions: skillVersions,
+            composition_id: this.runtime.compositionId,
+          },
         },
-      },
-      actor_kind: 'agent',
-      actor_id: this.runtime.agentSlug,
-    });
+        actor_kind: 'agent',
+        actor_id: this.runtime.agentSlug,
+      });
+    } catch (e) {
+      console.error('failed to record request_header in ledger', e);
+    }
   }
 }
 
@@ -225,19 +254,19 @@ export function runtimeFor(spec: {
         token: spec.token,
       }),
       skillsCatalog: [],
+      catalogReady: Promise.resolve(),
       compositionId: spec.compositionId,
     };
     runtimes.set(spec.agentSlug, runtime);
     const built = runtime;
-    void built.skills
-      .catalog()
-      .then((entries) => {
-        built.skillsCatalog = entries;
-      })
-      .catch(() => {
-        // Catalog is best-effort. A failed fetch leaves the agent running
-        // without governed skills until process restart.
-      });
+    built.catalogReady = (async () => {
+      try {
+        built.skillsCatalog = await built.skills.catalog();
+      } catch {
+        // Catalog is best-effort. A failed fetch still resolves
+        // catalogReady so the first turn can pin an empty header.
+      }
+    })();
   }
   return runtime;
 }

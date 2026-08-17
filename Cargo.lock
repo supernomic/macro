@@ -193,6 +193,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent_inbox"
+version = "0.1.0"
+dependencies = [
+ "approvals",
+ "axum",
+ "chrono",
+ "escalations",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "skill_governance",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
+]
+
+[[package]]
 name = "agent_ledger"
 version = "0.1.0"
 dependencies = [
@@ -4412,6 +4432,7 @@ dependencies = [
  "agent",
  "agent_feedback",
  "agent_identity",
+ "agent_inbox",
  "agent_ledger",
  "aho-corasick",
  "ai_projections",
@@ -15751,6 +15772,7 @@ dependencies = [
 name = "training_export"
 version = "0.1.0"
 dependencies = [
+ "agent_feedback",
  "agent_identity",
  "agent_ledger",
  "axum",

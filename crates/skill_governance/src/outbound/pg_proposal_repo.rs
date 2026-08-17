@@ -197,33 +197,77 @@ impl ProposalRepo for PgProposalRepo {
 
     #[tracing::instrument(skip(self), err)]
     async fn list(&self, filter: &ProposalFilter) -> Result<Vec<SkillProposal>> {
-        let limit = if filter.limit <= 0 { 100 } else { filter.limit };
-        let status = filter.status.map(|s| s.as_str().to_string());
-        let rows = sqlx::query!(
-            r#"
-            SELECT id, org_id, skill_id, kind, slug, target_scope,
-                   owner_user_id, owner_team_id, proposed_name, proposed_description,
-                   proposed_body, diff_summary, evidence, proposer_agent_id,
-                   proposer_user_id, status, assignee_user_id, assignee_team_id,
-                   snapshot_id, eval_run_id, eval_passed, decided_by, decision_note,
-                   decided_at, created_at, updated_at
-            FROM agent_skill_proposals
-            WHERE ($1::int IS NULL OR org_id IS NOT DISTINCT FROM $1)
-              AND ($2::text IS NULL OR status = $2)
-              AND ($3::text IS NULL OR assignee_user_id = $3)
-              AND ($4::uuid IS NULL OR assignee_team_id = $4)
-            ORDER BY created_at DESC
-            LIMIT $5
-            "#,
-            filter.org_id,
-            status,
-            filter.assignee_user_id.as_deref(),
-            filter.assignee_team_id,
-            limit,
-        )
-        .fetch_all(&self.pool)
-        .await?;
-        rows.into_iter().map(|r| proposal_from_record!(r)).collect()
+        // Dynamic filter combination over a fixed column set (unassigned_only
+        // is optional, matching approvals team-queue HITL).
+        const SELECT_COLUMNS: &str = "id, org_id, skill_id, kind, slug, target_scope, \
+             owner_user_id, owner_team_id, proposed_name, proposed_description, \
+             proposed_body, diff_summary, evidence, proposer_agent_id, \
+             proposer_user_id, status, assignee_user_id, assignee_team_id, \
+             snapshot_id, eval_run_id, eval_passed, decided_by, decision_note, \
+             decided_at, created_at, updated_at";
+        let mut builder = sqlx::QueryBuilder::new(format!(
+            "SELECT {SELECT_COLUMNS} FROM agent_skill_proposals WHERE TRUE"
+        ));
+        if let Some(org_id) = filter.org_id {
+            builder
+                .push(" AND org_id IS NOT DISTINCT FROM ")
+                .push_bind(org_id);
+        }
+        if let Some(status) = filter.status {
+            builder.push(" AND status = ").push_bind(status.as_str());
+        }
+        if let Some(user) = &filter.assignee_user_id {
+            builder
+                .push(" AND assignee_user_id = ")
+                .push_bind(user.clone());
+        }
+        if let Some(team) = filter.assignee_team_id {
+            builder.push(" AND assignee_team_id = ").push_bind(team);
+        }
+        if filter.unassigned_only {
+            builder.push(" AND assignee_user_id IS NULL");
+        }
+        if let Some(slug) = &filter.slug {
+            builder.push(" AND slug = ").push_bind(slug.clone());
+        }
+        builder
+            .push(" ORDER BY created_at DESC LIMIT ")
+            .push_bind(if filter.limit > 0 { filter.limit } else { 100 });
+
+        let rows = builder.build().fetch_all(&self.pool).await?;
+        rows.into_iter()
+            .map(|row| {
+                use sqlx::Row;
+                row_to_proposal(ProposalRow {
+                    id: row.try_get("id")?,
+                    org_id: row.try_get("org_id")?,
+                    skill_id: row.try_get("skill_id")?,
+                    kind: row.try_get("kind")?,
+                    slug: row.try_get("slug")?,
+                    target_scope: row.try_get("target_scope")?,
+                    owner_user_id: row.try_get("owner_user_id")?,
+                    owner_team_id: row.try_get("owner_team_id")?,
+                    proposed_name: row.try_get("proposed_name")?,
+                    proposed_description: row.try_get("proposed_description")?,
+                    proposed_body: row.try_get("proposed_body")?,
+                    diff_summary: row.try_get("diff_summary")?,
+                    evidence: row.try_get("evidence")?,
+                    proposer_agent_id: row.try_get("proposer_agent_id")?,
+                    proposer_user_id: row.try_get("proposer_user_id")?,
+                    status: row.try_get("status")?,
+                    assignee_user_id: row.try_get("assignee_user_id")?,
+                    assignee_team_id: row.try_get("assignee_team_id")?,
+                    snapshot_id: row.try_get("snapshot_id")?,
+                    eval_run_id: row.try_get("eval_run_id")?,
+                    eval_passed: row.try_get("eval_passed")?,
+                    decided_by: row.try_get("decided_by")?,
+                    decision_note: row.try_get("decision_note")?,
+                    decided_at: row.try_get("decided_at")?,
+                    created_at: row.try_get("created_at")?,
+                    updated_at: row.try_get("updated_at")?,
+                })
+            })
+            .collect()
     }
 
     #[tracing::instrument(skip(self, proposal), err)]

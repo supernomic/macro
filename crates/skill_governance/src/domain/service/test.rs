@@ -64,8 +64,8 @@ impl SkillRepo for FakeSkills {
                     .org_id
                     .is_none_or(|o| s.org_id == Some(o) || s.org_id.is_none())
             })
-            .cloned()
             .take(filter.limit.max(1) as usize)
+            .cloned()
             .collect())
     }
 
@@ -124,6 +124,7 @@ impl ProposalRepo for FakeProposals {
             .iter()
             .filter(|p| {
                 filter.status.is_none_or(|s| p.status == s)
+                    && filter.org_id.is_none_or(|oid| p.org_id == Some(oid))
                     && filter
                         .assignee_user_id
                         .as_ref()
@@ -131,6 +132,8 @@ impl ProposalRepo for FakeProposals {
                     && filter
                         .assignee_team_id
                         .is_none_or(|t| p.assignee_team_id == Some(t))
+                    && (!filter.unassigned_only || p.assignee_user_id.is_none())
+                    && filter.slug.as_ref().is_none_or(|s| p.slug == *s)
             })
             .cloned()
             .collect())
@@ -715,4 +718,62 @@ async fn eval_gate_does_not_block_when_no_eval_exists() {
         .unwrap();
     assert_eq!(approved.status, ProposalStatus::Approved);
     assert_eq!(approved.eval_passed, None);
+}
+
+#[tokio::test]
+async fn list_for_user_splits_assigned_and_unassigned_team_queue() {
+    let team_id = macro_uuid::generate_uuid_v7();
+    let svc = svc_with_teams(FakeTeams::with_member("reviewer", team_id));
+
+    let mut assigned = org_create("direct");
+    assigned.assignee_user_id = Some("reviewer".into());
+    let assigned = svc
+        .propose(Some(1), assigned, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+
+    let mut queued = org_create("team-queue");
+    queued.assignee_team_id = Some(team_id);
+    let queued = svc
+        .propose(Some(1), queued, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+
+    let mut taken = org_create("already-taken");
+    taken.assignee_team_id = Some(team_id);
+    taken.assignee_user_id = Some("other".into());
+    svc.propose(Some(1), taken, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+
+    let view = svc.list_for_user("reviewer").await.unwrap();
+    assert_eq!(view.assigned.len(), 1);
+    assert_eq!(view.assigned[0].id, assigned.id);
+    assert_eq!(view.team_queue.len(), 1);
+    assert_eq!(view.team_queue[0].id, queued.id);
+}
+
+#[tokio::test]
+async fn propose_same_pending_slug_returns_existing() {
+    let svc = svc();
+    let first = svc
+        .propose(
+            Some(1),
+            org_create("trace-refine-abc"),
+            Some("agent-1".into()),
+            None,
+        )
+        .await
+        .unwrap();
+    let second = svc
+        .propose(
+            Some(1),
+            org_create("trace-refine-abc"),
+            Some("agent-1".into()),
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(first.id, second.id);
+    assert_eq!(first.status, ProposalStatus::Pending);
 }

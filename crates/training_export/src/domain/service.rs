@@ -11,7 +11,7 @@ use chrono::Utc;
 use macro_uuid::Uuid;
 
 use super::model::{ExportJob, ProjectedEvent, Projection, Result, SharingMode};
-use super::ports::{ExportJobRepo, LedgerReader};
+use super::ports::{ConsentReader, ExportJobRepo, LedgerReader};
 
 /// Domain service.
 pub trait ExportService: Send + Sync + 'static {
@@ -116,21 +116,59 @@ pub fn filter_composition_pin(rows: Vec<ProjectedEvent>, pin: Option<&str>) -> V
         .collect()
 }
 
-/// Project a session's events according to `projection` and `sharing_mode`.
+/// Effective mode is `min(job_mode, session_consent)`.
+///
+/// Missing consent skips the session. Either side `Disabled` skips.
+/// The job cannot raise sharing above the session's consent.
+pub fn effective_sharing(
+    job_mode: SharingMode,
+    session_consent: Option<SharingMode>,
+) -> Option<SharingMode> {
+    let session = session_consent?;
+    let mode = job_mode.min(session);
+    (mode != SharingMode::Disabled).then_some(mode)
+}
+
+/// Project events using a single already-resolved sharing mode.
 pub fn project_events(
     events: &[AgentEvent],
     projection: Projection,
     sharing_mode: SharingMode,
 ) -> Vec<ProjectedEvent> {
-    if sharing_mode == SharingMode::Disabled {
-        return Vec::new();
-    }
+    project_with_session_mode(events, projection, |_| Some(sharing_mode))
+}
+
+/// Project events applying per-session consent against the job sharing mode.
+///
+/// Sessions absent from `consents` are skipped.
+pub fn project_consented_events(
+    events: &[AgentEvent],
+    projection: Projection,
+    job_mode: SharingMode,
+    consents: &HashMap<Uuid, SharingMode>,
+) -> Vec<ProjectedEvent> {
+    project_with_session_mode(events, projection, |session_id| {
+        effective_sharing(job_mode, consents.get(&session_id).copied())
+    })
+}
+
+fn project_with_session_mode(
+    events: &[AgentEvent],
+    projection: Projection,
+    session_mode: impl Fn(Uuid) -> Option<SharingMode>,
+) -> Vec<ProjectedEvent> {
     let sessions = collect_session_meta(events);
     let mut ordered: Vec<&AgentEvent> = events.iter().collect();
     ordered.sort_by_key(|event| (event.session_id, event.seq));
 
     let mut out = Vec::new();
     for event in ordered {
+        let Some(sharing_mode) = session_mode(event.session_id) else {
+            continue;
+        };
+        if sharing_mode == SharingMode::Disabled {
+            continue;
+        }
         if sharing_mode == SharingMode::FeedbackOnly
             && !matches!(event.payload, AgentEventPayload::FeedbackRecord { .. })
         {
@@ -160,21 +198,38 @@ pub fn project_events(
     out
 }
 
-/// Concrete service.
-#[derive(Debug, Clone)]
-pub struct ExportServiceImpl<L, J> {
-    ledger: L,
-    jobs: J,
+fn unique_session_ids(events: &[AgentEvent]) -> Vec<Uuid> {
+    let mut ids: Vec<Uuid> = events.iter().map(|event| event.session_id).collect();
+    ids.sort_unstable();
+    ids.dedup();
+    ids
 }
 
-impl<L: LedgerReader, J: ExportJobRepo> ExportServiceImpl<L, J> {
-    /// Build over ledger + job storage.
-    pub fn new(ledger: L, jobs: J) -> Self {
-        Self { ledger, jobs }
+/// Concrete service.
+#[derive(Debug, Clone)]
+pub struct ExportServiceImpl<L, J, C> {
+    ledger: L,
+    jobs: J,
+    consent: C,
+}
+
+impl<L: LedgerReader, J: ExportJobRepo, C: ConsentReader> ExportServiceImpl<L, J, C> {
+    /// Build over ledger, job storage, and per-session consent.
+    ///
+    /// `consent` is required. Sessions with no consent row are skipped and
+    /// never treated as Full.
+    pub fn new(ledger: L, jobs: J, consent: C) -> Self {
+        Self {
+            ledger,
+            jobs,
+            consent,
+        }
     }
 }
 
-impl<L: LedgerReader, J: ExportJobRepo> ExportService for ExportServiceImpl<L, J> {
+impl<L: LedgerReader, J: ExportJobRepo, C: ConsentReader> ExportService
+    for ExportServiceImpl<L, J, C>
+{
     #[tracing::instrument(skip(self), err)]
     async fn run(
         &self,
@@ -212,8 +267,12 @@ impl<L: LedgerReader, J: ExportJobRepo> ExportService for ExportServiceImpl<L, J
                     ..Default::default()
                 })
                 .await?;
+            let consents = self
+                .consent
+                .sharing_modes(&unique_session_ids(&events))
+                .await?;
             let projected = filter_composition_pin(
-                project_events(&events, projection, sharing_mode),
+                project_consented_events(&events, projection, sharing_mode, &consents),
                 composition_id.as_deref(),
             );
             Ok(projected)

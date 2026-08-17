@@ -606,6 +606,14 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized skill governance service");
 
+    let inbox_service = Arc::new(agent_inbox::domain::service::InboxServiceImpl::new(
+        escalation_service.as_ref().clone(),
+        approval_service.as_ref().clone(),
+        skill_governance_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized agent inbox");
+
     // Facade and connector ingest both take GraphService by value. Clone
     // before wrapping the leftover in Arc so they share the same pool-backed
     // repo rather than fighting over a moved value.
@@ -643,6 +651,7 @@ async fn main() -> anyhow::Result<()> {
     let export_service = Arc::new(training_export::domain::service::ExportServiceImpl::new(
         training_export::outbound::LedgerServiceReader::new(agent_ledger_service.as_ref().clone()),
         training_export::outbound::PgExportJobRepo::new(db.clone()),
+        training_export::outbound::PgConsentReader::new(db.clone()),
     ));
 
     tracing::info!("initialized training export");
@@ -795,6 +804,7 @@ async fn main() -> anyhow::Result<()> {
         approval_policies,
         skill_governance_service,
         skill_governance_facade,
+        inbox_service,
         graph_service,
         graph_facade,
         connector_service,

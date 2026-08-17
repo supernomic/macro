@@ -479,6 +479,12 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
     );
     let skill_governance_service = Arc::new(skill_governance_service);
 
+    let inbox_service = Arc::new(agent_inbox::domain::service::InboxServiceImpl::new(
+        escalation_service.as_ref().clone(),
+        approval_service.as_ref().clone(),
+        skill_governance_service.as_ref().clone(),
+    ));
+
     // Same as main.rs: clone graph_service into the facade and ingest
     // adapter before wrapping the leftover in Arc.
     let graph_service = entity_graph::domain::service::GraphServiceImpl::new(
@@ -509,6 +515,7 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
     let export_service = Arc::new(training_export::domain::service::ExportServiceImpl::new(
         training_export::outbound::LedgerServiceReader::new(agent_ledger_service.as_ref().clone()),
         training_export::outbound::PgExportJobRepo::new(pool.clone()),
+        training_export::outbound::PgConsentReader::new(pool.clone()),
     ));
 
     let feedback_facade = Arc::new(agent_feedback::domain::facade::AgentFeedbackFacade::new(
@@ -600,6 +607,7 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         approval_policies,
         skill_governance_service,
         skill_governance_facade,
+        inbox_service,
         graph_service,
         graph_facade,
         connector_service,

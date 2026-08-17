@@ -2,10 +2,11 @@
  * Mount Macro-governed skills into a Flue agent via `defineSkill` / `useSkill`.
  *
  * Catalog fetch is kicked off when the runtime is built and cached on the
- * runtime. Each render mounts whatever is currently cached; the next turn
- * picks up newly arrived skills. Injection is recorded once per skill
- * version on this conversation's ledger (`skill_injected`) — never
- * process-global, and re-logged when the catalog version changes.
+ * runtime (`catalogReady` settles on success or failure). Each render mounts
+ * whatever is currently cached; the next turn picks up newly arrived skills.
+ * Injection is recorded once per skill version on this conversation's ledger
+ * (`skill_injected`) — never process-global, and re-logged when the catalog
+ * version changes. Callers must await the returned promise.
  */
 
 import { defineSkill, useSkill } from '@flue/runtime';
@@ -21,12 +22,15 @@ export function isFlueSkillName(slug: string): boolean {
 
 /**
  * Mount cached catalog entries and emit `skill_injected` the first time
- * each skill version is seen on this conversation.
+ * each skill version is seen on this conversation. `useSkill` runs during
+ * the agent render; the returned promise settles when every injection
+ * append has been attempted (failures are logged, not thrown).
  */
 export function mountGovernedSkills(
   session: MacroSessionContext,
   skills: readonly SkillCatalogEntry[],
-): void {
+): Promise<void> {
+  const injections: Promise<void>[] = [];
   for (const skill of skills) {
     if (!isFlueSkillName(skill.slug)) {
       continue;
@@ -38,6 +42,7 @@ export function mountGovernedSkills(
         instructions: skill.body,
       }),
     );
-    session.recordSkillInjection(skill);
+    injections.push(session.recordSkillInjection(skill));
   }
+  return Promise.all(injections).then(() => undefined);
 }

@@ -131,6 +131,13 @@ pub type DcsSkillGovernanceService = skill_governance::domain::service::SkillGov
 pub type DcsSkillGovernanceFacade =
     skill_governance::domain::facade::AgentSkillFacade<DcsSkillGovernanceService>;
 
+/// Unified review inbox over escalations, approvals, and skill proposals.
+pub type DcsInboxService = agent_inbox::domain::service::InboxServiceImpl<
+    DcsEscalationService,
+    DcsApprovalService,
+    DcsSkillGovernanceService,
+>;
+
 /// Entity-graph service wired to Postgres.
 pub type DcsGraphService =
     entity_graph::domain::service::GraphServiceImpl<entity_graph::outbound::PgGraphRepo>;
@@ -160,6 +167,7 @@ pub type DcsExtensionService = tenant_extensions::domain::service::ExtensionServ
 pub type DcsExportService = training_export::domain::service::ExportServiceImpl<
     training_export::outbound::LedgerServiceReader<DcsAgentLedgerService>,
     training_export::outbound::PgExportJobRepo,
+    training_export::outbound::PgConsentReader,
 >;
 
 /// Feedback sidecar (editable ratings + consent).
@@ -238,6 +246,7 @@ pub struct ApiContext {
     pub approval_policies: Arc<approvals::outbound::PgPolicyRepo>,
     pub skill_governance_service: Arc<DcsSkillGovernanceService>,
     pub skill_governance_facade: Arc<DcsSkillGovernanceFacade>,
+    pub inbox_service: Arc<DcsInboxService>,
     pub graph_service: Arc<DcsGraphService>,
     pub graph_facade: Arc<DcsGraphFacade>,
     pub connector_service: Arc<DcsConnectorService>,

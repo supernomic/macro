@@ -11,7 +11,13 @@
  * binds the reply tool and anchors the Macro session to the thread.
  */
 
-import { useInitialData, useModel, useSubagent, useTool } from '@flue/runtime';
+import {
+  useAgentStart,
+  useInitialData,
+  useModel,
+  useSubagent,
+  useTool,
+} from '@flue/runtime';
 import * as v from 'valibot';
 import { config } from '../config.ts';
 import { DOMAIN_AGENTS, domainRuntime } from '../domains/registry.ts';
@@ -124,8 +130,15 @@ export function SuperAgent({ id }: { id: string }) {
     useTool(tool);
   }
 
-  mountGovernedSkills(session, session.runtime.skillsCatalog);
-  session.pinRequestHeader();
+  const skillMount = mountGovernedSkills(
+    session,
+    session.runtime.skillsCatalog,
+  );
+  useAgentStart(async () => {
+    await session.runtime.catalogReady;
+    await session.pinRequestHeader();
+    await skillMount;
+  });
 
   // Domain specialists (techops first). Only domains whose principal token
   // is configured are offered; the delegate's tools run under the domain's

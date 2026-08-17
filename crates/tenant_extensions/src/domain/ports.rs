@@ -35,6 +35,12 @@ pub trait ExtensionRepo: Send + Sync + 'static {
         extension_id: macro_uuid::Uuid,
     ) -> impl Future<Output = Result<Option<ExtensionSnapshot>>> + Send;
 
+    /// Load the tenant catalog JSON, if any.
+    fn get_catalog(
+        &self,
+        org_id: i32,
+    ) -> impl Future<Output = Result<Option<serde_json::Value>>> + Send;
+
     /// Replace the tenant catalog JSON.
     fn upsert_catalog(
         &self,

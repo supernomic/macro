@@ -68,6 +68,25 @@
       "crates/remote_env_var",
       "crates/workspace-hack"
     ],
+    "agent_inbox": [
+      "crates/agent_identity",
+      "crates/agent_inbox",
+      "crates/approvals",
+      "crates/bot_id",
+      "crates/cowlike",
+      "crates/escalations",
+      "crates/macro_auth",
+      "crates/macro_authorization",
+      "crates/macro_env",
+      "crates/macro_env_var",
+      "crates/macro_user_id",
+      "crates/macro_uuid",
+      "crates/model-error-response",
+      "crates/model_user",
+      "crates/remote_env_var",
+      "crates/skill_governance",
+      "crates/workspace-hack"
+    ],
     "agent_ledger": [
       "crates/agent_identity",
       "crates/agent_ledger",
@@ -1554,6 +1573,7 @@
       "crates/agent",
       "crates/agent_feedback",
       "crates/agent_identity",
+      "crates/agent_inbox",
       "crates/agent_ledger",
       "crates/ai_projections",
       "crates/ai_tools",
@@ -6441,6 +6461,7 @@
       "crates/workspace-hack"
     ],
     "training_export": [
+      "crates/agent_feedback",
       "crates/agent_identity",
       "crates/agent_ledger",
       "crates/bot_id",

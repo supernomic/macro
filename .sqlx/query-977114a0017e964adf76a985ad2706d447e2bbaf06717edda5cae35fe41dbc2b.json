@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.id as edge_id, e.org_id as edge_org, e.from_node_id, e.to_node_id,\n                   e.relationship, e.attributes as edge_attrs, e.created_at as edge_created,\n                   n.id as node_id, n.org_id as node_org, n.node_type, n.display_name,\n                   n.attributes as node_attrs, n.native_entity_type, n.native_entity_id,\n                   n.created_at as node_created, n.updated_at as node_updated\n            FROM entity_graph_edges e\n            JOIN entity_graph_nodes n\n              ON n.id = CASE WHEN e.from_node_id = $1 THEN e.to_node_id ELSE e.from_node_id END\n            WHERE (e.from_node_id = $1 OR e.to_node_id = $1)\n              AND ($2::text IS NULL OR e.relationship = $2)\n            ",
+  "query": "\n            SELECT e.id as edge_id, e.org_id as edge_org, e.from_node_id, e.to_node_id,\n                   e.relationship, e.attributes as edge_attrs, e.created_at as edge_created,\n                   n.id as node_id, n.org_id as node_org, n.node_type, n.display_name,\n                   n.attributes as node_attrs, n.native_entity_type, n.native_entity_id,\n                   n.created_at as node_created, n.updated_at as node_updated\n            FROM entity_graph_edges e\n            JOIN entity_graph_nodes n\n              ON n.id = CASE WHEN e.from_node_id = $1 THEN e.to_node_id ELSE e.from_node_id END\n            WHERE (e.from_node_id = $1 OR e.to_node_id = $1)\n              AND ($2::text IS NULL OR e.relationship = $2)\n              AND e.org_id IS NOT DISTINCT FROM $3\n              AND n.org_id IS NOT DISTINCT FROM $3\n            ",
   "describe": {
     "columns": [
       {
@@ -87,7 +87,8 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Text"
+        "Text",
+        "Int4"
       ]
     },
     "nullable": [
@@ -109,5 +110,5 @@
       false
     ]
   },
-  "hash": "e19df1f02fc2ea8403bef67e09e44ac9a37bc7e7b9b5212424bae95961a76b49"
+  "hash": "977114a0017e964adf76a985ad2706d447e2bbaf06717edda5cae35fe41dbc2b"
 }

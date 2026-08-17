@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, org_id, node_type, display_name, attributes,\n                   native_entity_type, native_entity_id, created_at, updated_at\n            FROM entity_graph_nodes\n            WHERE id = $1\n            ",
+  "query": "\n            SELECT id, org_id, node_type, display_name, attributes,\n                   native_entity_type, native_entity_id, created_at, updated_at\n            FROM entity_graph_nodes\n            WHERE id = $1 AND org_id IS NOT DISTINCT FROM $2\n            ",
   "describe": {
     "columns": [
       {
@@ -51,7 +51,8 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Int4"
       ]
     },
     "nullable": [
@@ -66,5 +67,5 @@
       false
     ]
   },
-  "hash": "030d6bcd730bc9274c8a55d5e5a8a4b291b45f77e4e8eb16eb901e65b4bc10eb"
+  "hash": "7e0fcea511a0c23be3d6478c2d1446cb6e1725e4ea13b61fbfae660422b852eb"
 }

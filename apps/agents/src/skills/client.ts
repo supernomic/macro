@@ -59,6 +59,14 @@ export interface SkillProposal {
   diff_summary: string;
 }
 
+/** Personal inbox of pending proposals (`GET /skill-proposals/mine`). */
+export interface UserProposals {
+  /** Pending proposals assigned directly to the caller. */
+  assigned: SkillProposal[];
+  /** Pending proposals on the caller's team queues. */
+  team_queue: SkillProposal[];
+}
+
 /**
  * Client for agent-facing skills endpoints. One instance per principal.
  */
@@ -107,5 +115,10 @@ export class SkillsClient {
   /** Open a staged proposal (user-scope creates may auto-apply). */
   propose(request: ProposeSkillRequest): Promise<SkillProposal> {
     return this.request<SkillProposal>('POST', '/agent-skills', request);
+  }
+
+  /** Pending proposals in the caller's inbox (assigned + team queues). */
+  listMine(): Promise<UserProposals> {
+    return this.request<UserProposals>('GET', '/skill-proposals/mine');
   }
 }

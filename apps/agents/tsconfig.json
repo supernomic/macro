@@ -15,5 +15,6 @@
 		"skipLibCheck": true,
 		"noEmit": true
 	},
-	"include": ["src", "flue.config.ts", "vite.config.ts"]
+	"include": ["src", "flue.config.ts", "vite.config.ts"],
+	"exclude": ["src/**/*.test.ts"]
 }

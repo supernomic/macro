@@ -1,7 +1,7 @@
 //! HTTP surface for skills governance.
 //!
 //! Agent principals (`mat_...`): catalog + propose.
-//! Users: inbox list, decide, rollback.
+//! Users: inbox list, get one proposal, decide, rollback.
 //! Internal: record evals, ingest trace-refinement jobs.
 
 use std::sync::Arc;
@@ -254,6 +254,10 @@ where
             get(list_my_proposals_handler::<A, I, Auth>),
         )
         .route(
+            "/skill-proposals/{id}",
+            get(get_proposal_handler::<A, I, Auth>),
+        )
+        .route(
             "/skill-proposals/{id}/decide",
             post(decide_proposal_handler::<A, I, Auth>),
         )
@@ -346,6 +350,35 @@ where
         Err(e) => return identity_error_response(e),
     };
     match state.facade.propose(&agent, body.into()).await {
+        Ok(proposal) => Json(proposal).into_response(),
+        Err(e) => error_response(e),
+    }
+}
+
+/// Fetch one proposal visible to the caller.
+#[utoipa::path(
+    get,
+    path = "/skill-proposals/{id}",
+    params(("id" = Uuid, Path, description = "Proposal id")),
+    responses(
+        (status = 200, description = "The skill proposal", body = SkillProposal),
+        (status = 404, description = "Not found", body = GovernanceErrorBody),
+    ),
+    tag = "skills"
+)]
+#[tracing::instrument(skip_all)]
+pub async fn get_proposal_handler<A, I, Auth>(
+    State(state): State<SkillGovernanceRouterState<A, I, Auth>>,
+    user: MacroAuthorizationExtractor<Auth, UserOrInternal>,
+    Path(id): Path<Uuid>,
+) -> Response
+where
+    A: SkillGovernanceService,
+    I: AgentIdentityService,
+    Auth: MacroAuthorizationService,
+{
+    let caller = Caller::User(user.authorization.user.macro_user_id.as_ref().to_string());
+    match state.service.get_proposal(&caller, id).await {
         Ok(proposal) => Json(proposal).into_response(),
         Err(e) => error_response(e),
     }

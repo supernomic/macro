@@ -89,6 +89,11 @@ export const authBacklog = [
   'macroApiToken',
 ] as const satisfies readonly (keyof AuthSdk)[];
 
+// Agent-platform DCS routes (ledger, skills, approvals, escalations, graph,
+// feedback, training-export, GET /inbox/mine) are consumed by dedicated Flue
+// `mat_...` HTTP clients, not `@macro/sdk` — same as the session ledger.
+// After OpenAPI regen, add the generated method names here alphabetically
+// (`cognitionExcluded`); do not wrap them.
 export const cognitionExcluded = [
   'addMcpServer',
   'callTool',

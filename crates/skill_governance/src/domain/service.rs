@@ -413,6 +413,19 @@ where
             }
             _ => {}
         }
+        let pending = self
+            .proposals
+            .list(&ProposalFilter {
+                org_id,
+                status: Some(ProposalStatus::Pending),
+                slug: Some(proposal.slug.clone()),
+                limit: 1,
+                ..Default::default()
+            })
+            .await?;
+        if let Some(existing) = pending.into_iter().next() {
+            return Ok(existing);
+        }
         let now = Utc::now();
         let mut row = SkillProposal {
             id: Self::new_id(),
@@ -496,12 +509,14 @@ where
                 .list(&ProposalFilter {
                     assignee_team_id: Some(team_id),
                     status: Some(ProposalStatus::Pending),
+                    unassigned_only: true,
                     limit: DEFAULT_LIST_LIMIT,
                     ..Default::default()
                 })
                 .await?;
             team_queue.append(&mut items);
         }
+        team_queue.sort_by(|a, b| a.created_at.cmp(&b.created_at));
         Ok(UserProposals {
             assigned,
             team_queue,

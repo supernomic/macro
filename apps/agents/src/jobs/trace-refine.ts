@@ -69,10 +69,84 @@ function slugFromSession(sessionId: string): string {
   return `trace-refine-${compact}`;
 }
 
+function stepsFromEvidence(events: readonly LedgerEvent[]): string[] {
+  const steps: string[] = [];
+  for (const event of events) {
+    if (
+      event.event_type === 'escalation/resolved' &&
+      event.payload.type === 'escalation_resolved'
+    ) {
+      const { escalation_id, resolved_by } = event.payload.data;
+      steps.push(
+        `Apply the recorded resolution for escalation ${escalation_id} ` +
+          `(resolved by ${resolved_by}). Do not add tools this event ` +
+          'does not name.',
+      );
+      continue;
+    }
+    if (
+      event.event_type === 'feedback/record' &&
+      event.payload.type === 'feedback_record'
+    ) {
+      const note = event.payload.data.note?.trim();
+      if (note) {
+        steps.push(note);
+      } else {
+        steps.push(
+          `Reuse the approach from the praised turn at ledger seq ` +
+            `${event.seq}.`,
+        );
+      }
+    }
+  }
+  if (steps.length === 0) {
+    steps.push(
+      "Consult this session's recorded outcomes before retrying the " +
+        'same class of request.',
+    );
+  }
+  return steps;
+}
+
 /**
- * Build one org-scope candidate from a session's evidence events. Body text
- * is the ledger excerpt — this job does not invent procedure beyond what
- * the events already recorded.
+ * Distill a procedure-shaped skill body from ledger evidence. Raw excerpts
+ * stay on the proposal's `evidence` blob — never as the body.
+ */
+export function procedureBodyFromEvidence(
+  sessionId: string,
+  events: readonly LedgerEvent[],
+): string {
+  const steps = stepsFromEvidence(events);
+  const numbered = steps.map((step, index) => `${index + 1}. ${step}`);
+  return [
+    '## Goal',
+    '',
+    `Capture a reusable procedure from session ${sessionId}'s resolved ` +
+      'escalations and highly-rated turns.',
+    '',
+    '## When to use',
+    '',
+    "When a later conversation matches this session's resolved " +
+      'escalation or praised turn.',
+    '',
+    '## Steps',
+    '',
+    ...numbered,
+    '',
+    '## Guardrails',
+    '',
+    '- Do not invent tools or APIs that the evidence does not mention.',
+    '- Keep raw ledger excerpts in the proposal evidence blob, not in ' +
+      'this procedure.',
+    '- Prefer the recorded resolution or praised turn over a new guess.',
+    '',
+  ].join('\n');
+}
+
+/**
+ * Build one org-scope candidate from a session's evidence events. Body is
+ * procedure markdown derived from resolutions and praised turns; raw
+ * excerpts live only on `evidence`.
  */
 export function candidateFromEvidence(
   sessionId: string,
@@ -84,27 +158,13 @@ export function candidateFromEvidence(
   const praise = events.filter(
     (event) => event.event_type === 'feedback/record',
   );
-  const lines: string[] = [
-    '# Distilled from ledger evidence',
-    '',
-    `Session: ${sessionId}`,
-    '',
-  ];
-  for (const event of events) {
-    lines.push(`## ${event.event_type} (seq ${event.seq})`);
-    lines.push('');
-    lines.push('```json');
-    lines.push(JSON.stringify(event.payload, null, 2));
-    lines.push('```');
-    lines.push('');
-  }
   return {
     slug: slugFromSession(sessionId),
     name: `Trace refinement ${sessionId.slice(0, 8)}`,
     description:
       `Procedure distilled from ${resolutions.length} resolved ` +
       `escalation(s) and ${praise.length} highly-rated turn(s) in one session.`,
-    body: lines.join('\n'),
+    body: procedureBodyFromEvidence(sessionId, events),
     diff_summary:
       `Opened from ${events.length} ledger evidence event(s) ` +
       `(escalation/resolved, feedback/record) in session ${sessionId}.`,
@@ -124,6 +184,31 @@ function groupBySession(
   return bySession;
 }
 
+function pendingSlugsFromInbox(
+  assigned: readonly { slug: string; status: string }[],
+  teamQueue: readonly { slug: string; status: string }[],
+): Set<string> {
+  const slugs = new Set<string>();
+  for (const proposal of [...assigned, ...teamQueue]) {
+    if (proposal.status === 'pending' && proposal.slug) {
+      slugs.add(proposal.slug);
+    }
+  }
+  return slugs;
+}
+
+async function loadPendingProposalSlugs(
+  runtime: AgentRuntime,
+): Promise<Set<string>> {
+  try {
+    const mine = await runtime.skills.listMine();
+    return pendingSlugsFromInbox(mine.assigned, mine.team_queue);
+  } catch (e) {
+    console.error('failed to list pending skill proposals', e);
+    return new Set();
+  }
+}
+
 /**
  * Query org history for escalation resolutions and highly-rated turns,
  * then open a proposal per evidence cluster (or per caller-supplied
@@ -131,7 +216,7 @@ function groupBySession(
  *
  * No ledger evidence ⇒ no proposals. Operator-supplied candidates are
  * optional; when omitted the job distills one candidate per session from
- * the events themselves.
+ * the events themselves. A pending proposal with the same slug is skipped.
  */
 export async function runTraceRefinement(
   runtime: AgentRuntime,
@@ -166,10 +251,15 @@ export async function runTraceRefinement(
             candidateFromEvidence(sessionId, sessionEvents),
         );
 
+  const pendingSlugs = await loadPendingProposalSlugs(runtime);
   const proposalIds: string[] = [];
   let skipped = 0;
   for (const candidate of toPropose) {
     if (!candidate.slug || !candidate.name || !candidate.body) {
+      skipped += 1;
+      continue;
+    }
+    if (pendingSlugs.has(candidate.slug)) {
       skipped += 1;
       continue;
     }
@@ -183,6 +273,7 @@ export async function runTraceRefinement(
       diff_summary: candidate.diff_summary,
       evidence: candidate.evidence ?? excerpts,
     });
+    pendingSlugs.add(candidate.slug);
     proposalIds.push(proposal.id);
   }
   return {

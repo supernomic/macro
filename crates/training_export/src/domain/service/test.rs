@@ -1,12 +1,13 @@
 use super::*;
 use crate::domain::model::{Projection, SharingMode};
-use crate::domain::ports::{ExportJobRepo, LedgerReader};
+use crate::domain::ports::{ConsentReader, ExportJobRepo, LedgerReader};
 use agent_ledger::domain::model::{
     Actor, ActorKind, AgentEvent, AgentEventPayload, RequestHeader, UserMessageSource,
 };
 use agent_ledger::domain::ports::EventFilter;
 use chrono::Utc;
 use macro_uuid::Uuid;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 fn event_on(session_id: Uuid, seq: i64, payload: AgentEventPayload) -> AgentEvent {
@@ -446,6 +447,88 @@ impl ExportJobRepo for FakeJobs {
     }
 }
 
+#[derive(Default, Clone)]
+struct FakeConsent {
+    modes: Arc<Mutex<HashMap<Uuid, SharingMode>>>,
+}
+
+impl FakeConsent {
+    fn with_mode(session_id: Uuid, mode: SharingMode) -> Self {
+        let fake = Self::default();
+        fake.modes.lock().unwrap().insert(session_id, mode);
+        fake
+    }
+
+    fn insert(&self, session_id: Uuid, mode: SharingMode) {
+        self.modes.lock().unwrap().insert(session_id, mode);
+    }
+}
+
+impl ConsentReader for FakeConsent {
+    async fn sharing_modes(&self, session_ids: &[Uuid]) -> Result<HashMap<Uuid, SharingMode>> {
+        let store = self.modes.lock().unwrap();
+        Ok(session_ids
+            .iter()
+            .filter_map(|id| store.get(id).copied().map(|mode| (*id, mode)))
+            .collect())
+    }
+}
+
+fn feedback_record(target_seq: i64) -> AgentEventPayload {
+    AgentEventPayload::FeedbackRecord {
+        rating: Some(true),
+        note: None,
+        target_seq: Some(target_seq),
+    }
+}
+
+#[test]
+fn sharing_mode_rank_is_disabled_lt_feedback_only_lt_full() {
+    assert!(SharingMode::Disabled < SharingMode::FeedbackOnly);
+    assert!(SharingMode::FeedbackOnly < SharingMode::Full);
+    assert_eq!(
+        SharingMode::Full.min(SharingMode::FeedbackOnly),
+        SharingMode::FeedbackOnly
+    );
+}
+
+#[test]
+fn missing_consent_skips_the_session() {
+    assert_eq!(effective_sharing(SharingMode::Full, None), None);
+}
+
+#[test]
+fn job_full_and_session_feedback_only_is_feedback_only() {
+    assert_eq!(
+        effective_sharing(SharingMode::Full, Some(SharingMode::FeedbackOnly)),
+        Some(SharingMode::FeedbackOnly)
+    );
+}
+
+#[test]
+fn job_full_and_session_disabled_skips() {
+    assert_eq!(
+        effective_sharing(SharingMode::Full, Some(SharingMode::Disabled)),
+        None
+    );
+}
+
+#[test]
+fn job_disabled_skips_even_with_full_session_consent() {
+    assert_eq!(
+        effective_sharing(SharingMode::Disabled, Some(SharingMode::Full)),
+        None
+    );
+}
+
+#[test]
+fn job_feedback_only_caps_a_full_session() {
+    assert_eq!(
+        effective_sharing(SharingMode::FeedbackOnly, Some(SharingMode::Full)),
+        Some(SharingMode::FeedbackOnly)
+    );
+}
+
 #[tokio::test]
 async fn run_records_a_completed_job() {
     let ledger = FakeLedger::default();
@@ -454,7 +537,11 @@ async fn run_records_a_completed_job() {
         .lock()
         .unwrap()
         .push(event(0, request_header("super-agent/v1")));
-    let svc = ExportServiceImpl::new(ledger, FakeJobs::default());
+    let svc = ExportServiceImpl::new(
+        ledger,
+        FakeJobs::default(),
+        FakeConsent::with_mode(Uuid::nil(), SharingMode::Full),
+    );
     let (job, rows) = svc
         .run(
             Some(1),
@@ -481,7 +568,10 @@ async fn run_pin_excludes_sessions_without_a_header() {
         event_on(with_header, 0, request_header("super-agent/v1")),
         event_on(with_header, 1, user_message("keep")),
     ]);
-    let svc = ExportServiceImpl::new(ledger, FakeJobs::default());
+    let consent = FakeConsent::default();
+    consent.insert(with_header, SharingMode::Full);
+    consent.insert(without, SharingMode::Full);
+    let svc = ExportServiceImpl::new(ledger, FakeJobs::default(), consent);
     let (job, rows) = svc
         .run(
             Some(1),
@@ -507,6 +597,7 @@ async fn run_marks_job_failed_when_ledger_errors() {
             ..FakeLedger::default()
         },
         jobs.clone(),
+        FakeConsent::default(),
     );
     let err = svc
         .run(
@@ -527,4 +618,138 @@ async fn run_marks_job_failed_when_ledger_errors() {
     assert_eq!(stored.len(), 1);
     assert_eq!(stored[0].status, "failed");
     assert!(stored[0].error.is_some());
+}
+
+#[tokio::test]
+async fn run_mixed_consents_in_one_job_window() {
+    let full_session = macro_uuid::generate_uuid_v7();
+    let feedback_session = macro_uuid::generate_uuid_v7();
+    let disabled_session = macro_uuid::generate_uuid_v7();
+    let missing_session = macro_uuid::generate_uuid_v7();
+    let ledger = FakeLedger::default();
+    ledger.events.lock().unwrap().extend([
+        event_on(full_session, 0, user_message("full-user")),
+        event_on(full_session, 1, assistant_message("full-assistant")),
+        event_on(feedback_session, 0, user_message("secret")),
+        event_on(feedback_session, 1, feedback_record(0)),
+        event_on(disabled_session, 0, user_message("disabled")),
+        event_on(missing_session, 0, user_message("no-consent")),
+    ]);
+    let consent = FakeConsent::default();
+    consent.insert(full_session, SharingMode::Full);
+    consent.insert(feedback_session, SharingMode::FeedbackOnly);
+    consent.insert(disabled_session, SharingMode::Disabled);
+    let svc = ExportServiceImpl::new(ledger, FakeJobs::default(), consent);
+    let (job, rows) = svc
+        .run(
+            Some(1),
+            Projection::TrainingExport,
+            SharingMode::Full,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(job.status, "completed");
+    let full_rows: Vec<&str> = rows
+        .iter()
+        .filter(|row| row.session_id == full_session)
+        .map(|row| row.event_type.as_str())
+        .collect();
+    assert_eq!(full_rows, vec!["user/message", "assistant/message"]);
+    let feedback_rows: Vec<&str> = rows
+        .iter()
+        .filter(|row| row.session_id == feedback_session)
+        .map(|row| row.event_type.as_str())
+        .collect();
+    assert_eq!(feedback_rows, vec!["feedback/record"]);
+    assert!(!rows.iter().any(|row| row.session_id == disabled_session));
+    assert!(!rows.iter().any(|row| row.session_id == missing_session));
+    assert_eq!(job.row_count, Some(3));
+}
+
+#[tokio::test]
+async fn run_job_full_session_feedback_only_emits_feedback_projection() {
+    let session_id = macro_uuid::generate_uuid_v7();
+    let ledger = FakeLedger::default();
+    ledger.events.lock().unwrap().extend([
+        event_on(session_id, 0, user_message("secret")),
+        event_on(session_id, 1, assistant_message("also secret")),
+        event_on(session_id, 2, feedback_record(0)),
+    ]);
+    let svc = ExportServiceImpl::new(
+        ledger,
+        FakeJobs::default(),
+        FakeConsent::with_mode(session_id, SharingMode::FeedbackOnly),
+    );
+    let (_, rows) = svc
+        .run(
+            Some(1),
+            Projection::TrainingExport,
+            SharingMode::Full,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].event_type, "feedback/record");
+    assert_eq!(rows[0].session_id, session_id);
+}
+
+#[tokio::test]
+async fn run_job_full_with_no_consent_row_excludes_the_session() {
+    let session_id = macro_uuid::generate_uuid_v7();
+    let ledger = FakeLedger::default();
+    ledger
+        .events
+        .lock()
+        .unwrap()
+        .push(event_on(session_id, 0, user_message("should skip")));
+    let svc = ExportServiceImpl::new(ledger, FakeJobs::default(), FakeConsent::default());
+    let (job, rows) = svc
+        .run(
+            Some(1),
+            Projection::TrainingExport,
+            SharingMode::Full,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    assert!(rows.is_empty());
+    assert_eq!(job.row_count, Some(0));
+    assert_eq!(job.status, "completed");
+}
+
+#[tokio::test]
+async fn run_job_disabled_emits_no_session_rows() {
+    let session_id = macro_uuid::generate_uuid_v7();
+    let ledger = FakeLedger::default();
+    ledger.events.lock().unwrap().extend([
+        event_on(session_id, 0, user_message("hi")),
+        event_on(session_id, 1, feedback_record(0)),
+    ]);
+    let svc = ExportServiceImpl::new(
+        ledger,
+        FakeJobs::default(),
+        FakeConsent::with_mode(session_id, SharingMode::Full),
+    );
+    let (job, rows) = svc
+        .run(
+            Some(1),
+            Projection::TrainingExport,
+            SharingMode::Disabled,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    assert!(rows.is_empty());
+    assert_eq!(job.row_count, Some(0));
+    assert_eq!(job.status, "completed");
 }

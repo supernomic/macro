@@ -65,6 +65,17 @@ impl ExtensionRepo for Fake {
             .cloned())
     }
 
+    async fn get_catalog(&self, org_id: i32) -> Result<Option<serde_json::Value>> {
+        Ok(self
+            .catalogs
+            .lock()
+            .unwrap()
+            .iter()
+            .rev()
+            .find(|(id, _, _)| *id == org_id)
+            .map(|(_, catalog, _)| catalog.clone()))
+    }
+
     async fn upsert_catalog(
         &self,
         org_id: i32,
@@ -93,6 +104,93 @@ fn req(version: &str, hash: &str) -> RegisterExtension {
         artifact_hash: hash.into(),
         scopes: vec!["tool:search".into()],
     }
+}
+
+fn req_slug(slug: &str, version: &str, hash: &str) -> RegisterExtension {
+    RegisterExtension {
+        slug: slug.into(),
+        display_name: slug.into(),
+        version: version.into(),
+        sdk_semver: "2.0.3".into(),
+        manifest: json!({"tools": ["ping"]}),
+        artifact_hash: hash.into(),
+        scopes: vec!["tool:search".into()],
+    }
+}
+
+fn catalog_by_slug<'a>(catalog: &'a serde_json::Value, slug: &str) -> &'a serde_json::Value {
+    catalog["extensions"]
+        .as_array()
+        .expect("extensions array")
+        .iter()
+        .find(|entry| entry["slug"] == slug)
+        .unwrap_or_else(|| panic!("missing slug {slug}"))
+}
+
+#[tokio::test]
+async fn register_merges_catalog_by_slug() {
+    let svc = svc();
+    svc.register(1, req_slug("ext-a", "1.0.0", "aaa"), "admin")
+        .await
+        .unwrap();
+    svc.register(1, req_slug("ext-b", "2.0.0", "bbb"), "admin")
+        .await
+        .unwrap();
+    let catalog = svc.repo.get_catalog(1).await.unwrap().unwrap();
+    let slugs: Vec<&str> = catalog["extensions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["slug"].as_str().unwrap())
+        .collect();
+    assert_eq!(slugs, vec!["ext-a", "ext-b"]);
+}
+
+#[tokio::test]
+async fn reregister_updates_only_that_slug() {
+    let svc = svc();
+    svc.register(1, req_slug("ext-a", "1.0.0", "aaa"), "admin")
+        .await
+        .unwrap();
+    svc.register(1, req_slug("ext-b", "2.0.0", "bbb"), "admin")
+        .await
+        .unwrap();
+    svc.register(1, req_slug("ext-a", "1.1.0", "ccc"), "admin")
+        .await
+        .unwrap();
+    let catalog = svc.repo.get_catalog(1).await.unwrap().unwrap();
+    assert_eq!(catalog["extensions"].as_array().unwrap().len(), 2);
+    let a = catalog_by_slug(&catalog, "ext-a");
+    let b = catalog_by_slug(&catalog, "ext-b");
+    assert_eq!(a["version"], "1.1.0");
+    assert_eq!(a["artifact_hash"], "ccc");
+    assert_eq!(a["status"], "draft");
+    assert_eq!(a["enabled"], json!(true));
+    assert_eq!(b["version"], "2.0.0");
+    assert_eq!(b["artifact_hash"], "bbb");
+    assert_eq!(b["status"], "draft");
+}
+
+#[tokio::test]
+async fn disable_keeps_slug_marked_disabled() {
+    let svc = svc();
+    let a = svc
+        .register(1, req_slug("ext-a", "1.0.0", "aaa"), "admin")
+        .await
+        .unwrap();
+    svc.register(1, req_slug("ext-b", "2.0.0", "bbb"), "admin")
+        .await
+        .unwrap();
+    svc.activate(a.id, "admin").await.unwrap();
+    svc.disable(a.id, "ops").await.unwrap();
+    let catalog = svc.repo.get_catalog(1).await.unwrap().unwrap();
+    assert_eq!(catalog["extensions"].as_array().unwrap().len(), 2);
+    let a = catalog_by_slug(&catalog, "ext-a");
+    let b = catalog_by_slug(&catalog, "ext-b");
+    assert_eq!(a["status"], "disabled");
+    assert_eq!(a["enabled"], json!(false));
+    assert_eq!(b["status"], "draft");
+    assert_eq!(b["enabled"], json!(true));
 }
 
 #[tokio::test]
@@ -169,11 +267,14 @@ async fn disable_is_a_kill_switch() {
         svc.rollback(ext.id, "admin").await.unwrap_err(),
         ExtensionError::InvalidStatus(_)
     ));
-    let catalogs = svc.repo.catalogs.lock().unwrap();
-    let last = catalogs.last().unwrap();
-    assert_eq!(last.0, 1);
-    assert_eq!(last.2, "ops");
-    assert_eq!(last.1["extensions"][0]["status"], "disabled");
+    {
+        let catalogs = svc.repo.catalogs.lock().unwrap();
+        let last = catalogs.last().unwrap();
+        assert_eq!(last.0, 1);
+        assert_eq!(last.2, "ops");
+        assert_eq!(last.1["extensions"][0]["status"], "disabled");
+        assert_eq!(last.1["extensions"][0]["enabled"], json!(false));
+    }
     assert!(matches!(
         svc.register(1, req("1.2.0", "ccc"), "admin")
             .await

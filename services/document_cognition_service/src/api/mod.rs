@@ -84,6 +84,7 @@ fn api_router(api_context: ApiContext) -> Router {
     let approval_policies = api_context.approval_policies.clone();
     let skill_governance_service = api_context.skill_governance_service.clone();
     let skill_governance_facade = api_context.skill_governance_facade.clone();
+    let inbox_service = api_context.inbox_service.clone();
     let graph_facade = api_context.graph_facade.clone();
     let connector_service = api_context.connector_service.clone();
     let mirror_service = api_context.mirror_service.clone();
@@ -158,6 +159,12 @@ fn api_router(api_context: ApiContext) -> Router {
                 },
             ),
         )
+        .merge(agent_inbox::inbound::axum_router::inbox_router(
+            agent_inbox::inbound::axum_router::InboxRouterState {
+                service: inbox_service,
+                authorization_state: authorization_state.clone(),
+            },
+        ))
         .merge(entity_graph::inbound::axum_router::entity_graph_router(
             entity_graph::inbound::axum_router::GraphRouterState {
                 facade: graph_facade,

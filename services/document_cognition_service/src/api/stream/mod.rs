@@ -4,6 +4,7 @@
 //! that publish to a durable stream. The connection_gateway handles delivery to clients.
 
 pub mod chat_message;
+mod flue_chat;
 pub mod stop;
 mod util;
 

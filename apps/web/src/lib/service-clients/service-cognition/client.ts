@@ -380,7 +380,91 @@ export const cognitionApiServiceClient = {
       })
     ).map((result) => result);
   },
+
+  /** Unified Agent Review inbox (`GET /inbox/mine`). */
+  async getMyInbox() {
+    return await dcsFetch<AgentInboxResponse>(`/inbox/mine`, {
+      method: 'GET',
+    });
+  },
+
+  /** Claim an open team-queue escalation (`POST /escalations/{id}/claim`). */
+  async claimEscalation(args: { id: string }) {
+    return await dcsFetch<AgentHitlActionResult>(
+      `/escalations/${args.id}/claim`,
+      { method: 'POST' }
+    );
+  },
+
+  /** Resolve a claimed escalation (`POST /escalations/{id}/resolve`). */
+  async resolveEscalation(args: { id: string; resolution: string }) {
+    return await dcsFetch<AgentHitlActionResult>(
+      `/escalations/${args.id}/resolve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ resolution: args.resolution }),
+      }
+    );
+  },
+
+  /** Approve or deny a pending approval (`POST /approvals/{id}/decide`). */
+  async decideApproval(args: { id: string; approved: boolean; note?: string }) {
+    return await dcsFetch<AgentHitlActionResult>(
+      `/approvals/${args.id}/decide`,
+      {
+        method: 'POST',
+        body: JSON.stringify(decideBody(args)),
+      }
+    );
+  },
+
+  /** Approve or reject a skill proposal (`POST /skill-proposals/{id}/decide`). */
+  async decideSkillProposal(args: {
+    id: string;
+    approved: boolean;
+    note?: string;
+  }) {
+    return await dcsFetch<AgentHitlActionResult>(
+      `/skill-proposals/${args.id}/decide`,
+      {
+        method: 'POST',
+        body: JSON.stringify(decideBody(args)),
+      }
+    );
+  },
 };
+
+/** HITL item kinds returned by `GET /inbox/mine`. */
+export type AgentInboxKind = 'escalation' | 'approval' | 'skill_proposal';
+
+/** One row in the Agent Review inbox. */
+export type AgentInboxItem = {
+  kind: AgentInboxKind;
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  href: string;
+  assigned_to_me: boolean;
+  team_queued: boolean;
+};
+
+/** `GET /inbox/mine` response. */
+export type AgentInboxResponse = {
+  items: AgentInboxItem[];
+};
+
+/** Minimal body returned by claim / resolve / decide. */
+export type AgentHitlActionResult = {
+  id?: string;
+  status?: string;
+};
+
+function decideBody(args: { approved: boolean; note?: string }) {
+  return args.note === undefined
+    ? { approved: args.approved }
+    : { approved: args.approved, note: args.note };
+}
 
 export async function generateTitle(text: string): Promise<string | undefined> {
   const result = await dcsCompletion({

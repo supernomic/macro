@@ -32,6 +32,10 @@ pub struct ProposalFilter {
     pub assignee_user_id: Option<String>,
     /// Team queue.
     pub assignee_team_id: Option<Uuid>,
+    /// Restrict to items with no direct assignee (team-queue HITL).
+    pub unassigned_only: bool,
+    /// Restrict to this slug (pending-proposal idempotency).
+    pub slug: Option<String>,
     /// Maximum rows.
     pub limit: i64,
 }

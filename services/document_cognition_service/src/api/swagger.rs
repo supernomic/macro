@@ -24,6 +24,7 @@ use agent_identity::inbound::axum_router::{
     self as agent_identity_api, CreatePrincipalRequest, IdentityErrorBody, MintTokenRequest,
     MintTokenResponse, PrincipalResponse,
 };
+use agent_inbox::inbound::axum_router::{self as inbox_api, InboxErrorBody, UserInboxResponse};
 use agent_ledger::inbound::axum_router::{
     self as agent_ledger_api, AppendEventsRequest, EventResponse, LedgerErrorBody, NewEventBody,
     OpenSessionRequest, RecordOutcomeRequest, SessionMappingResponse, VerifyChainResponse,
@@ -170,10 +171,12 @@ use utoipa::OpenApi;
             skill_governance_api::agent_get_skill_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::agent_propose_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::list_my_proposals_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::get_proposal_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::decide_proposal_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::rollback_proposal_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::record_eval_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             skill_governance_api::refine_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            inbox_api::list_my_inbox_handler::<crate::api::context::DcsInboxService, crate::api::context::DcsAuthorizationService>,
             entity_graph_api::upsert_node_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             entity_graph_api::upsert_edge_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             entity_graph_api::neighbors_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
@@ -346,6 +349,13 @@ use utoipa::OpenApi;
                 skill_governance::domain::model::TraceRefinement,
                 skill_governance::domain::model::SkillScope,
                 skill_governance::domain::model::TrustTier,
+
+                // Unified inbox
+                UserInboxResponse,
+                InboxErrorBody,
+                agent_inbox::domain::model::InboxItem,
+                agent_inbox::domain::model::InboxKind,
+                agent_inbox::domain::model::InboxView,
 
                 // Entity graph
                 UpsertNodeRequest,

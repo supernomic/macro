@@ -17,6 +17,9 @@ use utoipa::ToSchema;
 use crate::domain::model::{ExportError, ExportJob, ProjectedEvent, Projection, SharingMode};
 use crate::domain::service::ExportService;
 
+#[cfg(test)]
+mod test;
+
 /// Router state.
 pub struct ExportRouterState<A, Auth> {
     /// Export service.
@@ -80,8 +83,8 @@ pub struct RunExportRequest {
     pub to_occurred_at: Option<DateTime<Utc>>,
 }
 
-fn default_sharing() -> SharingMode {
-    SharingMode::Full
+pub(crate) fn default_sharing() -> SharingMode {
+    SharingMode::Disabled
 }
 
 /// Run-export response.

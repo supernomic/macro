@@ -75,6 +75,27 @@ impl SharingMode {
             _ => None,
         }
     }
+
+    /// Rank used by [`Ord`]: `Disabled < FeedbackOnly < Full`.
+    fn rank(self) -> u8 {
+        match self {
+            SharingMode::Disabled => 0,
+            SharingMode::FeedbackOnly => 1,
+            SharingMode::Full => 2,
+        }
+    }
+}
+
+impl PartialOrd for SharingMode {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for SharingMode {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.rank().cmp(&other.rank())
+    }
 }
 
 /// An export job record.

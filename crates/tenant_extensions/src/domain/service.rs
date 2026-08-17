@@ -56,17 +56,45 @@ impl<R: ExtensionRepo> ExtensionServiceImpl<R> {
     pub fn new(repo: R) -> Self {
         Self { repo }
     }
+
+    /// Load the org catalog, upsert this slug, persist the merged document.
+    #[tracing::instrument(skip(self, ext), err)]
+    async fn write_merged_catalog(&self, ext: &TenantExtension, actor: &str) -> Result<()> {
+        let existing = self.repo.get_catalog(ext.org_id).await?;
+        self.repo
+            .upsert_catalog(ext.org_id, catalog_json(existing, ext), actor)
+            .await
+    }
 }
 
-fn catalog_json(ext: &TenantExtension) -> serde_json::Value {
+/// One catalog row. `enabled` is the kill switch; `false` only when disabled.
+fn catalog_entry(ext: &TenantExtension) -> serde_json::Value {
     serde_json::json!({
-        "extensions": [{
-            "slug": ext.slug,
-            "version": ext.version,
-            "artifact_hash": ext.artifact_hash,
-            "status": ext.status.as_str(),
-        }]
+        "slug": ext.slug,
+        "version": ext.version,
+        "artifact_hash": ext.artifact_hash,
+        "status": ext.status.as_str(),
+        "enabled": !matches!(ext.status, ExtensionStatus::Disabled),
     })
+}
+
+/// Full org catalog: `{ "extensions": [ ...all slugs... ] }`. Upserts `ext` by slug.
+fn catalog_json(existing: Option<serde_json::Value>, ext: &TenantExtension) -> serde_json::Value {
+    let mut extensions = existing
+        .as_ref()
+        .and_then(|catalog| catalog.get("extensions"))
+        .and_then(|value| value.as_array())
+        .cloned()
+        .unwrap_or_default();
+    let entry = catalog_entry(ext);
+    match extensions
+        .iter_mut()
+        .find(|item| item.get("slug").and_then(|slug| slug.as_str()) == Some(ext.slug.as_str()))
+    {
+        Some(slot) => *slot = entry,
+        None => extensions.push(entry),
+    }
+    serde_json::json!({ "extensions": extensions })
 }
 
 fn snapshot_of(ext: &TenantExtension, actor: &str) -> ExtensionSnapshot {
@@ -134,6 +162,7 @@ impl<R: ExtensionRepo> ExtensionService for ExtensionServiceImpl<R> {
             }
             updated.updated_at = Utc::now();
             self.repo.update(&updated).await?;
+            self.write_merged_catalog(&updated, actor).await?;
             return Ok(updated);
         }
         let now = Utc::now();
@@ -154,6 +183,7 @@ impl<R: ExtensionRepo> ExtensionService for ExtensionServiceImpl<R> {
             updated_at: now,
         };
         self.repo.insert(&ext).await?;
+        self.write_merged_catalog(&ext, actor).await?;
         Ok(ext)
     }
 
@@ -174,9 +204,7 @@ impl<R: ExtensionRepo> ExtensionService for ExtensionServiceImpl<R> {
         ext.activated_at = Some(Utc::now());
         ext.updated_at = Utc::now();
         self.repo.update(&ext).await?;
-        self.repo
-            .upsert_catalog(ext.org_id, catalog_json(&ext), actor)
-            .await?;
+        self.write_merged_catalog(&ext, actor).await?;
         Ok(ext)
     }
 
@@ -198,9 +226,7 @@ impl<R: ExtensionRepo> ExtensionService for ExtensionServiceImpl<R> {
         ext.status = ExtensionStatus::RolledBack;
         ext.updated_at = Utc::now();
         self.repo.update(&ext).await?;
-        self.repo
-            .upsert_catalog(ext.org_id, catalog_json(&ext), actor)
-            .await?;
+        self.write_merged_catalog(&ext, actor).await?;
         Ok(ext)
     }
 
@@ -210,9 +236,7 @@ impl<R: ExtensionRepo> ExtensionService for ExtensionServiceImpl<R> {
         ext.status = ExtensionStatus::Disabled;
         ext.updated_at = Utc::now();
         self.repo.update(&ext).await?;
-        self.repo
-            .upsert_catalog(ext.org_id, catalog_json(&ext), actor)
-            .await?;
+        self.write_merged_catalog(&ext, actor).await?;
         Ok(ext)
     }
 }

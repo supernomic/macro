@@ -5,6 +5,7 @@ members = [
   "crates/activity",
   "crates/agent",
   "crates/agent_identity",
+  "crates/agent_inbox",
   "crates/agent_ledger",
   "crates/approvals",
   "crates/agent_runtime_protocol",

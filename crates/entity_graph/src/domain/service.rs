@@ -91,7 +91,11 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
 
     #[tracing::instrument(skip(self), err)]
     async fn get_node(&self, org_id: Option<i32>, id: Uuid) -> Result<GraphNode> {
-        let node = self.repo.get_node(id).await?.ok_or(GraphError::NotFound)?;
+        let node = self
+            .repo
+            .get_node(org_id, id)
+            .await?
+            .ok_or(GraphError::NotFound)?;
         if node.org_id != org_id {
             return Err(GraphError::NotFound);
         }
@@ -112,12 +116,12 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
         }
         let from = self
             .repo
-            .get_node(edge.from_node_id)
+            .get_node(org_id, edge.from_node_id)
             .await?
             .ok_or(GraphError::NotFound)?;
         let to = self
             .repo
-            .get_node(edge.to_node_id)
+            .get_node(org_id, edge.to_node_id)
             .await?
             .ok_or(GraphError::NotFound)?;
         if from.org_id != org_id || to.org_id != org_id {
@@ -144,13 +148,13 @@ impl<R: GraphRepo> GraphService for GraphServiceImpl<R> {
     ) -> Result<Vec<(GraphEdge, GraphNode)>> {
         let node = self
             .repo
-            .get_node(node_id)
+            .get_node(org_id, node_id)
             .await?
             .ok_or(GraphError::NotFound)?;
         if node.org_id != org_id {
             return Err(GraphError::NotFound);
         }
-        let pairs = self.repo.neighbors(node_id, relationship).await?;
+        let pairs = self.repo.neighbors(org_id, node_id, relationship).await?;
         Ok(pairs
             .into_iter()
             .filter(|(edge, neighbor)| edge.org_id == org_id && neighbor.org_id == org_id)

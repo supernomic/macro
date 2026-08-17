@@ -90,15 +90,16 @@ impl GraphRepo for PgGraphRepo {
     }
 
     #[tracing::instrument(skip(self), err)]
-    async fn get_node(&self, id: Uuid) -> Result<Option<GraphNode>> {
+    async fn get_node(&self, org_id: Option<i32>, id: Uuid) -> Result<Option<GraphNode>> {
         let row = sqlx::query!(
             r#"
             SELECT id, org_id, node_type, display_name, attributes,
                    native_entity_type, native_entity_id, created_at, updated_at
             FROM entity_graph_nodes
-            WHERE id = $1
+            WHERE id = $1 AND org_id IS NOT DISTINCT FROM $2
             "#,
             id,
+            org_id,
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -151,6 +152,7 @@ impl GraphRepo for PgGraphRepo {
     #[tracing::instrument(skip(self), err)]
     async fn neighbors(
         &self,
+        org_id: Option<i32>,
         node_id: Uuid,
         relationship: Option<&str>,
     ) -> Result<Vec<(GraphEdge, GraphNode)>> {
@@ -166,9 +168,12 @@ impl GraphRepo for PgGraphRepo {
               ON n.id = CASE WHEN e.from_node_id = $1 THEN e.to_node_id ELSE e.from_node_id END
             WHERE (e.from_node_id = $1 OR e.to_node_id = $1)
               AND ($2::text IS NULL OR e.relationship = $2)
+              AND e.org_id IS NOT DISTINCT FROM $3
+              AND n.org_id IS NOT DISTINCT FROM $3
             "#,
             node_id,
             relationship,
+            org_id,
         )
         .fetch_all(&self.pool)
         .await?;
@@ -204,6 +209,8 @@ impl GraphRepo for PgGraphRepo {
     #[tracing::instrument(skip(self, doc), err)]
     async fn upsert_knowledge(&self, doc: &KnowledgeDocument) -> Result<KnowledgeDocument> {
         let sources = serde_json::to_value(&doc.okf_sources).unwrap_or(serde_json::json!([]));
+        // Non-human ON CONFLICT writes must not replace human-authored prose
+        // (title, body, content_hash, sources, generated). Sticky human_authored.
         let row = sqlx::query!(
             r#"
             INSERT INTO knowledge_documents (
@@ -218,12 +225,32 @@ impl GraphRepo for PgGraphRepo {
             )
             ON CONFLICT (org_id, slug)
             DO UPDATE SET
-                title = EXCLUDED.title,
-                body = EXCLUDED.body,
-                okf_sources = EXCLUDED.okf_sources,
-                okf_generated = EXCLUDED.okf_generated,
+                title = CASE
+                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored
+                    THEN knowledge_documents.title
+                    ELSE EXCLUDED.title
+                END,
+                body = CASE
+                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored
+                    THEN knowledge_documents.body
+                    ELSE EXCLUDED.body
+                END,
+                okf_sources = CASE
+                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored
+                    THEN knowledge_documents.okf_sources
+                    ELSE EXCLUDED.okf_sources
+                END,
+                okf_generated = CASE
+                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored
+                    THEN knowledge_documents.okf_generated
+                    ELSE EXCLUDED.okf_generated
+                END,
                 okf_status = EXCLUDED.okf_status,
-                content_hash = EXCLUDED.content_hash,
+                content_hash = CASE
+                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored
+                    THEN knowledge_documents.content_hash
+                    ELSE EXCLUDED.content_hash
+                END,
                 human_authored = knowledge_documents.human_authored OR EXCLUDED.human_authored,
                 updated_at = EXCLUDED.updated_at
             RETURNING id, org_id, slug, title, body, okf_type, okf_sources,
