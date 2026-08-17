@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, agent_slug, tool_name, decision,\n                   approver_user_id, approver_team_id\n            FROM approval_policies\n            WHERE org_id IS NOT DISTINCT FROM $1\n            ORDER BY agent_slug, tool_name\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "agent_slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "tool_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "decision",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "approver_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "approver_team_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "ff98867539fb23259c1c58318b8a339d7c774b3cb08a52ed84e1850623d69a78"
+}

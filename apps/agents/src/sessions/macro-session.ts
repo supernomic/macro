@@ -9,6 +9,7 @@
  */
 
 import type { Macro } from '@macro/sdk';
+import { ApprovalsClient } from '../approvals/client.ts';
 import { config } from '../config.ts';
 import { EscalationsClient } from '../escalations/client.ts';
 import { LedgerClient } from '../ledger/client.ts';
@@ -30,6 +31,8 @@ export interface AgentRuntime {
   ledger: LedgerClient;
   /** Escalations client authenticated as this principal. */
   escalations: EscalationsClient;
+  /** Approval-gate client authenticated as this principal. */
+  approvals: ApprovalsClient;
   /** Pinned composition id for this agent definition. */
   compositionId: string;
 }
@@ -44,7 +47,8 @@ export interface AgentRuntime {
  */
 export class MacroSessionContext {
   readonly runtime: AgentRuntime;
-  private readonly conversationId: string;
+  /** Flue conversation id this session is bound to. */
+  readonly conversationId: string;
   private readonly externalThread?: {
     kind: ExternalThreadKind;
     key: string;
@@ -131,6 +135,10 @@ export function runtimeFor(spec: {
         token: spec.token,
       }),
       escalations: new EscalationsClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      approvals: new ApprovalsClient({
         baseUrl: config.ledgerBaseUrl,
         token: spec.token,
       }),

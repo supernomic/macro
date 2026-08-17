@@ -95,6 +95,20 @@ Configuration:
   Macro (`EscalationCallbackToken` env var on document-cognition-service) so
   callbacks are verified.
 
+## Approval gates
+
+Every tool call is gated by Macro (`crates/approvals`) before it runs:
+`allow` / `require_approval` / `deny` per agent+tool, combining a built-in
+floor (outbound `send_*` and destructive `delete_*` / `revoke_*` require
+approval) with org policies that can only tighten it. Pending requests
+surface in the Macro inbox (`GET /approvals/mine`) and can be decided,
+reassigned ("this isn't mine"), or cancelled. The decision is a ledger
+event (`approval/decided`) and Macro POSTs to
+`/callbacks/approvals/:conversationId` so the conversation resumes.
+
+Agent tokens need `approval:gate` (and `approval:query` to poll). The same
+`ESCALATION_CALLBACK_TOKEN` authenticates the resume callback.
+
 ## Durability
 
 - Flue conversation state: Postgres via `src/db.ts` when

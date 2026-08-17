@@ -37,7 +37,10 @@ Flue agent fn ──> tool layer (this repo) ──> @macro/sdk ──> Macro Ru
   set in sync in the agent's composition definition.
 - Scope grammar (mirrors `crates/agent_identity`): colon-separated segments,
   trailing `:*` wildcard. Examples: `tool:search`, `tool:*`,
-  `api:documents:read`, `ledger:append`, `escalation:create`.
+  `api:documents:read`, `ledger:append`, `escalation:create`,
+  `approval:gate`, `approval:query`. Every agent token that runs tools
+  must include `approval:gate` so the Macro-side policy floor is
+  evaluated before each call.
 
 ## Tool conventions
 
@@ -65,9 +68,12 @@ Flue agent fn ──> tool layer (this repo) ──> @macro/sdk ──> Macro Ru
    errors reach the model.
 7. **No business policy in tools.** Authorization, approval gating, tenancy
    filtering, and routing decisions live in Macro's Rust domain services.
-   A tool converts model intent into an API call and the API result into
-   model-visible text/JSON. If you find yourself writing an allow/deny
-   branch in a tool, it belongs in Macro.
+   The `bindMacroTools` wrapper consults Macro's gate (`POST
+   /agent-approvals/gate`) before running a tool body; `allow` proceeds,
+   `deny` fails with `MacroToolError('denied')`, and `require_approval`
+   pauses with `MacroToolError('approval_required')` plus an
+   `approval_requested` ledger event. Do not re-implement allow/deny in
+   a tool body.
 8. **Idempotency**: tools that create entities must accept and forward an
    idempotency key derived from the ledger `(session_id, seq)` of the
    `tool/call` event so retried steps don't double-create.

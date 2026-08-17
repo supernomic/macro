@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, approval_id, action, actor_id, from_user_id,\n                   from_team_id, to_user_id, to_team_id, reason, created_at\n            FROM approval_transitions\n            WHERE approval_id = $1\n            ORDER BY created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "approval_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "action",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "from_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "from_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "to_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "to_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "b1ee91a631945566f7e9e12a7e5d671671742f8e5426ee9c4d7f80850c81937e"
+}

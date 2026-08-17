@@ -107,6 +107,19 @@ pub type DcsEscalationService = escalations::domain::service::EscalationServiceI
 pub type DcsEscalationFacade =
     escalations::domain::facade::AgentEscalationFacade<DcsEscalationService>;
 
+/// The approval-gate service wired to the Postgres repos, MacroDB team
+/// membership, the HTTP resume-callback client, and the no-op notifier.
+pub type DcsApprovalService = approvals::domain::service::ApprovalServiceImpl<
+    approvals::outbound::PgApprovalRepo,
+    approvals::outbound::PgPolicyRepo,
+    approvals::outbound::PgTeamMembership,
+    approvals::outbound::HttpCallbackClient,
+    approvals::outbound::NoopNotifier,
+>;
+
+/// The agent-facing approval facade (scope + tenancy policy).
+pub type DcsApprovalFacade = approvals::domain::facade::AgentApprovalFacade<DcsApprovalService>;
+
 /// The AI cost service wired to the Postgres usage repo.
 pub type DcsUsageService =
     ai_usage::domain::service::UsageServiceImpl<ai_usage::outbound::PgUsageRepo>;
@@ -168,6 +181,9 @@ pub struct ApiContext {
     pub escalation_service: Arc<DcsEscalationService>,
     pub escalation_facade: Arc<DcsEscalationFacade>,
     pub escalation_routing: Arc<escalations::outbound::PgRoutingRepo>,
+    pub approval_service: Arc<DcsApprovalService>,
+    pub approval_facade: Arc<DcsApprovalFacade>,
+    pub approval_policies: Arc<approvals::outbound::PgPolicyRepo>,
     pub usage_service: Arc<DcsUsageService>,
     pub ai_projections_service: Arc<DcsAiProjectionService>,
     pub properties_tool_context: ToolPropertiesToolContext,

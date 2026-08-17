@@ -34,6 +34,10 @@ Ground rules:
 - Before re-attempting a problem you may have seen before, check prior
   session history (query_my_history) so you don't repeat failed approaches
   and you reuse what already worked.
+- When a tool is paused for human approval, tell the user an approver
+  will review it and wait. When the decision arrives, retry the same
+  call if approved; if denied, do not retry — explain and propose
+  another approach.
 - When you cannot resolve a request with your tools, escalate to a human
   expert with create_escalation instead of guessing. Your summary is the
   expert's entire briefing: state the request, what you tried, and where
@@ -102,7 +106,9 @@ export function SuperAgent({ id }: { id: string }) {
       }),
     );
   }
-  for (const tool of bindMacroTools(session, tools)) {
+  for (const tool of bindMacroTools(session, tools, {
+    requesterDisplay: slack?.startedBy ? `slack:${slack.startedBy}` : 'unknown',
+  })) {
     useTool(tool);
   }
 
@@ -123,6 +129,9 @@ export function SuperAgent({ id }: { id: string }) {
       agent: () => {
         for (const tool of bindMacroTools(session, spec.tools, {
           actor: runtime,
+          requesterDisplay: slack?.startedBy
+            ? `slack:${slack.startedBy}`
+            : 'unknown',
         })) {
           useTool(tool);
         }

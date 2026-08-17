@@ -605,6 +605,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac436601d6bdde674a0d7fb593e829ffe7b3387c351b356dd20e2d40f5bf3ee5"
 
 [[package]]
+name = "approvals"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "hex",
+ "macro_authorization",
+ "macro_uuid",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
+]
+
+[[package]]
 name = "aquamarine"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4378,6 +4400,7 @@ dependencies = [
  "ai_toolset",
  "ai_usage",
  "anyhow",
+ "approvals",
  "async-openai",
  "async-stream",
  "async-trait",

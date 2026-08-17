@@ -11,10 +11,17 @@
 import { defineTool, type JsonValue } from '@flue/runtime';
 import type { Macro } from '@macro/sdk';
 import type * as v from 'valibot';
+import { config } from '../config.ts';
 import type {
   AgentRuntime,
   MacroSessionContext,
 } from '../sessions/macro-session.ts';
+
+/** Resume-callback URL Macro posts to when an approval is decided. */
+export function approvalCallbackUrl(conversationId: string): string {
+  const base = config.publicBaseUrl.replace(/\/$/, '');
+  return `${base}/callbacks/approvals/${encodeURIComponent(conversationId)}`;
+}
 
 /**
  * Structured tool failure. Thrown by tool bodies; the wrapper records it on
@@ -103,6 +110,10 @@ export interface BindMacroToolsOptions {
    * parent conversation's session (same org, distinct actor).
    */
   actor?: AgentRuntime;
+  /** Display name of the person the agent is acting for (inbox cards). */
+  requesterDisplay?: string;
+  /** Macro user id of the person the agent is acting for, when known. */
+  requesterUserId?: string;
 }
 
 /**
@@ -149,6 +160,41 @@ export function bindMacroTools(
           signal,
         };
         try {
+          const mapping = await session.session();
+          const outcome = await actor.approvals.gate({
+            session_id: mapping.session_id,
+            requester_user_id: options?.requesterUserId,
+            requester_display: options?.requesterDisplay ?? actor.agentSlug,
+            tool_name: tool.name,
+            arguments: data,
+            summary: `Agent ${actor.agentSlug} proposes calling ${tool.name}`,
+            callback_url: approvalCallbackUrl(session.conversationId),
+          });
+          if (outcome.decision === 'deny') {
+            throw new MacroToolError('denied', outcome.reason);
+          }
+          if (outcome.decision === 'pending') {
+            await session.append({
+              payload: {
+                type: 'approval_requested',
+                data: {
+                  approval_id: outcome.request.id,
+                  tool_name: tool.name,
+                  arguments_digest: outcome.request.arguments_digest,
+                },
+              },
+              actor_kind: 'agent',
+              actor_id: agentId,
+              source_event_seqs: callEvent ? [callEvent.seq] : [],
+            });
+            throw new MacroToolError(
+              'approval_required',
+              `Tool ${tool.name} is paused for human approval ` +
+                `(id ${outcome.request.id}). Tell the user an approver ` +
+                'will review it; when they decide, this conversation ' +
+                'resumes and you can retry the same call once.',
+            );
+          }
           const result = await tool.run(data, ctx);
           const output = (
             typeof result === 'string' ? result : result.output

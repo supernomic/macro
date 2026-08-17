@@ -455,6 +455,19 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         escalation_service.as_ref().clone(),
     ));
 
+    let approval_policies = Arc::new(approvals::outbound::PgPolicyRepo::new(pool.clone()));
+    let approval_service = Arc::new(approvals::domain::service::ApprovalServiceImpl::new(
+        approvals::outbound::PgApprovalRepo::new(pool.clone()),
+        approval_policies.as_ref().clone(),
+        approvals::outbound::PgTeamMembership::new(pool.clone()),
+        approvals::outbound::HttpCallbackClient::new(None),
+        approvals::outbound::NoopNotifier,
+        approvals::domain::model::PolicyFloor::builtin(),
+    ));
+    let approval_facade = Arc::new(approvals::domain::facade::AgentApprovalFacade::new(
+        approval_service.as_ref().clone(),
+    ));
+
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
         ai_usage::outbound::PgUsageRepo::new(pool.clone()),
     ));
@@ -532,6 +545,9 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         escalation_service,
         escalation_facade,
         escalation_routing,
+        approval_service,
+        approval_facade,
+        approval_policies,
         usage_service,
         ai_projections_service,
         properties_tool_context,

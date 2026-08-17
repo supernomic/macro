@@ -10,6 +10,10 @@
 import { createAgentRouter } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 import { SuperAgent } from './agents/super-agent.ts';
+import {
+  type ApprovalCallbackPayload,
+  resumeFromApproval,
+} from './approvals/resume.ts';
 import { channel as slack } from './channels/slack.ts';
 import { config } from './config.ts';
 import {
@@ -42,6 +46,24 @@ app.post('/callbacks/escalations/:conversationId', async (c) => {
     return c.json({ error: 'malformed payload' }, 400);
   }
   await resumeFromEscalation(c.req.param('conversationId'), payload);
+  return c.json({ ok: true });
+});
+
+// Approval-decision callback: Macro posts here when an approver decides
+// (or cancels) a gated tool call. Verified by the same shared token.
+app.post('/callbacks/approvals/:conversationId', async (c) => {
+  const expected = config.escalationCallbackToken();
+  if (expected) {
+    const auth = c.req.header('authorization');
+    if (auth !== `Bearer ${expected}`) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+  }
+  const payload = (await c.req.json()) as ApprovalCallbackPayload;
+  if (!payload.approval_id || !payload.tool_name) {
+    return c.json({ error: 'malformed payload' }, 400);
+  }
+  await resumeFromApproval(c.req.param('conversationId'), payload);
   return c.json({ ok: true });
 });
 

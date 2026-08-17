@@ -30,6 +30,10 @@ use ai_projections::inbound::axum_router::upsert_projection::{
     ProjectionStateResponse, UpsertProjectionRequest,
 };
 use ai_usage::inbound::axum_router::{self as ai_usage_api};
+use approvals::inbound::axum_router::{
+    self as approvals_api, ApprovalErrorBody, DecideRequest, GateToolCallRequest,
+    ReassignApprovalRequest, UserApprovalsResponse,
+};
 use escalations::inbound::axum_router::{
     self as escalations_api, CreateEscalationRequest, EscalationErrorBody, ReassignRequest,
     ResolveRequest, UserEscalationsResponse,
@@ -127,6 +131,18 @@ use utoipa::OpenApi;
             escalations_api::delete_rule_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             escalations_api::list_experts_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             escalations_api::upsert_expert_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::agent_gate_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::agent_get_approval_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::agent_cancel_approval_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::list_my_approvals_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::list_team_approvals_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::get_approval_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::decide_approval_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::reassign_approval_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::list_approval_transitions_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::list_policies_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::upsert_policy_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            approvals_api::delete_policy_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             import_api::get_state_handler,
             import_api::run_import_handler,
             import_api::retry_gather_handler,
@@ -253,6 +269,19 @@ use utoipa::OpenApi;
                 escalations::domain::model::RoutingRule,
                 escalations::domain::model::RouteTarget,
                 escalations::domain::model::ExpertProfile,
+
+                // Approval gates
+                GateToolCallRequest,
+                UserApprovalsResponse,
+                DecideRequest,
+                ReassignApprovalRequest,
+                ApprovalErrorBody,
+                approvals::domain::model::ApprovalRequest,
+                approvals::domain::model::ApprovalStatus,
+                approvals::domain::model::ApprovalTransition,
+                approvals::domain::model::GateOutcome,
+                approvals::domain::model::PolicyDecision,
+                approvals::domain::model::ToolPolicy,
 
                 // Import pipeline
                 import::domain::models::ImportState,

@@ -78,6 +78,9 @@ fn api_router(api_context: ApiContext) -> Router {
     let escalation_service = api_context.escalation_service.clone();
     let escalation_facade = api_context.escalation_facade.clone();
     let escalation_routing = api_context.escalation_routing.clone();
+    let approval_service = api_context.approval_service.clone();
+    let approval_facade = api_context.approval_facade.clone();
+    let approval_policies = api_context.approval_policies.clone();
     let usage_service = api_context.usage_service.clone();
     let ai_projections_service = api_context.ai_projections_service.clone();
     let import_service = api_context.import_service.clone();
@@ -123,6 +126,15 @@ fn api_router(api_context: ApiContext) -> Router {
                 facade: escalation_facade,
                 service: escalation_service,
                 routing: escalation_routing,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(approvals::inbound::axum_router::approvals_router(
+            approvals::inbound::axum_router::ApprovalRouterState {
+                facade: approval_facade,
+                service: approval_service,
+                policies: approval_policies,
                 identity: agent_identity_service,
                 authorization_state: authorization_state.clone(),
             },

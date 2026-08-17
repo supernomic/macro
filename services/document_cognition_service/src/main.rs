@@ -575,6 +575,27 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized escalation service");
 
+    // Build the approval-gate service (policy floor + pending requests)
+    // and the agent-facing facade. Reuses the same callback token as
+    // escalations so the runtime verifies both with one secret.
+    let approval_policies = Arc::new(approvals::outbound::PgPolicyRepo::new(db.clone()));
+    let approval_service = Arc::new(approvals::domain::service::ApprovalServiceImpl::new(
+        approvals::outbound::PgApprovalRepo::new(db.clone()),
+        approval_policies.as_ref().clone(),
+        approvals::outbound::PgTeamMembership::new(db.clone()),
+        approvals::outbound::HttpCallbackClient::new(
+            crate::config::EscalationCallbackToken::new()
+                .and_then(|t| t.value().map(str::to_string)),
+        ),
+        approvals::outbound::NoopNotifier,
+        approvals::domain::model::PolicyFloor::builtin(),
+    ));
+    let approval_facade = Arc::new(approvals::domain::facade::AgentApprovalFacade::new(
+        approval_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized approval-gate service");
+
     // Build the AI cost service. It backs both the admin query/pricing router
     // and the usage recorder threaded through the tool service context.
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
@@ -709,6 +730,9 @@ async fn main() -> anyhow::Result<()> {
         escalation_service,
         escalation_facade,
         escalation_routing,
+        approval_service,
+        approval_facade,
+        approval_policies,
         usage_service,
         ai_projections_service,
         properties_tool_context,
