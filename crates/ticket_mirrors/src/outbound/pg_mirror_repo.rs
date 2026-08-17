@@ -20,7 +20,7 @@ impl PgMirrorRepo {
     }
 }
 
-fn parse_row(
+struct MirrorRow {
     id: Uuid,
     org_id: Option<i32>,
     provider: String,
@@ -32,21 +32,42 @@ fn parse_row(
     status: String,
     last_mirrored_at: chrono::DateTime<Utc>,
     disconnected_at: Option<chrono::DateTime<Utc>>,
-) -> Result<TicketMirror> {
+}
+
+fn row_to_mirror(row: MirrorRow) -> Result<TicketMirror> {
     Ok(TicketMirror {
-        id,
-        org_id,
-        provider: MirrorProvider::parse(&provider)
-            .ok_or_else(|| MirrorError::InvalidRequest(format!("unknown provider: {provider}")))?,
-        native_entity_type,
-        native_entity_id,
-        foreign_id,
-        foreign_url,
-        summary,
-        status,
-        last_mirrored_at,
-        disconnected_at,
+        id: row.id,
+        org_id: row.org_id,
+        provider: MirrorProvider::parse(&row.provider).ok_or_else(|| {
+            MirrorError::InvalidRequest(format!("unknown provider: {}", row.provider))
+        })?,
+        native_entity_type: row.native_entity_type,
+        native_entity_id: row.native_entity_id,
+        foreign_id: row.foreign_id,
+        foreign_url: row.foreign_url,
+        summary: row.summary,
+        status: row.status,
+        last_mirrored_at: row.last_mirrored_at,
+        disconnected_at: row.disconnected_at,
     })
+}
+
+macro_rules! mirror_from_record {
+    ($r:expr) => {
+        row_to_mirror(MirrorRow {
+            id: $r.id,
+            org_id: $r.org_id,
+            provider: $r.provider,
+            native_entity_type: $r.native_entity_type,
+            native_entity_id: $r.native_entity_id,
+            foreign_id: $r.foreign_id,
+            foreign_url: $r.foreign_url,
+            summary: $r.summary,
+            status: $r.status,
+            last_mirrored_at: $r.last_mirrored_at,
+            disconnected_at: $r.disconnected_at,
+        })
+    };
 }
 
 impl MirrorRepo for PgMirrorRepo {
@@ -86,19 +107,7 @@ impl MirrorRepo for PgMirrorRepo {
         )
         .fetch_one(&self.pool)
         .await?;
-        parse_row(
-            row.id,
-            row.org_id,
-            row.provider,
-            row.native_entity_type,
-            row.native_entity_id,
-            row.foreign_id,
-            row.foreign_url,
-            row.summary,
-            row.status,
-            row.last_mirrored_at,
-            row.disconnected_at,
-        )
+        mirror_from_record!(row)
     }
 
     #[tracing::instrument(skip(self), err)]
@@ -115,22 +124,7 @@ impl MirrorRepo for PgMirrorRepo {
         )
         .fetch_optional(&self.pool)
         .await?;
-        row.map(|r| {
-            parse_row(
-                r.id,
-                r.org_id,
-                r.provider,
-                r.native_entity_type,
-                r.native_entity_id,
-                r.foreign_id,
-                r.foreign_url,
-                r.summary,
-                r.status,
-                r.last_mirrored_at,
-                r.disconnected_at,
-            )
-        })
-        .transpose()
+        row.map(|r| mirror_from_record!(r)).transpose()
     }
 
     #[tracing::instrument(skip(self), err)]
@@ -148,22 +142,7 @@ impl MirrorRepo for PgMirrorRepo {
         )
         .fetch_optional(&self.pool)
         .await?;
-        row.map(|r| {
-            parse_row(
-                r.id,
-                r.org_id,
-                r.provider,
-                r.native_entity_type,
-                r.native_entity_id,
-                r.foreign_id,
-                r.foreign_url,
-                r.summary,
-                r.status,
-                r.last_mirrored_at,
-                r.disconnected_at,
-            )
-        })
-        .transpose()
+        row.map(|r| mirror_from_record!(r)).transpose()
     }
 
     #[tracing::instrument(skip(self), err)]
@@ -193,21 +172,6 @@ impl MirrorRepo for PgMirrorRepo {
         )
         .fetch_optional(&self.pool)
         .await?;
-        row.map(|r| {
-            parse_row(
-                r.id,
-                r.org_id,
-                r.provider,
-                r.native_entity_type,
-                r.native_entity_id,
-                r.foreign_id,
-                r.foreign_url,
-                r.summary,
-                r.status,
-                r.last_mirrored_at,
-                r.disconnected_at,
-            )
-        })
-        .transpose()
+        row.map(|r| mirror_from_record!(r)).transpose()
     }
 }

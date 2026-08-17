@@ -432,16 +432,17 @@ where
             ));
         }
 
-        if approved && proposal.target_scope.requires_review() {
-            if let Some(eval) = self.proposals.latest_eval_for_proposal(proposal.id).await? {
-                if !eval.passed {
-                    return Err(GovernanceError::EvalGate(
-                        "latest eval run did not pass".to_string(),
-                    ));
-                }
-                proposal.eval_run_id = Some(eval.id.to_string());
-                proposal.eval_passed = Some(true);
+        if approved
+            && proposal.target_scope.requires_review()
+            && let Some(eval) = self.proposals.latest_eval_for_proposal(proposal.id).await?
+        {
+            if !eval.passed {
+                return Err(GovernanceError::EvalGate(
+                    "latest eval run did not pass".to_string(),
+                ));
             }
+            proposal.eval_run_id = Some(eval.id.to_string());
+            proposal.eval_passed = Some(true);
         }
 
         let actor = caller.actor_id();

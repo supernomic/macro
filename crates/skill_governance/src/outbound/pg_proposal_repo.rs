@@ -22,7 +22,7 @@ impl PgProposalRepo {
     }
 }
 
-fn parse_proposal(
+struct ProposalRow {
     id: Uuid,
     org_id: Option<i32>,
     skill_id: Option<Uuid>,
@@ -49,39 +49,76 @@ fn parse_proposal(
     decided_at: Option<chrono::DateTime<chrono::Utc>>,
     created_at: chrono::DateTime<chrono::Utc>,
     updated_at: chrono::DateTime<chrono::Utc>,
-) -> Result<SkillProposal> {
+}
+
+fn row_to_proposal(row: ProposalRow) -> Result<SkillProposal> {
     Ok(SkillProposal {
-        id,
-        org_id,
-        skill_id,
-        kind: ProposalKind::parse(&kind)
-            .ok_or_else(|| GovernanceError::InvalidRequest(format!("unknown kind: {kind}")))?,
-        slug,
-        target_scope: SkillScope::parse(&target_scope).ok_or_else(|| {
-            GovernanceError::InvalidRequest(format!("unknown scope: {target_scope}"))
+        id: row.id,
+        org_id: row.org_id,
+        skill_id: row.skill_id,
+        kind: ProposalKind::parse(&row.kind).ok_or_else(|| {
+            GovernanceError::InvalidRequest(format!("unknown kind: {}", row.kind))
         })?,
-        owner_user_id,
-        owner_team_id,
-        proposed_name,
-        proposed_description,
-        proposed_body,
-        diff_summary,
-        evidence,
-        proposer_agent_id,
-        proposer_user_id,
-        status: ProposalStatus::parse(&status)
-            .ok_or_else(|| GovernanceError::InvalidRequest(format!("unknown status: {status}")))?,
-        assignee_user_id,
-        assignee_team_id,
-        snapshot_id,
-        eval_run_id,
-        eval_passed,
-        decided_by,
-        decision_note,
-        decided_at,
-        created_at,
-        updated_at,
+        slug: row.slug,
+        target_scope: SkillScope::parse(&row.target_scope).ok_or_else(|| {
+            GovernanceError::InvalidRequest(format!("unknown scope: {}", row.target_scope))
+        })?,
+        owner_user_id: row.owner_user_id,
+        owner_team_id: row.owner_team_id,
+        proposed_name: row.proposed_name,
+        proposed_description: row.proposed_description,
+        proposed_body: row.proposed_body,
+        diff_summary: row.diff_summary,
+        evidence: row.evidence,
+        proposer_agent_id: row.proposer_agent_id,
+        proposer_user_id: row.proposer_user_id,
+        status: ProposalStatus::parse(&row.status).ok_or_else(|| {
+            GovernanceError::InvalidRequest(format!("unknown status: {}", row.status))
+        })?,
+        assignee_user_id: row.assignee_user_id,
+        assignee_team_id: row.assignee_team_id,
+        snapshot_id: row.snapshot_id,
+        eval_run_id: row.eval_run_id,
+        eval_passed: row.eval_passed,
+        decided_by: row.decided_by,
+        decision_note: row.decision_note,
+        decided_at: row.decided_at,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
     })
+}
+
+macro_rules! proposal_from_record {
+    ($r:expr) => {
+        row_to_proposal(ProposalRow {
+            id: $r.id,
+            org_id: $r.org_id,
+            skill_id: $r.skill_id,
+            kind: $r.kind,
+            slug: $r.slug,
+            target_scope: $r.target_scope,
+            owner_user_id: $r.owner_user_id,
+            owner_team_id: $r.owner_team_id,
+            proposed_name: $r.proposed_name,
+            proposed_description: $r.proposed_description,
+            proposed_body: $r.proposed_body,
+            diff_summary: $r.diff_summary,
+            evidence: $r.evidence,
+            proposer_agent_id: $r.proposer_agent_id,
+            proposer_user_id: $r.proposer_user_id,
+            status: $r.status,
+            assignee_user_id: $r.assignee_user_id,
+            assignee_team_id: $r.assignee_team_id,
+            snapshot_id: $r.snapshot_id,
+            eval_run_id: $r.eval_run_id,
+            eval_passed: $r.eval_passed,
+            decided_by: $r.decided_by,
+            decision_note: $r.decision_note,
+            decided_at: $r.decided_at,
+            created_at: $r.created_at,
+            updated_at: $r.updated_at,
+        })
+    };
 }
 
 impl ProposalRepo for PgProposalRepo {
@@ -155,37 +192,7 @@ impl ProposalRepo for PgProposalRepo {
         )
         .fetch_optional(&self.pool)
         .await?;
-        row.map(|r| {
-            parse_proposal(
-                r.id,
-                r.org_id,
-                r.skill_id,
-                r.kind,
-                r.slug,
-                r.target_scope,
-                r.owner_user_id,
-                r.owner_team_id,
-                r.proposed_name,
-                r.proposed_description,
-                r.proposed_body,
-                r.diff_summary,
-                r.evidence,
-                r.proposer_agent_id,
-                r.proposer_user_id,
-                r.status,
-                r.assignee_user_id,
-                r.assignee_team_id,
-                r.snapshot_id,
-                r.eval_run_id,
-                r.eval_passed,
-                r.decided_by,
-                r.decision_note,
-                r.decided_at,
-                r.created_at,
-                r.updated_at,
-            )
-        })
-        .transpose()
+        row.map(|r| proposal_from_record!(r)).transpose()
     }
 
     #[tracing::instrument(skip(self), err)]
@@ -216,38 +223,7 @@ impl ProposalRepo for PgProposalRepo {
         )
         .fetch_all(&self.pool)
         .await?;
-        rows.into_iter()
-            .map(|r| {
-                parse_proposal(
-                    r.id,
-                    r.org_id,
-                    r.skill_id,
-                    r.kind,
-                    r.slug,
-                    r.target_scope,
-                    r.owner_user_id,
-                    r.owner_team_id,
-                    r.proposed_name,
-                    r.proposed_description,
-                    r.proposed_body,
-                    r.diff_summary,
-                    r.evidence,
-                    r.proposer_agent_id,
-                    r.proposer_user_id,
-                    r.status,
-                    r.assignee_user_id,
-                    r.assignee_team_id,
-                    r.snapshot_id,
-                    r.eval_run_id,
-                    r.eval_passed,
-                    r.decided_by,
-                    r.decision_note,
-                    r.decided_at,
-                    r.created_at,
-                    r.updated_at,
-                )
-            })
-            .collect()
+        rows.into_iter().map(|r| proposal_from_record!(r)).collect()
     }
 
     #[tracing::instrument(skip(self, proposal), err)]
