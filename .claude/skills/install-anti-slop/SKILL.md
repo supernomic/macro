@@ -5,6 +5,10 @@ description: Install and configure the anti-slop Oxlint plugin in a local TypeSc
 
 # Install anti-slop
 
+> **Local note (this repo):** on Node < 23.6, Oxlint fails to load the `.ts`
+> plugin with `ERR_UNKNOWN_FILE_EXTENSION`. Run lint with
+> `NODE_OPTIONS=--experimental-strip-types` in that case.
+
 Install the bundled Oxlint plugin into the current repository and integrate it with the repository's existing lint setup. Preserve unrelated work and adapt to the project's package manager and configuration style.
 
 ## Procedure
