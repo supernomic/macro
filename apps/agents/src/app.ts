@@ -10,11 +10,15 @@
 import { createAgentRouter } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 import { SuperAgent } from './agents/super-agent.ts';
+import { channel as slack } from './channels/slack.ts';
 
 const app = new Hono();
 
 app.get('/healthz', (c) => c.json({ ok: true }));
 
 app.route('/agents/super-agent', createAgentRouter(SuperAgent));
+
+// Slack Events API endpoint: POST /channels/slack/events (verified ingress).
+app.route('/channels/slack', slack.route());
 
 export default app;

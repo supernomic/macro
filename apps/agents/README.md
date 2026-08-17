@@ -42,6 +42,21 @@ curl -X POST http://localhost:5173/agents/super-agent/demo-1 \
 curl "http://localhost:5173/agents/super-agent/demo-1?view=history"
 ```
 
+## Slack
+
+Verified Events API ingress is served at `POST /channels/slack/events`
+(`src/channels/slack.ts`). Register that URL in the Slack app config and
+subscribe to `app_mention` and `message.channels`. One Slack thread maps to
+one durable conversation and one Macro session
+(`slack_thread:<channel>:<thread_ts>`).
+
+Listening is per-channel (`src/channels/slack-config.ts`):
+`mentions_only` (default — mentions plus threads the agent was brought
+into), `proactive` (all plain messages delivered; the agent's instructions
+make it reply only when it adds clear value — its sole way to speak is the
+`reply_in_slack_thread` tool, so not calling it is a non-reply), or
+`silent`. Set `SLACK_DEFAULT_CHANNEL_MODE` / `SLACK_CHANNEL_MODES`.
+
 ## Durability
 
 - Flue conversation state: Postgres via `src/db.ts` when

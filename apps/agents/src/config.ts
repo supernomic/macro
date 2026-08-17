@@ -60,4 +60,25 @@ export const config = {
     'MACRO_SUPER_AGENT_COMPOSITION_ID',
     'super-agent/v1',
   ),
+
+  /** Slack signing secret for inbound event verification. */
+  slackSigningSecret: () => required('SLACK_SIGNING_SECRET'),
+
+  /** Slack bot token (`xoxb-...`) for outbound Web API calls. */
+  slackBotToken: () => required('SLACK_BOT_TOKEN'),
+
+  /**
+   * Default listening mode for Slack channels without an explicit entry
+   * in `SLACK_CHANNEL_MODES`: `mentions_only` | `proactive` | `silent`.
+   */
+  slackDefaultChannelMode: optional(
+    'SLACK_DEFAULT_CHANNEL_MODE',
+    'mentions_only',
+  ),
+
+  /**
+   * JSON map of Slack channel id → mode, e.g.
+   * `{"C0123":"proactive","C0456":"silent"}`.
+   */
+  slackChannelModes: optional('SLACK_CHANNEL_MODES', '{}'),
 } as const;
