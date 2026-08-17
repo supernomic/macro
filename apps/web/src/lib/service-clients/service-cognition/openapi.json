@@ -11,6 +11,1132 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/agent-approvals/gate": {
+      "post": {
+        "tags": ["approvals"],
+        "summary": "Gate a proposed tool call. Agent callers.",
+        "operationId": "agent_gate_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateToolCallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The gate outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GateOutcome"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-approvals/{id}": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "Poll one approval request. Agent callers.",
+        "operationId": "agent_get_approval_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The approval request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-approvals/{id}/cancel": {
+      "post": {
+        "tags": ["approvals"],
+        "summary": "Cancel one of the agent's own pending requests. Agent callers.",
+        "operationId": "agent_cancel_approval_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The cancelled request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-escalations": {
+      "post": {
+        "tags": ["escalations"],
+        "summary": "Create an escalation. Agent callers.",
+        "operationId": "agent_create_escalation_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEscalationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The routed escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-escalations/{id}": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "Poll one escalation. Agent callers.",
+        "operationId": "agent_get_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-feedback/{session_id}/consent": {
+      "get": {
+        "tags": ["feedback"],
+        "summary": "Read session consent. Agent callers.",
+        "operationId": "agent_get_consent_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentRecord"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["feedback"],
+        "summary": "Set sharing consent. User callers.",
+        "operationId": "user_set_consent_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Consent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-feedback/{session_id}/ratings": {
+      "get": {
+        "tags": ["feedback"],
+        "summary": "List sidecar ratings. Agent callers.",
+        "operationId": "agent_list_ratings_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ratings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageRating"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["feedback"],
+        "summary": "Rate a ledger event. Agent callers.",
+        "operationId": "agent_rate_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The rating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageRating"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-feedback/{session_id}/user-ratings": {
+      "post": {
+        "tags": ["feedback"],
+        "summary": "Rate a ledger event. User callers.",
+        "operationId": "user_rate_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The rating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageRating"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-graph/edges": {
+      "post": {
+        "tags": ["graph"],
+        "summary": "Upsert an edge.",
+        "operationId": "upsert_edge_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEdgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The edge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphEdge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-graph/knowledge": {
+      "post": {
+        "tags": ["graph"],
+        "summary": "Upsert a knowledge document.",
+        "operationId": "upsert_knowledge_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertKnowledgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeDocument"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-graph/nodes": {
+      "post": {
+        "tags": ["graph"],
+        "summary": "Upsert a graph node.",
+        "operationId": "upsert_node_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertNodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The node",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphNode"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-graph/nodes/{id}/neighbors": {
+      "get": {
+        "tags": ["graph"],
+        "summary": "List neighbors of a node.",
+        "operationId": "neighbors_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Neighbors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Neighbor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-identity/principals": {
+      "get": {
+        "tags": ["agent-identity"],
+        "summary": "List agent principals for an org.",
+        "operationId": "list_principals_handler",
+        "responses": {
+          "200": {
+            "description": "Principals in the org",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrincipalResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["agent-identity"],
+        "summary": "Create an agent principal. Internal callers only.",
+        "operationId": "create_principal_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrincipalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The created principal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrincipalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Slug already taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-identity/principals/{principal_id}/disable": {
+      "post": {
+        "tags": ["agent-identity"],
+        "summary": "Disable an agent principal (its tokens stop verifying). Internal callers\nonly.",
+        "operationId": "disable_principal_handler",
+        "parameters": [
+          {
+            "name": "principal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Principal disabled"
+          }
+        }
+      }
+    },
+    "/agent-identity/principals/{principal_id}/tokens": {
+      "post": {
+        "tags": ["agent-identity"],
+        "summary": "Mint a scoped API token for a principal. Internal callers only.",
+        "operationId": "mint_token_handler",
+        "parameters": [
+          {
+            "name": "principal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MintTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The minted token (bearer shown once)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Principal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-identity/tokens/{token_id}/revoke": {
+      "post": {
+        "tags": ["agent-identity"],
+        "summary": "Revoke an API token. Internal callers only.",
+        "operationId": "revoke_token_handler",
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Token revoked"
+          }
+        }
+      }
+    },
+    "/agent-ledger/agent-events": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Org-scoped audit query for agent callers (self-query over past attempts,\napprovals, escalations). The org filter is forced server-side.",
+        "operationId": "agent_query_events_handler",
+        "responses": {
+          "200": {
+            "description": "Matching events in the agent's org",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/events": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Cross-session audit query. Internal callers.",
+        "operationId": "query_events_handler",
+        "responses": {
+          "200": {
+            "description": "Matching events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/export": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Audit export as NDJSON (one event per line). Internal callers.",
+        "operationId": "export_events_handler",
+        "responses": {
+          "200": {
+            "description": "NDJSON export of matching events"
+          }
+        }
+      }
+    },
+    "/agent-ledger/sessions": {
+      "post": {
+        "tags": ["agent-ledger"],
+        "summary": "Open (or resume) a session for a runtime conversation. Agent callers.",
+        "operationId": "open_session_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The session mapping",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMappingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/sessions/by-thread": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Find the session anchored to an external thread. Agent callers.",
+        "operationId": "find_session_by_thread_handler",
+        "responses": {
+          "200": {
+            "description": "The session mapping",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMappingResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No session for this thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/sessions/{session_id}/events": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Replay a session's events in order. Agent callers.",
+        "operationId": "list_session_events_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events in seq order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["agent-ledger"],
+        "summary": "Append events to a session. Agent callers.",
+        "operationId": "append_events_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppendEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The stored events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/sessions/{session_id}/outcome": {
+      "post": {
+        "tags": ["agent-ledger"],
+        "summary": "Record a session's terminal outcome. Agent callers.",
+        "operationId": "record_outcome_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordOutcomeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Outcome recorded"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-ledger/sessions/{session_id}/verify": {
+      "get": {
+        "tags": ["agent-ledger"],
+        "summary": "Verify a session's hash chain. Internal callers.",
+        "operationId": "verify_chain_handler",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyChainResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-skills": {
+      "get": {
+        "tags": ["skills"],
+        "summary": "List skills this agent may inject.",
+        "operationId": "agent_catalog_handler",
+        "responses": {
+          "200": {
+            "description": "Skill catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillCatalogEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["skills"],
+        "summary": "Open a staged skill proposal. Agent callers.",
+        "operationId": "agent_propose_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeSkillRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The proposal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillProposal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-skills/{id}": {
+      "get": {
+        "tags": ["skills"],
+        "summary": "Fetch one skill. Agent callers.",
+        "operationId": "agent_get_skill_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Skill id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ai-cost/pricing": {
       "post": {
         "tags": ["ai_usage"],
@@ -164,6 +1290,359 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approval-policies": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "List tool policies. Internal callers only.",
+        "operationId": "list_policies_handler",
+        "responses": {
+          "200": {
+            "description": "All tool policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ToolPolicy"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["approvals"],
+        "summary": "Insert or replace a tool policy. Internal callers only.",
+        "operationId": "upsert_policy_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolPolicy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The stored policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolPolicy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approval-policies/{id}": {
+      "delete": {
+        "tags": ["approvals"],
+        "summary": "Delete a tool policy. Internal callers only.",
+        "operationId": "delete_policy_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Policy id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "No such policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/mine": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "The caller's personal inbox view: assigned plus team-queue items.",
+        "operationId": "list_my_approvals_handler",
+        "responses": {
+          "200": {
+            "description": "Assigned and team-queue approvals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserApprovalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/teams/{team_id}": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "A team's full queue (members only).",
+        "operationId": "list_team_approvals_handler",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "description": "Team id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The team's approvals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRequest"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/{id}": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "Fetch one approval request visible to the caller.",
+        "operationId": "get_approval_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The approval request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/{id}/decide": {
+      "post": {
+        "tags": ["approvals"],
+        "summary": "Approve or deny a pending request; resumes the agent runtime.",
+        "operationId": "decide_approval_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The decided request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/{id}/reassign": {
+      "post": {
+        "tags": ["approvals"],
+        "summary": "Reassign a pending request to another user or team (\"this isn't mine\").",
+        "operationId": "reassign_approval_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The reassigned request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/approvals/{id}/transitions": {
+      "get": {
+        "tags": ["approvals"],
+        "summary": "An approval request's audited transition history.",
+        "operationId": "list_approval_transitions_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Approval request id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transitions, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalTransition"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalErrorBody"
                 }
               }
             }
@@ -1026,6 +2505,510 @@
         }
       }
     },
+    "/escalation-routing/experts": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "List expert profiles. Internal callers only.",
+        "operationId": "list_experts_handler",
+        "responses": {
+          "200": {
+            "description": "All expert profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpertProfile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["escalations"],
+        "summary": "Insert or replace an expert profile (availability, domains, tags).\nInternal callers only.",
+        "operationId": "upsert_expert_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpertProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The stored profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalation-routing/rules": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "List routing rules. Internal callers only.",
+        "operationId": "list_rules_handler",
+        "responses": {
+          "200": {
+            "description": "All routing rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoutingRule"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["escalations"],
+        "summary": "Insert or replace a routing rule. Internal callers only.",
+        "operationId": "upsert_rule_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingRule"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The stored rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutingRule"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalation-routing/rules/{id}": {
+      "delete": {
+        "tags": ["escalations"],
+        "summary": "Delete a routing rule. Internal callers only.",
+        "operationId": "delete_rule_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Rule id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "No such rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/mine": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "The caller's personal inbox view: assigned plus claimable items.",
+        "operationId": "list_my_escalations_handler",
+        "responses": {
+          "200": {
+            "description": "Assigned and claimable escalations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEscalationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/teams/{team_id}": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "A team's full queue (members only): unclaimed and claimed items.",
+        "operationId": "list_team_escalations_handler",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "description": "Team id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The team's escalations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Escalation"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "Fetch one escalation visible to the caller.",
+        "operationId": "get_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}/cancel": {
+      "post": {
+        "tags": ["escalations"],
+        "summary": "Cancel without a resolution.",
+        "operationId": "cancel_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The cancelled escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already terminal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}/claim": {
+      "post": {
+        "tags": ["escalations"],
+        "summary": "Claim an open escalation (first claim wins).",
+        "operationId": "claim_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The claimed escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not open",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}/reassign": {
+      "post": {
+        "tags": ["escalations"],
+        "summary": "Reassign to another user or team queue, with a required reason.",
+        "operationId": "reassign_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The reassigned escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}/resolve": {
+      "post": {
+        "tags": ["escalations"],
+        "summary": "Resolve with an expert answer; resumes the agent runtime.",
+        "operationId": "resolve_escalation_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The resolved escalation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Escalation"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already terminal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escalations/{id}/transitions": {
+      "get": {
+        "tags": ["escalations"],
+        "summary": "An escalation's audited transition history.",
+        "operationId": "list_transitions_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Escalation id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transitions, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EscalationTransition"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health"],
@@ -1153,6 +3136,97 @@
           },
           "500": {
             "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/inbox/mine": {
+      "get": {
+        "tags": ["inbox"],
+        "summary": "The caller's unified review inbox across escalations, approvals, and\nskill proposals.",
+        "operationId": "list_my_inbox_handler",
+        "responses": {
+          "200": {
+            "description": "Unified inbox cards, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInboxResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lifecycle-connectors/accounts": {
+      "post": {
+        "tags": ["connectors"],
+        "summary": "Register a provider account.",
+        "operationId": "register_account_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorAccount"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lifecycle-connectors/accounts/{id}/ingest": {
+      "post": {
+        "tags": ["connectors"],
+        "summary": "Ingest a batch of provider records.",
+        "operationId": "ingest_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Stored records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectorRecord"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1610,6 +3684,194 @@
         }
       }
     },
+    "/skill-evals": {
+      "post": {
+        "tags": ["skills"],
+        "summary": "Record an eval run that may gate promotion. Internal callers.",
+        "operationId": "record_eval_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordEvalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Recorded eval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillEvalRun"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skill-proposals/mine": {
+      "get": {
+        "tags": ["skills"],
+        "summary": "Personal inbox of skill proposals.",
+        "operationId": "list_my_proposals_handler",
+        "responses": {
+          "200": {
+            "description": "Inbox view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProposalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skill-proposals/{id}": {
+      "get": {
+        "tags": ["skills"],
+        "summary": "Fetch one proposal visible to the caller.",
+        "operationId": "get_proposal_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Proposal id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The skill proposal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillProposal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernanceErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skill-proposals/{id}/decide": {
+      "post": {
+        "tags": ["skills"],
+        "summary": "Approve or reject a pending proposal.",
+        "operationId": "decide_proposal_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated proposal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillProposal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skill-proposals/{id}/rollback": {
+      "post": {
+        "tags": ["skills"],
+        "summary": "Roll an approved proposal back to its snapshot.",
+        "operationId": "rollback_proposal_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skill-refinements": {
+      "post": {
+        "tags": ["skills"],
+        "summary": "Ingest a trace-refinement job. Internal callers.",
+        "operationId": "refine_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Refinement job + proposal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceRefinement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/stream/chat/message": {
       "post": {
         "tags": ["chat_message"],
@@ -1752,6 +4014,213 @@
           }
         }
       }
+    },
+    "/tenant-extensions": {
+      "post": {
+        "tags": ["extensions"],
+        "summary": "Register a draft extension.",
+        "operationId": "register_extension_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterExtensionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The extension",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantExtension"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenant-extensions/{id}/activate": {
+      "post": {
+        "tags": ["extensions"],
+        "summary": "Activate (candidate-set swap).",
+        "operationId": "activate_extension_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activated extension",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantExtension"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenant-extensions/{id}/disable": {
+      "post": {
+        "tags": ["extensions"],
+        "summary": "Delist kill switch.",
+        "operationId": "disable_extension_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disabled extension",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantExtension"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenant-extensions/{id}/rollback": {
+      "post": {
+        "tags": ["extensions"],
+        "summary": "Rollback to the latest snapshot.",
+        "operationId": "rollback_extension_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rolled-back extension",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantExtension"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ticket-mirrors": {
+      "post": {
+        "tags": ["mirrors"],
+        "summary": "Upsert a Zendesk/Jira mirror.",
+        "operationId": "upsert_mirror_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMirrorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The mirror",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMirror"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ticket-mirrors/{id}/disconnect": {
+      "post": {
+        "tags": ["mirrors"],
+        "summary": "Disconnect a mirror without changing the native entity.",
+        "operationId": "disconnect_mirror_handler",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disconnected mirror",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMirror"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/training-export": {
+      "post": {
+        "tags": ["training"],
+        "summary": "Run a training-export projection.",
+        "operationId": "run_export_handler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Job + projected events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunExportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1791,6 +4260,187 @@
           "ai_editing",
           "import"
         ]
+      },
+      "AppendEventsRequest": {
+        "type": "object",
+        "description": "Request body for appending events.",
+        "required": ["events"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NewEventBody"
+            },
+            "description": "The events to append, in order."
+          }
+        }
+      },
+      "ApprovalErrorBody": {
+        "type": "object",
+        "description": "Error body for approval endpoints.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "ApprovalRequest": {
+        "type": "object",
+        "description": "One approval request: a gated tool call waiting for (or decided by) a\nhuman.",
+        "required": [
+          "id",
+          "agent_slug",
+          "requester_display",
+          "tool_name",
+          "arguments",
+          "arguments_digest",
+          "summary",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "agent_slug": {
+            "type": "string",
+            "description": "Slug of the agent principal that hit the gate."
+          },
+          "arguments": {
+            "description": "The proposed arguments, shown verbatim to the approver."
+          },
+          "arguments_digest": {
+            "type": "string",
+            "description": "SHA-256 hex digest of the canonical arguments."
+          },
+          "assignee_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Approver team queue, when routed to a team."
+          },
+          "assignee_user_id": {
+            "type": ["string", "null"],
+            "description": "Direct approver, when routed to a person."
+          },
+          "callback_url": {
+            "type": ["string", "null"],
+            "description": "URL the runtime is called back on when decided."
+          },
+          "consumed_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the decided request was consumed by a retry of the call."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation instant."
+          },
+          "decided_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Decision instant."
+          },
+          "decided_by": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the decider."
+          },
+          "decision_note": {
+            "type": ["string", "null"],
+            "description": "Optional note from the decider (shown to the agent and requester)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request id (UUID v7)."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "requester_display": {
+            "type": "string",
+            "description": "Human-readable requester for inbox cards."
+          },
+          "requester_user_id": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the person the agent is acting for, when known."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Ledger session of the gated conversation."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus",
+            "description": "Lifecycle status."
+          },
+          "summary": {
+            "type": "string",
+            "description": "The agent's explanation of what it wants to do and why."
+          },
+          "tool_name": {
+            "type": "string",
+            "description": "The gated tool."
+          }
+        }
+      },
+      "ApprovalStatus": {
+        "type": "string",
+        "description": "Lifecycle of an approval request.",
+        "enum": ["pending", "approved", "denied", "cancelled"]
+      },
+      "ApprovalTransition": {
+        "type": "object",
+        "description": "An audited state transition on an approval request.",
+        "required": ["id", "approval_id", "action", "actor_id", "created_at"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Action name (`routed`, `approved`, `denied`, `reassigned`,\n`cancelled`, `consumed`)."
+          },
+          "actor_id": {
+            "type": "string",
+            "description": "Who performed it (Macro user id, agent principal id, or `system`)."
+          },
+          "approval_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The approval request."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instant of the transition."
+          },
+          "from_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Assignee team before the transition."
+          },
+          "from_user_id": {
+            "type": ["string", "null"],
+            "description": "Assignee user before the transition."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Transition id."
+          },
+          "reason": {
+            "type": ["string", "null"],
+            "description": "Free-form reason (required for reassign)."
+          },
+          "to_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Assignee team after the transition."
+          },
+          "to_user_id": {
+            "type": ["string", "null"],
+            "description": "Assignee user after the transition."
+          }
+        }
       },
       "AssistantMessagePart": {
         "oneOf": [
@@ -2504,6 +5154,152 @@
           }
         }
       },
+      "ConnectorAccount": {
+        "type": "object",
+        "description": "A connected provider account.",
+        "required": [
+          "id",
+          "provider",
+          "display_name",
+          "credential_ref",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "credential_ref": {
+            "type": "string",
+            "description": "Credential reference (never the secret)."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account id."
+          },
+          "last_cursor": {
+            "type": ["string", "null"],
+            "description": "Opaque cursor."
+          },
+          "last_synced_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Last successful sync."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider",
+            "description": "Provider."
+          }
+        }
+      },
+      "ConnectorErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "ConnectorRecord": {
+        "type": "object",
+        "description": "A synced external record.",
+        "required": [
+          "id",
+          "account_id",
+          "external_id",
+          "record_type",
+          "payload",
+          "updated_at"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account."
+          },
+          "external_id": {
+            "type": "string",
+            "description": "Provider-stable id."
+          },
+          "graph_node_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Graph node this was projected onto."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Record id."
+          },
+          "payload": {
+            "description": "Raw payload."
+          },
+          "record_type": {
+            "type": "string",
+            "description": "Record kind (`user`, `device`, `application`)."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Updated at."
+          }
+        }
+      },
+      "ConsentRecord": {
+        "type": "object",
+        "description": "Per-session training-export consent.",
+        "required": ["session_id", "sharing_mode", "set_by", "updated_at"],
+        "properties": {
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization."
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session."
+          },
+          "set_by": {
+            "type": "string",
+            "description": "Who set it."
+          },
+          "sharing_mode": {
+            "$ref": "#/components/schemas/FeedbackSharingMode",
+            "description": "Sharing mode."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last edit."
+          }
+        }
+      },
+      "ConsentRequest": {
+        "type": "object",
+        "description": "Consent body.",
+        "required": ["sharing_mode"],
+        "properties": {
+          "sharing_mode": {
+            "$ref": "#/components/schemas/FeedbackSharingMode",
+            "description": "Sharing mode."
+          }
+        }
+      },
       "ConversationRecord": {
         "type": "object",
         "required": ["chat_id", "title", "messages"],
@@ -2533,6 +5329,118 @@
           "projectId": {
             "type": ["string", "null"],
             "description": "Optional project to associate the chat with."
+          }
+        }
+      },
+      "CreateEscalationRequest": {
+        "type": "object",
+        "description": "Request body for creating an escalation (agent callers).",
+        "required": ["domain", "requester_display", "title", "summary"],
+        "properties": {
+          "callback_url": {
+            "type": ["string", "null"],
+            "description": "URL the runtime is called back on when the escalation resolves."
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain the escalation belongs to (e.g. `techops`)."
+          },
+          "priority": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Priority",
+                "description": "Urgency; defaults to `normal`."
+              }
+            ]
+          },
+          "requester_display": {
+            "type": "string",
+            "description": "Display name of the requester (e.g. Slack handle)."
+          },
+          "requester_user_id": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the requester, when known."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Ledger session of the escalating conversation."
+          },
+          "source_channel": {
+            "type": ["string", "null"],
+            "description": "Source channel (e.g. `slack`)."
+          },
+          "summary": {
+            "type": "string",
+            "description": "What the agent tried and where it got stuck."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Routing tags."
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title for inbox cards."
+          }
+        }
+      },
+      "CreatePrincipalRequest": {
+        "type": "object",
+        "description": "Request body for creating an agent principal.",
+        "required": ["slug", "display_name", "kind"],
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name."
+          },
+          "kind": {
+            "type": "string",
+            "description": "`super_agent` | `domain_agent` | `workflow_agent` | `extension`"
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization scope; omit for platform-level agents."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable machine slug (lowercase, unique per org)."
+          }
+        }
+      },
+      "DecideProposalRequest": {
+        "type": "object",
+        "description": "Request body for deciding a pending proposal.",
+        "required": ["approved"],
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "description": "`true` approves, `false` rejects."
+          },
+          "note": {
+            "type": ["string", "null"],
+            "description": "Optional note."
+          }
+        }
+      },
+      "DecideRequest": {
+        "type": "object",
+        "description": "Request body for deciding a pending approval.",
+        "required": ["approved"],
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "description": "`true` approves, `false` denies."
+          },
+          "note": {
+            "type": ["string", "null"],
+            "description": "Optional note shown to the agent and requester."
           }
         }
       },
@@ -2653,10 +5561,383 @@
           }
         }
       },
+      "Escalation": {
+        "type": "object",
+        "description": "One escalation: an agent's request for human-expert input.",
+        "required": [
+          "id",
+          "domain",
+          "requester_display",
+          "title",
+          "summary",
+          "tags",
+          "priority",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "assignee_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Team whose queue holds it (set on team routing)."
+          },
+          "assignee_user_id": {
+            "type": ["string", "null"],
+            "description": "Person who owns it (set on claim / direct routing)."
+          },
+          "callback_url": {
+            "type": ["string", "null"],
+            "description": "URL the runtime is called back on when the escalation resolves."
+          },
+          "claimed_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Claim instant, when claimed."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation instant."
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain the escalation belongs to (e.g. `techops`)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Escalation id (UUID v7)."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization, when the creating principal is org-scoped."
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority",
+            "description": "Urgency."
+          },
+          "requester_display": {
+            "type": "string",
+            "description": "Human-readable requester (e.g. Slack handle) for display."
+          },
+          "requester_user_id": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the person who originally asked, when known."
+          },
+          "resolution": {
+            "type": ["string", "null"],
+            "description": "The expert's answer (set on resolve)."
+          },
+          "resolved_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Resolution instant, when resolved or cancelled."
+          },
+          "resolved_by": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the resolver."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Ledger session of the conversation that escalated, when any."
+          },
+          "source_channel": {
+            "type": ["string", "null"],
+            "description": "Source channel of the originating conversation (e.g. `slack`)."
+          },
+          "status": {
+            "$ref": "#/components/schemas/EscalationStatus",
+            "description": "Lifecycle status."
+          },
+          "summary": {
+            "type": "string",
+            "description": "What the agent tried and where it got stuck (the expert's briefing)."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Use-case tags for routing (e.g. `vpn`, `sso`)."
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title for inbox cards."
+          }
+        }
+      },
+      "EscalationErrorBody": {
+        "type": "object",
+        "description": "Error body for escalation endpoints.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "EscalationStatus": {
+        "type": "string",
+        "description": "Lifecycle of an escalation.",
+        "enum": ["open", "claimed", "resolved", "cancelled"]
+      },
+      "EscalationTransition": {
+        "type": "object",
+        "description": "An audited state transition on an escalation (claim, reassign, resolve).",
+        "required": ["id", "escalation_id", "action", "actor_id", "created_at"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Action name (`routed`, `claimed`, `reassigned`, `resolved`,\n`cancelled`)."
+          },
+          "actor_id": {
+            "type": "string",
+            "description": "Who performed it (Macro user id, agent principal id, or `system`)."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instant of the transition."
+          },
+          "escalation_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The escalation."
+          },
+          "from_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Assignee team before the transition."
+          },
+          "from_user_id": {
+            "type": ["string", "null"],
+            "description": "Assignee user before the transition."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Transition id."
+          },
+          "reason": {
+            "type": ["string", "null"],
+            "description": "Free-form reason (required for reassign; feeds rule refinement)."
+          },
+          "to_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Assignee team after the transition."
+          },
+          "to_user_id": {
+            "type": ["string", "null"],
+            "description": "Assignee user after the transition."
+          }
+        }
+      },
+      "EventResponse": {
+        "type": "object",
+        "description": "A stored ledger event.",
+        "required": [
+          "session_id",
+          "seq",
+          "event_type",
+          "payload",
+          "actor_kind",
+          "actor_id",
+          "occurred_at",
+          "source_event_seqs",
+          "hash"
+        ],
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "description": "Actor id."
+          },
+          "actor_kind": {
+            "type": "string",
+            "description": "Actor kind."
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Stored event type discriminant."
+          },
+          "hash": {
+            "type": "string",
+            "description": "Chain hash (hex)."
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event occurred."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization scope."
+          },
+          "payload": {
+            "type": "object",
+            "description": "The typed payload, adjacently tagged."
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Position in the session."
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session id."
+          },
+          "source_event_seqs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Provenance links."
+          }
+        }
+      },
+      "ExpertProfile": {
+        "type": "object",
+        "description": "An expert's routing profile: which domains they cover and whether they\nare currently taking work.",
+        "required": ["user_id", "domains", "tags", "available"],
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "Whether the expert is currently taking new escalations."
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Domains the expert covers (empty = all)."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Expertise tags (informational; used by future rule refinement)."
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The expert's Macro user id."
+          }
+        }
+      },
       "Expiry": {
         "type": "string",
         "description": "How long a projection remains active without being requested.",
         "enum": ["day", "week", "month"]
+      },
+      "ExportErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "ExportJob": {
+        "type": "object",
+        "description": "An export job record.",
+        "required": [
+          "id",
+          "projection",
+          "sharing_mode",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "artifact_uri": {
+            "type": ["string", "null"],
+            "description": "Artifact URI when completed."
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Completed at."
+          },
+          "composition_id": {
+            "type": ["string", "null"],
+            "description": "Optional composition pin."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "error": {
+            "type": ["string", "null"],
+            "description": "Error when failed."
+          },
+          "from_occurred_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Window start."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Job id."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "projection": {
+            "$ref": "#/components/schemas/Projection",
+            "description": "Projection."
+          },
+          "row_count": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "description": "Rows emitted."
+          },
+          "sharing_mode": {
+            "$ref": "#/components/schemas/SharingMode",
+            "description": "Sharing mode applied."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status."
+          },
+          "to_occurred_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Window end."
+          }
+        }
+      },
+      "ExtensionErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "ExtensionStatus": {
+        "type": "string",
+        "description": "Lifecycle status.",
+        "enum": ["draft", "proposed", "active", "disabled", "rolled_back"]
       },
       "FeatureUsage": {
         "type": "object",
@@ -2680,6 +5961,22 @@
             "description": "Total cost across `entries` (USD)."
           }
         }
+      },
+      "FeedbackErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "FeedbackSharingMode": {
+        "type": "string",
+        "description": "Telemetry sharing consent for a session (dsh).\n\nNamed [`FeedbackSharingMode`] (not `SharingMode`) so OpenAPI/utoipa emits a\ndistinct schema from the training-export job's sharing-mode enum. utoipa's\n`schema(rename = ...)` is a field rename, not a component-name alias.",
+        "enum": ["full", "feedback_only", "disabled"]
       },
       "FileType": {
         "type": "string",
@@ -3109,6 +6406,87 @@
           "swf"
         ]
       },
+      "GateOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "Proceed with the call (policy allows it, or a matching approval was\nconsumed).",
+            "required": ["decision"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["allow"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Refuse the call.",
+            "required": ["reason", "decision"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["deny"]
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why (policy, or the decider's note)."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The call is paused behind a pending approval request.",
+            "required": ["request", "decision"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["pending"]
+              },
+              "request": {
+                "$ref": "#/components/schemas/ApprovalRequest",
+                "description": "The pending request (newly created or already open)."
+              }
+            }
+          }
+        ],
+        "description": "Outcome of a gate check."
+      },
+      "GateToolCallRequest": {
+        "type": "object",
+        "description": "Request body for gating a proposed tool call (agent callers).",
+        "required": ["requester_display", "tool_name", "arguments", "summary"],
+        "properties": {
+          "arguments": {
+            "description": "The proposed arguments, shown verbatim to the approver."
+          },
+          "callback_url": {
+            "type": ["string", "null"],
+            "description": "URL the runtime is called back on when decided."
+          },
+          "requester_display": {
+            "type": "string",
+            "description": "Display name for inbox cards."
+          },
+          "requester_user_id": {
+            "type": ["string", "null"],
+            "description": "Macro user id of the person the agent acts for, when known."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Ledger session of the conversation."
+          },
+          "summary": {
+            "type": "string",
+            "description": "The agent's explanation of what it wants to do and why."
+          },
+          "tool_name": {
+            "type": "string",
+            "description": "The tool about to run."
+          }
+        }
+      },
       "GenericErrorResponse": {
         "type": "object",
         "required": ["error", "message"],
@@ -3195,6 +6573,127 @@
           }
         }
       },
+      "GovernanceErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "GraphEdge": {
+        "type": "object",
+        "description": "A typed relationship between two nodes.",
+        "required": [
+          "id",
+          "from_node_id",
+          "to_node_id",
+          "relationship",
+          "attributes",
+          "created_at"
+        ],
+        "properties": {
+          "attributes": {
+            "description": "Attributes blob."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "from_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source node."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Edge id."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Relationship type (`employs`, `owns_device`, `has_account`)."
+          },
+          "to_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Target node."
+          }
+        }
+      },
+      "GraphErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "GraphNode": {
+        "type": "object",
+        "description": "A typed graph node.",
+        "required": [
+          "id",
+          "node_type",
+          "display_name",
+          "attributes",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "attributes": {
+            "description": "Attributes blob."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Node id."
+          },
+          "native_entity_id": {
+            "type": ["string", "null"],
+            "description": "Optional native Macro entity id."
+          },
+          "native_entity_type": {
+            "type": ["string", "null"],
+            "description": "Optional native Macro entity type."
+          },
+          "node_type": {
+            "type": "string",
+            "description": "schema.org-inspired type (`Person`, `Device`, `SoftwareApplication`)."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Updated at."
+          }
+        }
+      },
       "HttpSendChatMessageRequest": {
         "type": "object",
         "description": "HTTP request payload for sending a chat message.\nUnlike the WebSocket payload, this does not include stream_id as it's generated server-side.",
@@ -3226,6 +6725,17 @@
           "toolset": {
             "$ref": "#/components/schemas/ToolSet",
             "description": "Which toolset to use. Defaults to `all`"
+          }
+        }
+      },
+      "IdentityErrorBody": {
+        "type": "object",
+        "description": "Error body for identity endpoints.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
           }
         }
       },
@@ -3360,6 +6870,126 @@
         "description": "Lifecycle of one import entity.",
         "enum": ["staged", "importing", "imported", "discarded"]
       },
+      "InboxErrorBody": {
+        "type": "object",
+        "description": "Error body for inbox endpoints.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "InboxItem": {
+        "type": "object",
+        "description": "One card in `GET /inbox/mine`. Field names are locked for the UI agent.",
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "status",
+          "created_at",
+          "href",
+          "assigned_to_me",
+          "team_queued"
+        ],
+        "properties": {
+          "assigned_to_me": {
+            "type": "boolean",
+            "description": "The item is on the caller's personal assigned list."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the source row was created (RFC 3339)."
+          },
+          "href": {
+            "type": "string",
+            "description": "Existing DCS get path for this item (not a web route)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source-row id."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/InboxKind",
+            "description": "`escalation` | `approval` | `skill_proposal`."
+          },
+          "status": {
+            "type": "string",
+            "description": "Source status as its storage string."
+          },
+          "team_queued": {
+            "type": "boolean",
+            "description": "The item is on a team queue the caller can claim/decide."
+          },
+          "title": {
+            "type": "string",
+            "description": "Inbox-card title from the source record."
+          }
+        }
+      },
+      "InboxKind": {
+        "type": "string",
+        "description": "Discriminator for a unified inbox card. Locked JSON: `escalation` |\n`approval` | `skill_proposal`.",
+        "enum": ["escalation", "approval", "skill_proposal"]
+      },
+      "InboxView": {
+        "type": "object",
+        "description": "Personal unified inbox.",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "description": "Cards from all three sources, newest first."
+          }
+        }
+      },
+      "IngestRecord": {
+        "type": "object",
+        "description": "One record to ingest.",
+        "required": ["external_id", "record_type", "display_name", "payload"],
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "description": "Display name for the graph node."
+          },
+          "external_id": {
+            "type": "string",
+            "description": "Provider-stable id."
+          },
+          "payload": {
+            "description": "Raw payload."
+          },
+          "record_type": {
+            "type": "string",
+            "description": "Record kind."
+          }
+        }
+      },
+      "IngestRequest": {
+        "type": "object",
+        "description": "Ingest body.",
+        "required": ["records"],
+        "properties": {
+          "cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor."
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngestRecord"
+            },
+            "description": "Records."
+          }
+        }
+      },
       "Initiator": {
         "type": "string",
         "description": "Where an import entity was first staged from. Provenance only — never a\nvisibility filter.",
@@ -3371,6 +7001,106 @@
         "properties": {
           "token": {
             "type": "string"
+          }
+        }
+      },
+      "KnowledgeDocument": {
+        "type": "object",
+        "description": "An OKF-style knowledge document.",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "body",
+          "okf_type",
+          "okf_sources",
+          "okf_generated",
+          "okf_verified",
+          "okf_status",
+          "content_hash",
+          "human_authored",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "Markdown body."
+          },
+          "content_hash": {
+            "type": "string",
+            "description": "Content hash."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "human_authored": {
+            "type": "boolean",
+            "description": "Human-authored documents are never overwritten by generated updates."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Document id."
+          },
+          "okf_generated": {
+            "type": "boolean",
+            "description": "Generated by an agent."
+          },
+          "okf_sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Sources."
+          },
+          "okf_status": {
+            "type": "string",
+            "description": "`draft` | `active` | `deprecated` | `archived`."
+          },
+          "okf_type": {
+            "type": "string",
+            "description": "OKF type."
+          },
+          "okf_verified": {
+            "type": "boolean",
+            "description": "Verified by a human."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug."
+          },
+          "stale_after": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Stale-after timestamp."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Updated at."
+          }
+        }
+      },
+      "LedgerErrorBody": {
+        "type": "object",
+        "description": "Error body for ledger endpoints.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
           }
         }
       },
@@ -3446,6 +7176,46 @@
           }
         }
       },
+      "MessageRating": {
+        "type": "object",
+        "description": "One sidecar rating row.",
+        "required": [
+          "session_id",
+          "target_seq",
+          "rating",
+          "rated_by",
+          "updated_at"
+        ],
+        "properties": {
+          "note": {
+            "type": ["string", "null"],
+            "description": "Optional note."
+          },
+          "rated_by": {
+            "type": "string",
+            "description": "Who rated (user id or agent principal id)."
+          },
+          "rating": {
+            "$ref": "#/components/schemas/RatingValue",
+            "description": "Rating."
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session."
+          },
+          "target_seq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Ledger seq of the rated event."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last edit."
+          }
+        }
+      },
       "MessageWithAttachments": {
         "type": "object",
         "required": ["content", "date", "attachmentIds"],
@@ -3462,6 +7232,88 @@
           "date": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "MintTokenRequest": {
+        "type": "object",
+        "description": "Request body for minting a token.",
+        "required": ["name", "scopes"],
+        "properties": {
+          "expires_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Optional expiry."
+          },
+          "name": {
+            "type": "string",
+            "description": "Operator-facing label for the token."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Capability scopes to grant."
+          }
+        }
+      },
+      "MintTokenResponse": {
+        "type": "object",
+        "description": "Response body for a freshly minted token. The bearer string is only ever\nreturned here.",
+        "required": ["id", "bearer", "scopes"],
+        "properties": {
+          "bearer": {
+            "type": "string",
+            "description": "The full bearer string. Shown exactly once."
+          },
+          "expires_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Optional expiry."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Token id."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Scopes granted."
+          }
+        }
+      },
+      "MirrorErrorBody": {
+        "type": "object",
+        "description": "Error body.",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error description."
+          }
+        }
+      },
+      "MirrorProvider": {
+        "type": "string",
+        "description": "External ticketing provider.",
+        "enum": ["zendesk", "jira"]
+      },
+      "Neighbor": {
+        "type": "object",
+        "description": "Neighbor pair.",
+        "required": ["edge", "node"],
+        "properties": {
+          "edge": {
+            "$ref": "#/components/schemas/GraphEdge",
+            "description": "Edge."
+          },
+          "node": {
+            "$ref": "#/components/schemas/GraphNode",
+            "description": "Other node."
           }
         }
       },
@@ -3514,6 +7366,38 @@
           }
         }
       },
+      "NewEventBody": {
+        "type": "object",
+        "description": "A new event submitted for appending.",
+        "required": ["payload", "actor_kind", "actor_id"],
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "description": "Actor identifier."
+          },
+          "actor_kind": {
+            "type": "string",
+            "description": "`user` | `agent` | `system`"
+          },
+          "occurred_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the event occurred; defaults to now."
+          },
+          "payload": {
+            "type": "object",
+            "description": "The typed payload, adjacently tagged (`{\"type\": ..., \"data\": ...}`)."
+          },
+          "source_event_seqs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Provenance links to earlier events in this session."
+          }
+        }
+      },
       "NewMessageAttachment": {
         "type": "object",
         "required": ["messageId", "attachmentType", "attachmentId"],
@@ -3547,6 +7431,11 @@
             "description": "Deep link back to the page in Notion."
           }
         }
+      },
+      "OkfStatus": {
+        "type": "string",
+        "description": "Lifecycle status of a skill or knowledge document (OKF `status`).",
+        "enum": ["draft", "active", "deprecated", "archived"]
       },
       "OnboardingRow": {
         "type": "object",
@@ -3600,6 +7489,25 @@
         "description": "Lifecycle of the onboarding flow itself.",
         "enum": ["active", "completed"]
       },
+      "OpenSessionRequest": {
+        "type": "object",
+        "description": "Request body for opening a session.",
+        "required": ["runtime_conversation_id"],
+        "properties": {
+          "external_thread_key": {
+            "type": ["string", "null"],
+            "description": "The external thread key."
+          },
+          "external_thread_kind": {
+            "type": ["string", "null"],
+            "description": "`slack_thread` | `email_thread` | `channel_thread` | `native_chat`"
+          },
+          "runtime_conversation_id": {
+            "type": "string",
+            "description": "The runtime (Flue) conversation id."
+          }
+        }
+      },
       "PatchChatRequest": {
         "type": "object",
         "description": "Request body for patching a chat.",
@@ -3625,6 +7533,11 @@
           }
         }
       },
+      "PolicyDecision": {
+        "type": "string",
+        "description": "The three policy outcomes for a gated tool call, ordered by\nrestrictiveness: combining policy layers takes the maximum, so lower\nlayers (the floor) can only be tightened, never loosened.",
+        "enum": ["allow", "require_approval", "deny"]
+      },
       "Price": {
         "type": "object",
         "description": "Resolved price for one completion.",
@@ -3646,6 +7559,88 @@
             "description": "Total cost of the completion (USD)."
           }
         }
+      },
+      "PrincipalResponse": {
+        "type": "object",
+        "description": "Response body describing an agent principal.",
+        "required": ["id", "slug", "display_name", "kind", "created_at"],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation time."
+          },
+          "disabled_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Disabled time, when disabled."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Principal id."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Agent kind."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization scope."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Machine slug."
+          }
+        }
+      },
+      "Priority": {
+        "type": "string",
+        "description": "Urgency of an escalation; routing rules can gate on it.",
+        "enum": ["low", "normal", "high", "urgent"]
+      },
+      "ProjectedEvent": {
+        "type": "object",
+        "description": "One projected event row.",
+        "required": ["session_id", "seq", "event_type", "data"],
+        "properties": {
+          "composition_id": {
+            "type": ["string", "null"],
+            "description": "Composition id when known from a prior request/header."
+          },
+          "data": {
+            "description": "Payload JSON."
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Event type discriminant."
+          },
+          "parent_session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Parent session when this row sits after a `session/seed` fork."
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Seq."
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session."
+          }
+        }
+      },
+      "Projection": {
+        "type": "string",
+        "description": "Which projection of the ledger to emit.",
+        "enum": ["model_history", "human_transcript", "training_export"]
       },
       "ProjectionStateResponse": {
         "type": "object",
@@ -3685,10 +7680,314 @@
         "description": "The materialization status of a user's projection instance.",
         "enum": ["loading", "cold", "ready", "refreshing", "error"]
       },
+      "ProposalKind": {
+        "type": "string",
+        "description": "Kind of staged write.",
+        "enum": ["create", "patch", "archive"]
+      },
+      "ProposalStatus": {
+        "type": "string",
+        "description": "Proposal review status.",
+        "enum": ["pending", "approved", "rejected", "rolled_back"]
+      },
+      "ProposeSkillRequest": {
+        "type": "object",
+        "description": "Request body for opening a skill proposal.",
+        "required": [
+          "kind",
+          "slug",
+          "target_scope",
+          "proposed_name",
+          "proposed_description",
+          "proposed_body",
+          "diff_summary"
+        ],
+        "properties": {
+          "assignee_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Team queue."
+          },
+          "assignee_user_id": {
+            "type": ["string", "null"],
+            "description": "Direct assignee."
+          },
+          "diff_summary": {
+            "type": "string",
+            "description": "Human-readable diff summary."
+          },
+          "evidence": {
+            "description": "Trace excerpts / eval pointers."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ProposalKind",
+            "description": "`create` | `patch` | `archive`."
+          },
+          "owner_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Owner team when targeting team scope."
+          },
+          "owner_user_id": {
+            "type": ["string", "null"],
+            "description": "Owner user when targeting user scope."
+          },
+          "proposed_body": {
+            "type": "string",
+            "description": "Proposed body."
+          },
+          "proposed_description": {
+            "type": "string",
+            "description": "Proposed catalog description."
+          },
+          "proposed_name": {
+            "type": "string",
+            "description": "Proposed name."
+          },
+          "skill_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Existing skill, required for patch/archive."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Target slug."
+          },
+          "target_scope": {
+            "$ref": "#/components/schemas/SkillScope",
+            "description": "Target scope."
+          }
+        }
+      },
+      "Provider": {
+        "type": "string",
+        "description": "Supported lifecycle providers.",
+        "enum": ["okta", "iru", "meraki"]
+      },
+      "RateRequest": {
+        "type": "object",
+        "description": "Rate body.",
+        "required": ["target_seq", "rating"],
+        "properties": {
+          "note": {
+            "type": ["string", "null"],
+            "description": "Optional note."
+          },
+          "rating": {
+            "$ref": "#/components/schemas/RatingValue",
+            "description": "Rating."
+          },
+          "target_seq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Ledger seq of the rated event."
+          }
+        }
+      },
+      "RatingValue": {
+        "type": "string",
+        "description": "Editable thumbs rating stored in the sidecar (not the ledger).",
+        "enum": ["down", "none", "up"]
+      },
+      "ReassignApprovalRequest": {
+        "type": "object",
+        "description": "Request body for reassigning a pending approval.",
+        "required": ["reason"],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Why it was reassigned (required; recorded in the trail)."
+          },
+          "to_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "New assignee team queue (exactly one of user/team)."
+          },
+          "to_user_id": {
+            "type": ["string", "null"],
+            "description": "New assignee user (exactly one of user/team)."
+          }
+        }
+      },
+      "ReassignRequest": {
+        "type": "object",
+        "description": "Request body for reassigning an escalation.",
+        "required": ["reason"],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Why it was reassigned (required; feeds routing refinement)."
+          },
+          "to_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "New assignee team queue (exactly one of user/team)."
+          },
+          "to_user_id": {
+            "type": ["string", "null"],
+            "description": "New assignee user (exactly one of user/team)."
+          }
+        }
+      },
+      "RecordEvalRequest": {
+        "type": "object",
+        "description": "Request body for recording an eval run.",
+        "required": ["composition_id", "dataset", "passed"],
+        "properties": {
+          "composition_id": {
+            "type": "string",
+            "description": "Pinned composition id."
+          },
+          "dataset": {
+            "type": "string",
+            "description": "Dataset / task set name."
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the run passed."
+          },
+          "proposal_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Proposal this run gates."
+          },
+          "report": {
+            "description": "Full report blob."
+          },
+          "score": {
+            "type": ["number", "null"],
+            "format": "double",
+            "description": "Optional numeric score."
+          },
+          "skill_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Skill under test, when it already exists."
+          }
+        }
+      },
+      "RecordOutcomeRequest": {
+        "type": "object",
+        "description": "Request body for recording a session outcome.",
+        "required": ["outcome"],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "description": "`resolved` | `unresolved` | `escalated`"
+          },
+          "summary": {
+            "type": ["string", "null"],
+            "description": "Optional summary of what was attempted / what worked."
+          }
+        }
+      },
+      "RefineRequest": {
+        "type": "object",
+        "description": "Request body for a trace-refinement ingest.",
+        "required": ["proposal", "window_start", "window_end"],
+        "properties": {
+          "evidence_excerpt": {
+            "description": "Evidence excerpt."
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/ProposeSkillRequest",
+            "description": "The proposal to open from the evidence."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Session the evidence was drawn from."
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Window end."
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Window start."
+          }
+        }
+      },
       "RefreshCadence": {
         "type": "string",
         "description": "How frequently an active projection is regenerated.",
         "enum": ["high", "medium", "low"]
+      },
+      "RegisterAccountRequest": {
+        "type": "object",
+        "description": "Register-account body.",
+        "required": ["provider", "display_name", "credential_ref"],
+        "properties": {
+          "credential_ref": {
+            "type": "string",
+            "description": "Credential reference."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization."
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider",
+            "description": "Provider."
+          }
+        }
+      },
+      "RegisterExtensionRequest": {
+        "type": "object",
+        "description": "Register body.",
+        "required": [
+          "org_id",
+          "slug",
+          "display_name",
+          "version",
+          "sdk_semver",
+          "manifest",
+          "artifact_hash"
+        ],
+        "properties": {
+          "artifact_hash": {
+            "type": "string",
+            "description": "Artifact hash."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "manifest": {
+            "description": "Manifest."
+          },
+          "org_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Organization."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Scopes."
+          },
+          "sdk_semver": {
+            "type": "string",
+            "description": "SDK semver."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug."
+          },
+          "version": {
+            "type": "string",
+            "description": "Version."
+          }
+        }
       },
       "RejectToolCallRequest": {
         "type": "object",
@@ -3705,10 +8004,177 @@
           }
         }
       },
+      "ResolveRequest": {
+        "type": "object",
+        "description": "Request body for resolving an escalation.",
+        "required": ["resolution"],
+        "properties": {
+          "resolution": {
+            "type": "string",
+            "description": "The expert's answer, delivered back to the agent runtime."
+          }
+        }
+      },
       "Role": {
         "type": "string",
         "description": "The role of a message participant.",
         "enum": ["user", "assistant", "system"]
+      },
+      "RouteTarget": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "Assign directly to one expert.",
+            "required": ["user_id", "type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["user"]
+              },
+              "user_id": {
+                "type": "string",
+                "description": "The expert's Macro user id."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Put on a team queue for claiming.",
+            "required": ["team_id", "type"],
+            "properties": {
+              "team_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The team."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["team_queue"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Assign round-robin across a team's available experts.",
+            "required": ["team_id", "type"],
+            "properties": {
+              "team_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The team."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["team_round_robin"]
+              }
+            }
+          }
+        ],
+        "description": "Where a routing rule sends matching escalations."
+      },
+      "RoutingRule": {
+        "type": "object",
+        "description": "A routing rule: conditions → target, evaluated in `position` order; the\nfirst matching rule wins.",
+        "required": ["id", "domain", "position", "tags", "target"],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain this rule applies to."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Rule id."
+          },
+          "min_priority": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Priority",
+                "description": "Minimum priority condition: matches when absent or `<=` the\nescalation's priority."
+              }
+            ]
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Evaluation order (ascending; first match wins)."
+          },
+          "source_channel": {
+            "type": ["string", "null"],
+            "description": "Source-channel condition: matches when absent or equal."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags condition: matches when empty or intersecting the escalation's\ntags."
+          },
+          "target": {
+            "$ref": "#/components/schemas/RouteTarget",
+            "description": "Where matching escalations go."
+          }
+        }
+      },
+      "RunExportRequest": {
+        "type": "object",
+        "description": "Run-export body.",
+        "required": ["projection"],
+        "properties": {
+          "composition_id": {
+            "type": ["string", "null"],
+            "description": "Optional composition pin."
+          },
+          "from_occurred_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Window start."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization."
+          },
+          "projection": {
+            "$ref": "#/components/schemas/Projection",
+            "description": "Projection."
+          },
+          "sharing_mode": {
+            "$ref": "#/components/schemas/SharingMode",
+            "description": "Sharing mode."
+          },
+          "to_occurred_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Window end."
+          }
+        }
+      },
+      "RunExportResponse": {
+        "type": "object",
+        "description": "Run-export response.",
+        "required": ["job", "events"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectedEvent"
+            },
+            "description": "Projected rows (capped by the query limit)."
+          },
+          "job": {
+            "$ref": "#/components/schemas/ExportJob",
+            "description": "Job record."
+          }
+        }
       },
       "RunImportOutcome": {
         "type": "object",
@@ -3849,6 +8315,50 @@
           }
         }
       },
+      "SessionMappingResponse": {
+        "type": "object",
+        "description": "Response body describing a session mapping.",
+        "required": [
+          "session_id",
+          "runtime_conversation_id",
+          "agent_principal_id",
+          "created_at"
+        ],
+        "properties": {
+          "agent_principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Owning agent principal."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation time."
+          },
+          "external_thread_key": {
+            "type": ["string", "null"],
+            "description": "External thread key, when anchored."
+          },
+          "external_thread_kind": {
+            "type": ["string", "null"],
+            "description": "External thread kind, when anchored."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization scope."
+          },
+          "runtime_conversation_id": {
+            "type": "string",
+            "description": "Runtime conversation id."
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Macro session id."
+          }
+        }
+      },
       "SetPricingRequest": {
         "type": "object",
         "description": "Request body for [`set_pricing_handler`].",
@@ -3912,6 +8422,370 @@
             "description": "The owner of the item"
           }
         }
+      },
+      "SharingMode": {
+        "type": "string",
+        "description": "Telemetry sharing consent applied to an export job (dsh).\n\nNamed [`SharingMode`] (not `FeedbackSharingMode`) so OpenAPI/utoipa emits a\ndistinct schema from the feedback sidecar's consent enum. utoipa's\n`schema(rename = ...)` is a field rename, not a component-name alias.",
+        "enum": ["full", "feedback_only", "disabled"]
+      },
+      "SkillCatalogEntry": {
+        "type": "object",
+        "description": "Catalog line served to Flue `useSkill` / `defineSkill`.",
+        "required": [
+          "id",
+          "slug",
+          "description",
+          "body",
+          "version",
+          "scope",
+          "trust_tier"
+        ],
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "Full instructions (loaded on activation)."
+          },
+          "description": {
+            "type": "string",
+            "description": "Catalog description."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Skill id."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/SkillScope",
+            "description": "Scope."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug (Flue skill name)."
+          },
+          "trust_tier": {
+            "$ref": "#/components/schemas/TrustTier",
+            "description": "Trust tier."
+          },
+          "version": {
+            "type": "string",
+            "description": "Content hash at serve time."
+          }
+        }
+      },
+      "SkillEvalRun": {
+        "type": "object",
+        "description": "An eval run that may gate org/team promotion.",
+        "required": [
+          "id",
+          "composition_id",
+          "dataset",
+          "passed",
+          "report",
+          "created_at"
+        ],
+        "properties": {
+          "composition_id": {
+            "type": "string",
+            "description": "Pinned composition id."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the run was recorded."
+          },
+          "dataset": {
+            "type": "string",
+            "description": "Dataset / task set name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Run id."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the run passed the gate."
+          },
+          "proposal_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Proposal this run gates."
+          },
+          "report": {
+            "description": "Full report blob."
+          },
+          "score": {
+            "type": ["number", "null"],
+            "format": "double",
+            "description": "Optional numeric score."
+          },
+          "skill_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Skill under test, when it already exists."
+          }
+        }
+      },
+      "SkillProposal": {
+        "type": "object",
+        "description": "A staged skill write awaiting (or having received) inbox review.",
+        "required": [
+          "id",
+          "kind",
+          "slug",
+          "target_scope",
+          "proposed_name",
+          "proposed_description",
+          "proposed_body",
+          "diff_summary",
+          "evidence",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "assignee_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Team queue."
+          },
+          "assignee_user_id": {
+            "type": ["string", "null"],
+            "description": "Direct assignee."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "decided_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When decided."
+          },
+          "decided_by": {
+            "type": ["string", "null"],
+            "description": "Who decided."
+          },
+          "decision_note": {
+            "type": ["string", "null"],
+            "description": "Decision note."
+          },
+          "diff_summary": {
+            "type": "string",
+            "description": "Human-readable diff summary (evidence-backed, prime-agent `/refine` shape)."
+          },
+          "eval_passed": {
+            "type": ["boolean", "null"],
+            "description": "Whether that eval passed."
+          },
+          "eval_run_id": {
+            "type": ["string", "null"],
+            "description": "Eval run that gated promotion, when any."
+          },
+          "evidence": {
+            "description": "Trace excerpts / eval pointers backing the change."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Proposal id."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ProposalKind",
+            "description": "Create / patch / archive."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "owner_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Owner team when targeting team scope."
+          },
+          "owner_user_id": {
+            "type": ["string", "null"],
+            "description": "Owner user when targeting user scope."
+          },
+          "proposed_body": {
+            "type": "string",
+            "description": "Proposed body."
+          },
+          "proposed_description": {
+            "type": "string",
+            "description": "Proposed catalog description."
+          },
+          "proposed_name": {
+            "type": "string",
+            "description": "Proposed name."
+          },
+          "proposer_agent_id": {
+            "type": ["string", "null"],
+            "description": "Proposing agent principal id, when an agent authored this."
+          },
+          "proposer_user_id": {
+            "type": ["string", "null"],
+            "description": "Proposing user id, when a human authored this."
+          },
+          "skill_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Existing skill, when patching or archiving."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Target slug."
+          },
+          "snapshot_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Snapshot taken at approve time (for rollback)."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProposalStatus",
+            "description": "Review status."
+          },
+          "target_scope": {
+            "$ref": "#/components/schemas/SkillScope",
+            "description": "Target scope."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last updated at."
+          }
+        }
+      },
+      "SkillRecord": {
+        "type": "object",
+        "description": "A governed skill record.",
+        "required": [
+          "id",
+          "scope",
+          "slug",
+          "name",
+          "description",
+          "body",
+          "trust_tier",
+          "okf_type",
+          "okf_sources",
+          "okf_generated",
+          "okf_verified",
+          "okf_status",
+          "content_hash",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "archived_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Soft-delete timestamp."
+          },
+          "body": {
+            "type": "string",
+            "description": "Full SKILL.md body (instructions)."
+          },
+          "content_hash": {
+            "type": "string",
+            "description": "SHA-256 hex of `body`."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "description": {
+            "type": "string",
+            "description": "One-or-two sentence description (the catalog line the model always sees)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Skill id."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "okf_generated": {
+            "type": "boolean",
+            "description": "Whether an agent generated this content."
+          },
+          "okf_sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Source URIs or ids."
+          },
+          "okf_status": {
+            "$ref": "#/components/schemas/OkfStatus",
+            "description": "Lifecycle status."
+          },
+          "okf_type": {
+            "type": "string",
+            "description": "OKF type (`skill`)."
+          },
+          "okf_verified": {
+            "type": "boolean",
+            "description": "Whether a human has verified the content."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization; `None` for platform skills."
+          },
+          "owner_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Owner team when `scope` is `team`."
+          },
+          "owner_user_id": {
+            "type": ["string", "null"],
+            "description": "Owner user when `scope` is `user`."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/SkillScope",
+            "description": "Ownership scope."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable slug (directory name / Flue skill name)."
+          },
+          "stale_after": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the content should be considered stale."
+          },
+          "trust_tier": {
+            "$ref": "#/components/schemas/TrustTier",
+            "description": "Trust tier."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last updated at."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Monotonic version; each approve/rollback bumps this."
+          }
+        }
+      },
+      "SkillScope": {
+        "type": "string",
+        "description": "Who a skill is owned by. Personal skills may auto-apply; team and org\nskills always go through proposal review before they become active.",
+        "enum": ["user", "team", "org", "platform"]
       },
       "SlackChannelMeta": {
         "type": "object",
@@ -4114,6 +8988,192 @@
         "description": "The kind of entity a projection is materialized for.",
         "enum": ["user", "team"]
       },
+      "TenantExtension": {
+        "type": "object",
+        "description": "A tenant extension package.",
+        "required": [
+          "id",
+          "org_id",
+          "slug",
+          "display_name",
+          "version",
+          "sdk_semver",
+          "manifest",
+          "artifact_hash",
+          "status",
+          "scopes",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "activated_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When activated."
+          },
+          "artifact_hash": {
+            "type": "string",
+            "description": "SHA-256 of the artifact."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Created at."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Extension id."
+          },
+          "manifest": {
+            "description": "marketplace.json-style manifest."
+          },
+          "org_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "principal_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Agent principal acting as this extension."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Token scopes granted to the extension principal."
+          },
+          "sdk_semver": {
+            "type": "string",
+            "description": "Host SDK semver this artifact was stamped against."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug unique per org."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExtensionStatus",
+            "description": "Status."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Updated at."
+          },
+          "version": {
+            "type": "string",
+            "description": "Package semver."
+          }
+        }
+      },
+      "TicketMirror": {
+        "type": "object",
+        "description": "A live (or disconnected) mirror of a Macro entity onto an external ticket.",
+        "required": [
+          "id",
+          "provider",
+          "native_entity_type",
+          "native_entity_id",
+          "foreign_id",
+          "summary",
+          "status",
+          "last_mirrored_at"
+        ],
+        "properties": {
+          "disconnected_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When disconnected; native entity is unchanged."
+          },
+          "foreign_id": {
+            "type": "string",
+            "description": "External ticket id."
+          },
+          "foreign_url": {
+            "type": ["string", "null"],
+            "description": "External ticket URL (backlink)."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Mirror id."
+          },
+          "last_mirrored_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last successful mirror."
+          },
+          "native_entity_id": {
+            "type": "string",
+            "description": "Macro entity id."
+          },
+          "native_entity_type": {
+            "type": "string",
+            "description": "Macro entity type (source of truth)."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "provider": {
+            "$ref": "#/components/schemas/MirrorProvider",
+            "description": "Provider."
+          },
+          "status": {
+            "type": "string",
+            "description": "External status snapshot."
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary mirrored outward."
+          }
+        }
+      },
+      "ToolPolicy": {
+        "type": "object",
+        "description": "An org-configurable policy row: which decision applies to an agent +\ntool pair, and who approves when the decision is `require_approval`.",
+        "required": ["id", "agent_slug", "tool_name", "decision"],
+        "properties": {
+          "agent_slug": {
+            "type": "string",
+            "description": "Agent slug pattern (`techops`, `*`, `tech*`)."
+          },
+          "approver_team_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Approver team queue, when `require_approval`."
+          },
+          "approver_user_id": {
+            "type": ["string", "null"],
+            "description": "Direct approver, when `require_approval`."
+          },
+          "decision": {
+            "$ref": "#/components/schemas/PolicyDecision",
+            "description": "The decision this policy imposes."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Policy id."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "tool_name": {
+            "type": "string",
+            "description": "Tool name pattern (`send_email`, `*`, `email.*`)."
+          }
+        }
+      },
       "ToolSet": {
         "oneOf": [
           {
@@ -4137,6 +9197,62 @@
             }
           }
         ]
+      },
+      "TraceRefinement": {
+        "type": "object",
+        "description": "A trace-refinement job result that emitted a proposal.",
+        "required": [
+          "id",
+          "window_start",
+          "window_end",
+          "evidence_excerpt",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the job ran."
+          },
+          "evidence_excerpt": {
+            "description": "Evidence excerpt stored with the job."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Job id."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Owning organization."
+          },
+          "proposal_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Proposal that was emitted."
+          },
+          "session_id": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Session the evidence was drawn from, when any."
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Window end."
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Window start."
+          }
+        }
+      },
+      "TrustTier": {
+        "type": "string",
+        "description": "Hermes-style trust tier recorded in skill provenance.",
+        "enum": ["builtin", "verified", "community", "untrusted"]
       },
       "UpdateChannelSharePermission": {
         "type": "object",
@@ -4254,6 +9370,137 @@
           "toolCallId": {
             "type": "string",
             "description": "The tool call ID whose response should be updated."
+          }
+        }
+      },
+      "UpsertEdgeRequest": {
+        "type": "object",
+        "description": "Upsert-edge body.",
+        "required": ["from_node_id", "to_node_id", "relationship"],
+        "properties": {
+          "attributes": {
+            "description": "Attributes."
+          },
+          "from_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source node."
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Relationship."
+          },
+          "to_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Target node."
+          }
+        }
+      },
+      "UpsertKnowledgeRequest": {
+        "type": "object",
+        "description": "Upsert-knowledge body.",
+        "required": ["slug", "title", "body"],
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "Body."
+          },
+          "human_authored": {
+            "type": "boolean",
+            "description": "Human-authored flag."
+          },
+          "okf_generated": {
+            "type": "boolean",
+            "description": "Generated flag."
+          },
+          "okf_sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Sources."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title."
+          }
+        }
+      },
+      "UpsertMirrorRequest": {
+        "type": "object",
+        "description": "Upsert body.",
+        "required": [
+          "provider",
+          "native_entity_type",
+          "native_entity_id",
+          "foreign_id",
+          "summary",
+          "status"
+        ],
+        "properties": {
+          "foreign_id": {
+            "type": "string",
+            "description": "External id."
+          },
+          "foreign_url": {
+            "type": ["string", "null"],
+            "description": "Backlink."
+          },
+          "native_entity_id": {
+            "type": "string",
+            "description": "Native entity id."
+          },
+          "native_entity_type": {
+            "type": "string",
+            "description": "Native entity type."
+          },
+          "org_id": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Organization."
+          },
+          "provider": {
+            "$ref": "#/components/schemas/MirrorProvider",
+            "description": "Provider."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status."
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary."
+          }
+        }
+      },
+      "UpsertNodeRequest": {
+        "type": "object",
+        "description": "Upsert-node body.",
+        "required": ["node_type", "display_name"],
+        "properties": {
+          "attributes": {
+            "description": "Attributes."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "native_entity_id": {
+            "type": ["string", "null"],
+            "description": "Native entity id."
+          },
+          "native_entity_type": {
+            "type": ["string", "null"],
+            "description": "Native entity type."
+          },
+          "node_type": {
+            "type": "string",
+            "description": "Node type."
           }
         }
       },
@@ -4394,6 +9641,62 @@
           }
         }
       },
+      "UserApprovalsResponse": {
+        "type": "object",
+        "description": "Personal inbox view.",
+        "required": ["assigned", "team_queue"],
+        "properties": {
+          "assigned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRequest"
+            },
+            "description": "Pending requests assigned directly to the user."
+          },
+          "team_queue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRequest"
+            },
+            "description": "Pending requests on the user's teams' queues."
+          }
+        }
+      },
+      "UserEscalationsResponse": {
+        "type": "object",
+        "description": "Personal inbox view.",
+        "required": ["assigned", "claimable"],
+        "properties": {
+          "assigned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Escalation"
+            },
+            "description": "Items assigned to (or claimed by) the user, non-terminal."
+          },
+          "claimable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Escalation"
+            },
+            "description": "Unclaimed items on the user's teams' queues."
+          }
+        }
+      },
+      "UserInboxResponse": {
+        "type": "object",
+        "description": "Personal unified inbox.",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "description": "Cards from escalations, approvals, and skill proposals, newest first."
+          }
+        }
+      },
       "UserPdfRect": {
         "type": "object",
         "description": "UserPdfRect is in UserSpace\n(0,0) top left\npercent page units\n1-based page index",
@@ -4422,6 +9725,27 @@
           }
         }
       },
+      "UserProposalsResponse": {
+        "type": "object",
+        "description": "Personal inbox view.",
+        "required": ["assigned", "team_queue"],
+        "properties": {
+          "assigned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillProposal"
+            },
+            "description": "Pending proposals assigned directly to the user."
+          },
+          "team_queue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillProposal"
+            },
+            "description": "Pending proposals on the user's teams' queues."
+          }
+        }
+      },
       "UserToolResponse_Value": {
         "oneOf": [
           {
@@ -4444,6 +9768,22 @@
           }
         ],
         "description": "User tools are pending until a user executes them"
+      },
+      "VerifyChainResponse": {
+        "type": "object",
+        "description": "Chain verification result.",
+        "required": ["valid"],
+        "properties": {
+          "first_broken_seq": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "description": "The first broken seq when invalid."
+          },
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the whole chain verifies."
+          }
+        }
       },
       "WebCitation": {
         "type": "object",

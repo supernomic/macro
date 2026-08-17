@@ -46,10 +46,37 @@ turn for that `chat_id`; prior AgentLoop turns are not replayed into Flue.
 
 ### Tool gap — not production tool parity
 
-Flue tools are the small set under `apps/agents/src/tools` (documents search/
-read, ledger history, graph lookup, escalations, skill proposals, feedback,
-Slack reply). Rust chat uses `ai_tools::all_tools()` plus the user's MCP
-servers. Do not claim the cutover is prod-ready for tool behavior.
+Flue today ships a **small** tool set (`apps/agents/src/tools`), mounted from
+the super-agent:
+
+| On Flue | Purpose |
+|---|---|
+| `search_documents` | Org document search |
+| `read_document` | Read one document |
+| `query_my_history` | Session ledger history |
+| `lookup_neighbors` | Entity graph neighbors |
+| `create_escalation` | HITL escalation |
+| `propose_skill` | Skill proposal |
+| `record_feedback` | Session feedback |
+| `reply_in_slack_thread` | Slack only |
+
+Rust DCS chat uses `ai_tools::all_tools()` **plus the user's connected MCP
+servers**. Those are **not** on Flue. Do not enable `FLUENT_DCS_CHAT` in
+production until this list is empty enough for the chat product, **or** Flue
+can invoke Macro tool execution with the **user JWT**.
+
+**Not yet on Flue (Rust `all_tools` + MCP):**
+
+- User MCP servers (`mcp_client` / `call_tool` — Flue cannot call them)
+- Email (send/read/search), notifications, import / Notion
+- Projects, properties, CRM, teams, channels, chats, calls
+- Soup `ListEntities`, skills (Rust `skill_toolset`, distinct from Flue
+  `propose_skill`), Anthropic computer-use, subagents
+- `SearchTools` / `LoadTools` / `DisplayResults` / `SelfKnowledge`
+
+Minimum for a **gated internal** rollout: search + documents +
+approvals/skills/graph (already on Flue). Channel bots and scheduled actions
+stay on AgentLoop until the list above is empty enough for those products.
 
 ### Auth gap — flag must stay off in production
 

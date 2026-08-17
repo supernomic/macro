@@ -30,6 +30,161 @@ export type AddServerRequest = {
 export type AiFeature = 'chat' | 'memory' | 'automation' | 'dynamic_completions_api' | 'chat_rename' | 'call_summary' | 'channel_bot' | 'ai_projection' | 'ai_editing' | 'import';
 
 /**
+ * Request body for appending events.
+ */
+export type AppendEventsRequest = {
+    /**
+     * The events to append, in order.
+     */
+    events: Array<NewEventBody>;
+};
+
+/**
+ * Error body for approval endpoints.
+ */
+export type ApprovalErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * One approval request: a gated tool call waiting for (or decided by) a
+ * human.
+ */
+export type ApprovalRequest = {
+    /**
+     * Slug of the agent principal that hit the gate.
+     */
+    agent_slug: string;
+    /**
+     * The proposed arguments, shown verbatim to the approver.
+     */
+    arguments: unknown;
+    /**
+     * SHA-256 hex digest of the canonical arguments.
+     */
+    arguments_digest: string;
+    /**
+     * Approver team queue, when routed to a team.
+     */
+    assignee_team_id?: string | null;
+    /**
+     * Direct approver, when routed to a person.
+     */
+    assignee_user_id?: string | null;
+    /**
+     * URL the runtime is called back on when decided.
+     */
+    callback_url?: string | null;
+    /**
+     * When the decided request was consumed by a retry of the call.
+     */
+    consumed_at?: string | null;
+    /**
+     * Creation instant.
+     */
+    created_at: string;
+    /**
+     * Decision instant.
+     */
+    decided_at?: string | null;
+    /**
+     * Macro user id of the decider.
+     */
+    decided_by?: string | null;
+    /**
+     * Optional note from the decider (shown to the agent and requester).
+     */
+    decision_note?: string | null;
+    /**
+     * Request id (UUID v7).
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Human-readable requester for inbox cards.
+     */
+    requester_display: string;
+    /**
+     * Macro user id of the person the agent is acting for, when known.
+     */
+    requester_user_id?: string | null;
+    /**
+     * Ledger session of the gated conversation.
+     */
+    session_id?: string | null;
+    /**
+     * Lifecycle status.
+     */
+    status: ApprovalStatus;
+    /**
+     * The agent's explanation of what it wants to do and why.
+     */
+    summary: string;
+    /**
+     * The gated tool.
+     */
+    tool_name: string;
+};
+
+/**
+ * Lifecycle of an approval request.
+ */
+export type ApprovalStatus = 'pending' | 'approved' | 'denied' | 'cancelled';
+
+/**
+ * An audited state transition on an approval request.
+ */
+export type ApprovalTransition = {
+    /**
+     * Action name (`routed`, `approved`, `denied`, `reassigned`,
+     * `cancelled`, `consumed`).
+     */
+    action: string;
+    /**
+     * Who performed it (Macro user id, agent principal id, or `system`).
+     */
+    actor_id: string;
+    /**
+     * The approval request.
+     */
+    approval_id: string;
+    /**
+     * Instant of the transition.
+     */
+    created_at: string;
+    /**
+     * Assignee team before the transition.
+     */
+    from_team_id?: string | null;
+    /**
+     * Assignee user before the transition.
+     */
+    from_user_id?: string | null;
+    /**
+     * Transition id.
+     */
+    id: string;
+    /**
+     * Free-form reason (required for reassign).
+     */
+    reason?: string | null;
+    /**
+     * Assignee team after the transition.
+     */
+    to_team_id?: string | null;
+    /**
+     * Assignee user after the transition.
+     */
+    to_user_id?: string | null;
+};
+
+/**
  * A structured part within an assistant message.
  *
  * When the model responds with tool calls the full turn is persisted as a
@@ -440,6 +595,124 @@ export type ConnectedServer = {
     url: string;
 };
 
+/**
+ * A connected provider account.
+ */
+export type ConnectorAccount = {
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Credential reference (never the secret).
+     */
+    credential_ref: string;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Account id.
+     */
+    id: string;
+    /**
+     * Opaque cursor.
+     */
+    last_cursor?: string | null;
+    /**
+     * Last successful sync.
+     */
+    last_synced_at?: string | null;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Provider.
+     */
+    provider: Provider;
+};
+
+/**
+ * Error body.
+ */
+export type ConnectorErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * A synced external record.
+ */
+export type ConnectorRecord = {
+    /**
+     * Account.
+     */
+    account_id: string;
+    /**
+     * Provider-stable id.
+     */
+    external_id: string;
+    /**
+     * Graph node this was projected onto.
+     */
+    graph_node_id?: string | null;
+    /**
+     * Record id.
+     */
+    id: string;
+    /**
+     * Raw payload.
+     */
+    payload: unknown;
+    /**
+     * Record kind (`user`, `device`, `application`).
+     */
+    record_type: string;
+    /**
+     * Updated at.
+     */
+    updated_at: string;
+};
+
+/**
+ * Per-session training-export consent.
+ */
+export type ConsentRecord = {
+    /**
+     * Organization.
+     */
+    org_id?: number | null;
+    /**
+     * Session.
+     */
+    session_id: string;
+    /**
+     * Who set it.
+     */
+    set_by: string;
+    /**
+     * Sharing mode.
+     */
+    sharing_mode: FeedbackSharingMode;
+    /**
+     * Last edit.
+     */
+    updated_at: string;
+};
+
+/**
+ * Consent body.
+ */
+export type ConsentRequest = {
+    /**
+     * Sharing mode.
+     */
+    sharing_mode: FeedbackSharingMode;
+};
+
 export type ConversationRecord = {
     chat_id: string;
     messages: Array<MessageWithAttachments>;
@@ -458,6 +731,99 @@ export type CreateChatRequest = {
      * Optional project to associate the chat with.
      */
     projectId?: string | null;
+};
+
+/**
+ * Request body for creating an escalation (agent callers).
+ */
+export type CreateEscalationRequest = {
+    /**
+     * URL the runtime is called back on when the escalation resolves.
+     */
+    callback_url?: string | null;
+    /**
+     * Domain the escalation belongs to (e.g. `techops`).
+     */
+    domain: string;
+    priority?: null | Priority;
+    /**
+     * Display name of the requester (e.g. Slack handle).
+     */
+    requester_display: string;
+    /**
+     * Macro user id of the requester, when known.
+     */
+    requester_user_id?: string | null;
+    /**
+     * Ledger session of the escalating conversation.
+     */
+    session_id?: string | null;
+    /**
+     * Source channel (e.g. `slack`).
+     */
+    source_channel?: string | null;
+    /**
+     * What the agent tried and where it got stuck.
+     */
+    summary: string;
+    /**
+     * Routing tags.
+     */
+    tags?: Array<string>;
+    /**
+     * Short title for inbox cards.
+     */
+    title: string;
+};
+
+/**
+ * Request body for creating an agent principal.
+ */
+export type CreatePrincipalRequest = {
+    /**
+     * Human-readable display name.
+     */
+    display_name: string;
+    /**
+     * `super_agent` | `domain_agent` | `workflow_agent` | `extension`
+     */
+    kind: string;
+    /**
+     * Organization scope; omit for platform-level agents.
+     */
+    org_id?: number | null;
+    /**
+     * Stable machine slug (lowercase, unique per org).
+     */
+    slug: string;
+};
+
+/**
+ * Request body for deciding a pending proposal.
+ */
+export type DecideProposalRequest = {
+    /**
+     * `true` approves, `false` rejects.
+     */
+    approved: boolean;
+    /**
+     * Optional note.
+     */
+    note?: string | null;
+};
+
+/**
+ * Request body for deciding a pending approval.
+ */
+export type DecideRequest = {
+    /**
+     * `true` approves, `false` denies.
+     */
+    approved: boolean;
+    /**
+     * Optional note shown to the agent and requester.
+     */
+    note?: string | null;
 };
 
 export type DocumentCognitionServiceApiVersion = 'v1' | 'v2';
@@ -532,9 +898,315 @@ export type ErrorResponse = {
 };
 
 /**
+ * One escalation: an agent's request for human-expert input.
+ */
+export type Escalation = {
+    /**
+     * Team whose queue holds it (set on team routing).
+     */
+    assignee_team_id?: string | null;
+    /**
+     * Person who owns it (set on claim / direct routing).
+     */
+    assignee_user_id?: string | null;
+    /**
+     * URL the runtime is called back on when the escalation resolves.
+     */
+    callback_url?: string | null;
+    /**
+     * Claim instant, when claimed.
+     */
+    claimed_at?: string | null;
+    /**
+     * Creation instant.
+     */
+    created_at: string;
+    /**
+     * Domain the escalation belongs to (e.g. `techops`).
+     */
+    domain: string;
+    /**
+     * Escalation id (UUID v7).
+     */
+    id: string;
+    /**
+     * Owning organization, when the creating principal is org-scoped.
+     */
+    org_id?: number | null;
+    /**
+     * Urgency.
+     */
+    priority: Priority;
+    /**
+     * Human-readable requester (e.g. Slack handle) for display.
+     */
+    requester_display: string;
+    /**
+     * Macro user id of the person who originally asked, when known.
+     */
+    requester_user_id?: string | null;
+    /**
+     * The expert's answer (set on resolve).
+     */
+    resolution?: string | null;
+    /**
+     * Resolution instant, when resolved or cancelled.
+     */
+    resolved_at?: string | null;
+    /**
+     * Macro user id of the resolver.
+     */
+    resolved_by?: string | null;
+    /**
+     * Ledger session of the conversation that escalated, when any.
+     */
+    session_id?: string | null;
+    /**
+     * Source channel of the originating conversation (e.g. `slack`).
+     */
+    source_channel?: string | null;
+    /**
+     * Lifecycle status.
+     */
+    status: EscalationStatus;
+    /**
+     * What the agent tried and where it got stuck (the expert's briefing).
+     */
+    summary: string;
+    /**
+     * Use-case tags for routing (e.g. `vpn`, `sso`).
+     */
+    tags: Array<string>;
+    /**
+     * Short title for inbox cards.
+     */
+    title: string;
+};
+
+/**
+ * Error body for escalation endpoints.
+ */
+export type EscalationErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * Lifecycle of an escalation.
+ */
+export type EscalationStatus = 'open' | 'claimed' | 'resolved' | 'cancelled';
+
+/**
+ * An audited state transition on an escalation (claim, reassign, resolve).
+ */
+export type EscalationTransition = {
+    /**
+     * Action name (`routed`, `claimed`, `reassigned`, `resolved`,
+     * `cancelled`).
+     */
+    action: string;
+    /**
+     * Who performed it (Macro user id, agent principal id, or `system`).
+     */
+    actor_id: string;
+    /**
+     * Instant of the transition.
+     */
+    created_at: string;
+    /**
+     * The escalation.
+     */
+    escalation_id: string;
+    /**
+     * Assignee team before the transition.
+     */
+    from_team_id?: string | null;
+    /**
+     * Assignee user before the transition.
+     */
+    from_user_id?: string | null;
+    /**
+     * Transition id.
+     */
+    id: string;
+    /**
+     * Free-form reason (required for reassign; feeds rule refinement).
+     */
+    reason?: string | null;
+    /**
+     * Assignee team after the transition.
+     */
+    to_team_id?: string | null;
+    /**
+     * Assignee user after the transition.
+     */
+    to_user_id?: string | null;
+};
+
+/**
+ * A stored ledger event.
+ */
+export type EventResponse = {
+    /**
+     * Actor id.
+     */
+    actor_id: string;
+    /**
+     * Actor kind.
+     */
+    actor_kind: string;
+    /**
+     * Stored event type discriminant.
+     */
+    event_type: string;
+    /**
+     * Chain hash (hex).
+     */
+    hash: string;
+    /**
+     * When the event occurred.
+     */
+    occurred_at: string;
+    /**
+     * Organization scope.
+     */
+    org_id?: number | null;
+    /**
+     * The typed payload, adjacently tagged.
+     */
+    payload: {
+        [key: string]: unknown;
+    };
+    /**
+     * Position in the session.
+     */
+    seq: number;
+    /**
+     * Session id.
+     */
+    session_id: string;
+    /**
+     * Provenance links.
+     */
+    source_event_seqs: Array<number>;
+};
+
+/**
+ * An expert's routing profile: which domains they cover and whether they
+ * are currently taking work.
+ */
+export type ExpertProfile = {
+    /**
+     * Whether the expert is currently taking new escalations.
+     */
+    available: boolean;
+    /**
+     * Domains the expert covers (empty = all).
+     */
+    domains: Array<string>;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Expertise tags (informational; used by future rule refinement).
+     */
+    tags: Array<string>;
+    /**
+     * The expert's Macro user id.
+     */
+    user_id: string;
+};
+
+/**
  * How long a projection remains active without being requested.
  */
 export type Expiry = 'day' | 'week' | 'month';
+
+/**
+ * Error body.
+ */
+export type ExportErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * An export job record.
+ */
+export type ExportJob = {
+    /**
+     * Artifact URI when completed.
+     */
+    artifact_uri?: string | null;
+    /**
+     * Completed at.
+     */
+    completed_at?: string | null;
+    /**
+     * Optional composition pin.
+     */
+    composition_id?: string | null;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Error when failed.
+     */
+    error?: string | null;
+    /**
+     * Window start.
+     */
+    from_occurred_at?: string | null;
+    /**
+     * Job id.
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Projection.
+     */
+    projection: Projection;
+    /**
+     * Rows emitted.
+     */
+    row_count?: number | null;
+    /**
+     * Sharing mode applied.
+     */
+    sharing_mode: SharingMode;
+    /**
+     * Status.
+     */
+    status: string;
+    /**
+     * Window end.
+     */
+    to_occurred_at?: string | null;
+};
+
+/**
+ * Error body.
+ */
+export type ExtensionErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * Lifecycle status.
+ */
+export type ExtensionStatus = 'draft' | 'proposed' | 'active' | 'disabled' | 'rolled_back';
 
 /**
  * Usage for a single feature, with its rolled-up dollar total.
@@ -555,6 +1227,25 @@ export type FeatureUsage = {
 };
 
 /**
+ * Error body.
+ */
+export type FeedbackErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * Telemetry sharing consent for a session (dsh).
+ *
+ * Named [`FeedbackSharingMode`] (not `SharingMode`) so OpenAPI/utoipa emits a
+ * distinct schema from the training-export job's sharing-mode enum. utoipa's
+ * `schema(rename = ...)` is a field rename, not a component-name alias.
+ */
+export type FeedbackSharingMode = 'full' | 'feedback_only' | 'disabled';
+
+/**
  * Generates a FileType enum and associated ContentType enum with their implementations.
  *
  * This macro takes a list of tuples in the format:
@@ -571,6 +1262,59 @@ export type FeatureUsage = {
  *
  */
 export type FileType = 'docx' | 'pdf' | 'md' | 'canvas' | 'coffee' | 'cson' | 'iced' | 'c' | 'i' | 'cpp' | 'cppm' | 'cc' | 'ccm' | 'cxx' | 'cxxm' | 'cplusplus' | 'cplusplusm' | 'hpp' | 'hh' | 'hxx' | 'hplusplus' | 'h' | 'ii' | 'ino' | 'inl' | 'ipp' | 'ixx' | 'tpp' | 'txx' | 'hppin' | 'hin' | 'cu' | 'cuh' | 'cs' | 'csx' | 'cake' | 'css' | 'dart' | 'diff' | 'patch' | 'rej' | 'dockerfile' | 'containerfile' | 'go' | 'handlebars' | 'hbs' | 'hjs' | 'hlsl' | 'hlsli' | 'fx' | 'fxh' | 'vsh' | 'psh' | 'cginc' | 'compute' | 'html' | 'htm' | 'shtml' | 'xhtml' | 'xht' | 'mdoc' | 'jsp' | 'asp' | 'aspx' | 'jshtm' | 'volt' | 'ejs' | 'rhtml' | 'ini' | 'conf' | 'properties' | 'cfg' | 'directory' | 'gitattributes' | 'gitconfig' | 'gitmodules' | 'editorconfig' | 'repo' | 'java' | 'jav' | 'jsx' | 'js' | 'es6' | 'mjs' | 'cjs' | 'pac' | 'json' | 'bowerrc' | 'jscsrc' | 'webmanifest' | 'jsmap' | 'cssmap' | 'tsmap' | 'har' | 'jslintrc' | 'jsonld' | 'geojson' | 'ipynb' | 'vuerc' | 'jsonc' | 'eslintrc' | 'eslintrcjson' | 'jsfmtrc' | 'jshintrc' | 'swcrc' | 'hintrc' | 'babelrc' | 'jsonl' | 'ndjson' | 'codesnippets' | 'jl' | 'jmd' | 'sty' | 'cls' | 'bbx' | 'cbx' | 'tex' | 'ltx' | 'ctx' | 'bib' | 'less' | 'log' | 'lua' | 'mak' | 'mk' | 'mkd' | 'mdwn' | 'mdown' | 'markdown' | 'markdn' | 'mdtxt' | 'mdtext' | 'workbook' | 'm' | 'mm' | 'pl' | 'pm' | 'pod' | 't' | 'psgi' | 'raku' | 'rakumod' | 'rakutest' | 'rakudoc' | 'nqp' | 'p6' | 'pl6' | 'pm6' | 'php' | 'php4' | 'php5' | 'phtml' | 'ctp' | 'ps1' | 'psm1' | 'psd1' | 'pssc' | 'psrc' | 'py' | 'rpy' | 'pyw' | 'cpy' | 'gyp' | 'gypi' | 'pyi' | 'ipy' | 'pyt' | 'r' | 'rhistory' | 'rprofile' | 'rt' | 'cshtml' | 'razor' | 'rb' | 'rbx' | 'rjs' | 'gemspec' | 'rake' | 'ru' | 'erb' | 'podspec' | 'rbi' | 'rs' | 'scss' | 'sass' | 'shader' | 'sh' | 'bash' | 'bashrc' | 'bashaliases' | 'bashprofile' | 'bashlogin' | 'ebuild' | 'eclass' | 'profile' | 'bashlogout' | 'xprofile' | 'xsession' | 'xsessionrc' | 'zsh' | 'zshrc' | 'zprofile' | 'zlogin' | 'zlogout' | 'zshenv' | 'zshtheme' | 'fish' | 'ksh' | 'csh' | 'cshrc' | 'tcshrc' | 'yashrc' | 'yashprofile' | 'sql' | 'dsql' | 'swift' | 'ts' | 'cts' | 'mts' | 'tsx' | 'tsbuildinfo' | 'xml' | 'xsd' | 'ascx' | 'atom' | 'axml' | 'axaml' | 'bpmn' | 'cpt' | 'csl' | 'csproj' | 'csprojuser' | 'dita' | 'ditamap' | 'dtd' | 'ent' | 'mod' | 'dtml' | 'fsproj' | 'fxml' | 'iml' | 'isml' | 'jmx' | 'launch' | 'menu' | 'mxml' | 'nuspec' | 'opml' | 'owl' | 'proj' | 'props' | 'pt' | 'publishsettings' | 'pubxml' | 'pubxmluser' | 'rbxlx' | 'rbxmx' | 'rdf' | 'rng' | 'rss' | 'shproj' | 'storyboard' | 'targets' | 'tld' | 'tmx' | 'vbproj' | 'vbprojuser' | 'vcxproj' | 'vcxprojfilters' | 'wsdl' | 'wxi' | 'wxl' | 'wxs' | 'xaml' | 'xbl' | 'xib' | 'xlf' | 'xliff' | 'xpdl' | 'xul' | 'xoml' | 'xsl' | 'xslt' | 'yaml' | 'yml' | 'eyaml' | 'eyml' | 'cff' | 'yamltmlanguage' | 'yamltmpreferences' | 'yamltmtheme' | 'winget' | 'txt' | 'csv' | 'tsv' | 'jpeg' | 'jpg' | 'png' | 'gif' | 'svg' | 'webp' | 'avif' | 'bmp' | 'ico' | 'tiff' | 'tif' | 'heic' | 'heif' | 'tar' | 'targz' | 'tgz' | 'gz' | 'bz2' | 'tarbz2' | 'tbz2' | 'z' | 'tarz' | 'lz' | 'tarlz' | 'xz' | 'tarxz' | 'txz' | 'lzma' | 'tarlzma' | 'rar' | 'sevenz' | 'zst' | 'tarzst' | 'tzst' | 'zip' | 'exe' | 'msi' | 'dll' | 'bat' | 'cmd' | 'com' | 'appimage' | 'app' | 'bin' | 'deb' | 'rpm' | 'apk' | 'dmg' | 'pkg' | 'crx' | 'xpi' | 'mp3' | 'wav' | 'ogg' | 'flac' | 'aac' | 'm4a' | 'wma' | 'mid' | 'midi' | 'mp4' | 'mkv' | 'webm' | 'avi' | 'mov' | 'wmv' | 'mpg' | 'mpeg' | 'm4v' | 'flv' | 'f4v' | 'threegp' | 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot' | 'rtf' | 'odt' | 'ods' | 'odp' | 'odg' | 'odf' | 'epub' | 'mobi' | 'azw' | 'azw3' | 'djvu' | 'xls' | 'ppt' | 'pptx' | 'xlsx' | 'db' | 'sqlite' | 'sqlite3' | 'mdb' | 'accdb' | 'dbf' | 'plist' | 'toml' | 'env' | 'dot' | 'gv' | 'torrent' | 'ics' | 'vcf' | 'ai' | 'eps' | 'ps' | 'dxf' | 'dwg' | 'stl' | 'obj' | 'fbx' | 'blend' | 'dae' | 'threeds' | 'gltf' | 'glb' | 'vhd' | 'vhdx' | 'vmdk' | 'ova' | 'ovf' | 'iso' | 'img' | 'swf';
+
+/**
+ * Outcome of a gate check.
+ */
+export type GateOutcome = {
+    decision: 'allow';
+} | {
+    decision: 'deny';
+    /**
+     * Why (policy, or the decider's note).
+     */
+    reason: string;
+} | {
+    decision: 'pending';
+    /**
+     * The pending request (newly created or already open).
+     */
+    request: ApprovalRequest;
+};
+
+/**
+ * Request body for gating a proposed tool call (agent callers).
+ */
+export type GateToolCallRequest = {
+    /**
+     * The proposed arguments, shown verbatim to the approver.
+     */
+    arguments: unknown;
+    /**
+     * URL the runtime is called back on when decided.
+     */
+    callback_url?: string | null;
+    /**
+     * Display name for inbox cards.
+     */
+    requester_display: string;
+    /**
+     * Macro user id of the person the agent acts for, when known.
+     */
+    requester_user_id?: string | null;
+    /**
+     * Ledger session of the conversation.
+     */
+    session_id?: string | null;
+    /**
+     * The agent's explanation of what it wants to do and why.
+     */
+    summary: string;
+    /**
+     * The tool about to run.
+     */
+    tool_name: string;
+};
 
 export type GenericErrorResponse = {
     /**
@@ -621,6 +1365,102 @@ export type GetChatsForAttachmentResponse = {
 };
 
 /**
+ * Error body.
+ */
+export type GovernanceErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * A typed relationship between two nodes.
+ */
+export type GraphEdge = {
+    /**
+     * Attributes blob.
+     */
+    attributes: unknown;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Source node.
+     */
+    from_node_id: string;
+    /**
+     * Edge id.
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Relationship type (`employs`, `owns_device`, `has_account`).
+     */
+    relationship: string;
+    /**
+     * Target node.
+     */
+    to_node_id: string;
+};
+
+/**
+ * Error body.
+ */
+export type GraphErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * A typed graph node.
+ */
+export type GraphNode = {
+    /**
+     * Attributes blob.
+     */
+    attributes: unknown;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Node id.
+     */
+    id: string;
+    /**
+     * Optional native Macro entity id.
+     */
+    native_entity_id?: string | null;
+    /**
+     * Optional native Macro entity type.
+     */
+    native_entity_type?: string | null;
+    /**
+     * schema.org-inspired type (`Person`, `Device`, `SoftwareApplication`).
+     */
+    node_type: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Updated at.
+     */
+    updated_at: string;
+};
+
+/**
  * HTTP request payload for sending a chat message.
  * Unlike the WebSocket payload, this does not include stream_id as it's generated server-side.
  */
@@ -649,6 +1489,16 @@ export type HttpSendChatMessageRequest = {
      * Which toolset to use. Defaults to `all`
      */
     toolset?: ToolSet;
+};
+
+/**
+ * Error body for identity endpoints.
+ */
+export type IdentityErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
 };
 
 /**
@@ -766,6 +1616,106 @@ export type ImportState = {
 export type ImportStatus = 'staged' | 'importing' | 'imported' | 'discarded';
 
 /**
+ * Error body for inbox endpoints.
+ */
+export type InboxErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * One card in `GET /inbox/mine`. Field names are locked for the UI agent.
+ */
+export type InboxItem = {
+    /**
+     * The item is on the caller's personal assigned list.
+     */
+    assigned_to_me: boolean;
+    /**
+     * When the source row was created (RFC 3339).
+     */
+    created_at: string;
+    /**
+     * Existing DCS get path for this item (not a web route).
+     */
+    href: string;
+    /**
+     * Source-row id.
+     */
+    id: string;
+    /**
+     * `escalation` | `approval` | `skill_proposal`.
+     */
+    kind: InboxKind;
+    /**
+     * Source status as its storage string.
+     */
+    status: string;
+    /**
+     * The item is on a team queue the caller can claim/decide.
+     */
+    team_queued: boolean;
+    /**
+     * Inbox-card title from the source record.
+     */
+    title: string;
+};
+
+/**
+ * Discriminator for a unified inbox card. Locked JSON: `escalation` |
+ * `approval` | `skill_proposal`.
+ */
+export type InboxKind = 'escalation' | 'approval' | 'skill_proposal';
+
+/**
+ * Personal unified inbox.
+ */
+export type InboxView = {
+    /**
+     * Cards from all three sources, newest first.
+     */
+    items: Array<InboxItem>;
+};
+
+/**
+ * One record to ingest.
+ */
+export type IngestRecord = {
+    /**
+     * Display name for the graph node.
+     */
+    display_name: string;
+    /**
+     * Provider-stable id.
+     */
+    external_id: string;
+    /**
+     * Raw payload.
+     */
+    payload: unknown;
+    /**
+     * Record kind.
+     */
+    record_type: string;
+};
+
+/**
+ * Ingest body.
+ */
+export type IngestRequest = {
+    /**
+     * Cursor.
+     */
+    cursor?: string | null;
+    /**
+     * Records.
+     */
+    records: Array<IngestRecord>;
+};
+
+/**
  * Where an import entity was first staged from. Provenance only — never a
  * visibility filter.
  */
@@ -773,6 +1723,82 @@ export type Initiator = 'onboarding' | 'chat';
 
 export type JwtPayload = {
     token: string;
+};
+
+/**
+ * An OKF-style knowledge document.
+ */
+export type KnowledgeDocument = {
+    /**
+     * Markdown body.
+     */
+    body: string;
+    /**
+     * Content hash.
+     */
+    content_hash: string;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Human-authored documents are never overwritten by generated updates.
+     */
+    human_authored: boolean;
+    /**
+     * Document id.
+     */
+    id: string;
+    /**
+     * Generated by an agent.
+     */
+    okf_generated: boolean;
+    /**
+     * Sources.
+     */
+    okf_sources: Array<string>;
+    /**
+     * `draft` | `active` | `deprecated` | `archived`.
+     */
+    okf_status: string;
+    /**
+     * OKF type.
+     */
+    okf_type: string;
+    /**
+     * Verified by a human.
+     */
+    okf_verified: boolean;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Slug.
+     */
+    slug: string;
+    /**
+     * Stale-after timestamp.
+     */
+    stale_after?: string | null;
+    /**
+     * Title.
+     */
+    title: string;
+    /**
+     * Updated at.
+     */
+    updated_at: string;
+};
+
+/**
+ * Error body for ledger endpoints.
+ */
+export type LedgerErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
 };
 
 /**
@@ -841,10 +1867,110 @@ export type MemoryResponse = {
     memory: string;
 };
 
+/**
+ * One sidecar rating row.
+ */
+export type MessageRating = {
+    /**
+     * Optional note.
+     */
+    note?: string | null;
+    /**
+     * Who rated (user id or agent principal id).
+     */
+    rated_by: string;
+    /**
+     * Rating.
+     */
+    rating: RatingValue;
+    /**
+     * Session.
+     */
+    session_id: string;
+    /**
+     * Ledger seq of the rated event.
+     */
+    target_seq: number;
+    /**
+     * Last edit.
+     */
+    updated_at: string;
+};
+
 export type MessageWithAttachments = {
     attachmentIds: Array<string>;
     content: string;
     date: string;
+};
+
+/**
+ * Request body for minting a token.
+ */
+export type MintTokenRequest = {
+    /**
+     * Optional expiry.
+     */
+    expires_at?: string | null;
+    /**
+     * Operator-facing label for the token.
+     */
+    name: string;
+    /**
+     * Capability scopes to grant.
+     */
+    scopes: Array<string>;
+};
+
+/**
+ * Response body for a freshly minted token. The bearer string is only ever
+ * returned here.
+ */
+export type MintTokenResponse = {
+    /**
+     * The full bearer string. Shown exactly once.
+     */
+    bearer: string;
+    /**
+     * Optional expiry.
+     */
+    expires_at?: string | null;
+    /**
+     * Token id.
+     */
+    id: string;
+    /**
+     * Scopes granted.
+     */
+    scopes: Array<string>;
+};
+
+/**
+ * Error body.
+ */
+export type MirrorErrorBody = {
+    /**
+     * Error description.
+     */
+    error: string;
+};
+
+/**
+ * External ticketing provider.
+ */
+export type MirrorProvider = 'zendesk' | 'jira';
+
+/**
+ * Neighbor pair.
+ */
+export type Neighbor = {
+    /**
+     * Edge.
+     */
+    edge: GraphEdge;
+    /**
+     * Other node.
+     */
+    node: GraphNode;
 };
 
 export type NewAttachment = {
@@ -877,6 +2003,34 @@ export type NewChatMessage = {
     updatedAt: string;
 };
 
+/**
+ * A new event submitted for appending.
+ */
+export type NewEventBody = {
+    /**
+     * Actor identifier.
+     */
+    actor_id: string;
+    /**
+     * `user` | `agent` | `system`
+     */
+    actor_kind: string;
+    /**
+     * When the event occurred; defaults to now.
+     */
+    occurred_at?: string | null;
+    /**
+     * The typed payload, adjacently tagged (`{"type": ..., "data": ...}`).
+     */
+    payload: {
+        [key: string]: unknown;
+    };
+    /**
+     * Provenance links to earlier events in this session.
+     */
+    source_event_seqs?: Array<number>;
+};
+
 export type NewMessageAttachment = {
     attachmentId: string;
     attachmentType: AttachmentType;
@@ -901,6 +2055,11 @@ export type NotionDocMeta = {
      */
     url?: string | null;
 };
+
+/**
+ * Lifecycle status of a skill or knowledge document (OKF `status`).
+ */
+export type OkfStatus = 'draft' | 'active' | 'deprecated' | 'archived';
 
 /**
  * One user's onboarding row.
@@ -953,6 +2112,24 @@ export type OnboardingState = {
 export type OnboardingStatus = 'active' | 'completed';
 
 /**
+ * Request body for opening a session.
+ */
+export type OpenSessionRequest = {
+    /**
+     * The external thread key.
+     */
+    external_thread_key?: string | null;
+    /**
+     * `slack_thread` | `email_thread` | `channel_thread` | `native_chat`
+     */
+    external_thread_kind?: string | null;
+    /**
+     * The runtime (Flue) conversation id.
+     */
+    runtime_conversation_id: string;
+};
+
+/**
  * Request body for patching a chat.
  */
 export type PatchChatRequest = {
@@ -966,6 +2143,13 @@ export type PatchChatRequest = {
     projectId?: string | null;
     sharePermission?: null | UpdateSharePermissionRequestV2;
 };
+
+/**
+ * The three policy outcomes for a gated tool call, ordered by
+ * restrictiveness: combining policy layers takes the maximum, so lower
+ * layers (the floor) can only be tightened, never loosened.
+ */
+export type PolicyDecision = 'allow' | 'require_approval' | 'deny';
 
 /**
  * Resolved price for one completion.
@@ -984,6 +2168,80 @@ export type Price = {
      */
     total: number;
 };
+
+/**
+ * Response body describing an agent principal.
+ */
+export type PrincipalResponse = {
+    /**
+     * Creation time.
+     */
+    created_at: string;
+    /**
+     * Disabled time, when disabled.
+     */
+    disabled_at?: string | null;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Principal id.
+     */
+    id: string;
+    /**
+     * Agent kind.
+     */
+    kind: string;
+    /**
+     * Organization scope.
+     */
+    org_id?: number | null;
+    /**
+     * Machine slug.
+     */
+    slug: string;
+};
+
+/**
+ * Urgency of an escalation; routing rules can gate on it.
+ */
+export type Priority = 'low' | 'normal' | 'high' | 'urgent';
+
+/**
+ * One projected event row.
+ */
+export type ProjectedEvent = {
+    /**
+     * Composition id when known from a prior request/header.
+     */
+    composition_id?: string | null;
+    /**
+     * Payload JSON.
+     */
+    data: unknown;
+    /**
+     * Event type discriminant.
+     */
+    event_type: string;
+    /**
+     * Parent session when this row sits after a `session/seed` fork.
+     */
+    parent_session_id?: string | null;
+    /**
+     * Seq.
+     */
+    seq: number;
+    /**
+     * Session.
+     */
+    session_id: string;
+};
+
+/**
+ * Which projection of the ledger to emit.
+ */
+export type Projection = 'model_history' | 'human_transcript' | 'training_export';
 
 /**
  * The current state of a user's projection instance.
@@ -1022,9 +2280,275 @@ export type ProjectionStateResponse = {
 export type ProjectionStatus = 'loading' | 'cold' | 'ready' | 'refreshing' | 'error';
 
 /**
+ * Kind of staged write.
+ */
+export type ProposalKind = 'create' | 'patch' | 'archive';
+
+/**
+ * Proposal review status.
+ */
+export type ProposalStatus = 'pending' | 'approved' | 'rejected' | 'rolled_back';
+
+/**
+ * Request body for opening a skill proposal.
+ */
+export type ProposeSkillRequest = {
+    /**
+     * Team queue.
+     */
+    assignee_team_id?: string | null;
+    /**
+     * Direct assignee.
+     */
+    assignee_user_id?: string | null;
+    /**
+     * Human-readable diff summary.
+     */
+    diff_summary: string;
+    /**
+     * Trace excerpts / eval pointers.
+     */
+    evidence?: unknown;
+    /**
+     * `create` | `patch` | `archive`.
+     */
+    kind: ProposalKind;
+    /**
+     * Owner team when targeting team scope.
+     */
+    owner_team_id?: string | null;
+    /**
+     * Owner user when targeting user scope.
+     */
+    owner_user_id?: string | null;
+    /**
+     * Proposed body.
+     */
+    proposed_body: string;
+    /**
+     * Proposed catalog description.
+     */
+    proposed_description: string;
+    /**
+     * Proposed name.
+     */
+    proposed_name: string;
+    /**
+     * Existing skill, required for patch/archive.
+     */
+    skill_id?: string | null;
+    /**
+     * Target slug.
+     */
+    slug: string;
+    /**
+     * Target scope.
+     */
+    target_scope: SkillScope;
+};
+
+/**
+ * Supported lifecycle providers.
+ */
+export type Provider = 'okta' | 'iru' | 'meraki';
+
+/**
+ * Rate body.
+ */
+export type RateRequest = {
+    /**
+     * Optional note.
+     */
+    note?: string | null;
+    /**
+     * Rating.
+     */
+    rating: RatingValue;
+    /**
+     * Ledger seq of the rated event.
+     */
+    target_seq: number;
+};
+
+/**
+ * Editable thumbs rating stored in the sidecar (not the ledger).
+ */
+export type RatingValue = 'down' | 'none' | 'up';
+
+/**
+ * Request body for reassigning a pending approval.
+ */
+export type ReassignApprovalRequest = {
+    /**
+     * Why it was reassigned (required; recorded in the trail).
+     */
+    reason: string;
+    /**
+     * New assignee team queue (exactly one of user/team).
+     */
+    to_team_id?: string | null;
+    /**
+     * New assignee user (exactly one of user/team).
+     */
+    to_user_id?: string | null;
+};
+
+/**
+ * Request body for reassigning an escalation.
+ */
+export type ReassignRequest = {
+    /**
+     * Why it was reassigned (required; feeds routing refinement).
+     */
+    reason: string;
+    /**
+     * New assignee team queue (exactly one of user/team).
+     */
+    to_team_id?: string | null;
+    /**
+     * New assignee user (exactly one of user/team).
+     */
+    to_user_id?: string | null;
+};
+
+/**
+ * Request body for recording an eval run.
+ */
+export type RecordEvalRequest = {
+    /**
+     * Pinned composition id.
+     */
+    composition_id: string;
+    /**
+     * Dataset / task set name.
+     */
+    dataset: string;
+    /**
+     * Whether the run passed.
+     */
+    passed: boolean;
+    /**
+     * Proposal this run gates.
+     */
+    proposal_id?: string | null;
+    /**
+     * Full report blob.
+     */
+    report?: unknown;
+    /**
+     * Optional numeric score.
+     */
+    score?: number | null;
+    /**
+     * Skill under test, when it already exists.
+     */
+    skill_id?: string | null;
+};
+
+/**
+ * Request body for recording a session outcome.
+ */
+export type RecordOutcomeRequest = {
+    /**
+     * `resolved` | `unresolved` | `escalated`
+     */
+    outcome: string;
+    /**
+     * Optional summary of what was attempted / what worked.
+     */
+    summary?: string | null;
+};
+
+/**
+ * Request body for a trace-refinement ingest.
+ */
+export type RefineRequest = {
+    /**
+     * Evidence excerpt.
+     */
+    evidence_excerpt?: unknown;
+    /**
+     * The proposal to open from the evidence.
+     */
+    proposal: ProposeSkillRequest;
+    /**
+     * Session the evidence was drawn from.
+     */
+    session_id?: string | null;
+    /**
+     * Window end.
+     */
+    window_end: string;
+    /**
+     * Window start.
+     */
+    window_start: string;
+};
+
+/**
  * How frequently an active projection is regenerated.
  */
 export type RefreshCadence = 'high' | 'medium' | 'low';
+
+/**
+ * Register-account body.
+ */
+export type RegisterAccountRequest = {
+    /**
+     * Credential reference.
+     */
+    credential_ref: string;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Organization.
+     */
+    org_id?: number | null;
+    /**
+     * Provider.
+     */
+    provider: Provider;
+};
+
+/**
+ * Register body.
+ */
+export type RegisterExtensionRequest = {
+    /**
+     * Artifact hash.
+     */
+    artifact_hash: string;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Manifest.
+     */
+    manifest: unknown;
+    /**
+     * Organization.
+     */
+    org_id: number;
+    /**
+     * Scopes.
+     */
+    scopes?: Array<string>;
+    /**
+     * SDK semver.
+     */
+    sdk_semver: string;
+    /**
+     * Slug.
+     */
+    slug: string;
+    /**
+     * Version.
+     */
+    version: string;
+};
 
 /**
  * Request body for rejecting a pending tool call.
@@ -1041,9 +2565,123 @@ export type RejectToolCallRequest = {
 };
 
 /**
+ * Request body for resolving an escalation.
+ */
+export type ResolveRequest = {
+    /**
+     * The expert's answer, delivered back to the agent runtime.
+     */
+    resolution: string;
+};
+
+/**
  * The role of a message participant.
  */
 export type Role = 'user' | 'assistant' | 'system';
+
+/**
+ * Where a routing rule sends matching escalations.
+ */
+export type RouteTarget = {
+    type: 'user';
+    /**
+     * The expert's Macro user id.
+     */
+    user_id: string;
+} | {
+    /**
+     * The team.
+     */
+    team_id: string;
+    type: 'team_queue';
+} | {
+    /**
+     * The team.
+     */
+    team_id: string;
+    type: 'team_round_robin';
+};
+
+/**
+ * A routing rule: conditions → target, evaluated in `position` order; the
+ * first matching rule wins.
+ */
+export type RoutingRule = {
+    /**
+     * Domain this rule applies to.
+     */
+    domain: string;
+    /**
+     * Rule id.
+     */
+    id: string;
+    min_priority?: null | Priority;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Evaluation order (ascending; first match wins).
+     */
+    position: number;
+    /**
+     * Source-channel condition: matches when absent or equal.
+     */
+    source_channel?: string | null;
+    /**
+     * Tags condition: matches when empty or intersecting the escalation's
+     * tags.
+     */
+    tags: Array<string>;
+    /**
+     * Where matching escalations go.
+     */
+    target: RouteTarget;
+};
+
+/**
+ * Run-export body.
+ */
+export type RunExportRequest = {
+    /**
+     * Optional composition pin.
+     */
+    composition_id?: string | null;
+    /**
+     * Window start.
+     */
+    from_occurred_at?: string | null;
+    /**
+     * Organization.
+     */
+    org_id?: number | null;
+    /**
+     * Projection.
+     */
+    projection: Projection;
+    /**
+     * Sharing mode.
+     */
+    sharing_mode?: SharingMode;
+    /**
+     * Window end.
+     */
+    to_occurred_at?: string | null;
+};
+
+/**
+ * Run-export response.
+ */
+export type RunExportResponse = {
+    /**
+     * Projected rows (capped by the query limit).
+     */
+    events: Array<ProjectedEvent>;
+    /**
+     * Job record.
+     */
+    job: ExportJob;
+};
 
 /**
  * Outcome of accepting/declining staged rows via `POST /import/run`.
@@ -1150,6 +2788,40 @@ export type ServerResponse = {
 };
 
 /**
+ * Response body describing a session mapping.
+ */
+export type SessionMappingResponse = {
+    /**
+     * Owning agent principal.
+     */
+    agent_principal_id: string;
+    /**
+     * Creation time.
+     */
+    created_at: string;
+    /**
+     * External thread key, when anchored.
+     */
+    external_thread_key?: string | null;
+    /**
+     * External thread kind, when anchored.
+     */
+    external_thread_kind?: string | null;
+    /**
+     * Organization scope.
+     */
+    org_id?: number | null;
+    /**
+     * Runtime conversation id.
+     */
+    runtime_conversation_id: string;
+    /**
+     * Macro session id.
+     */
+    session_id: string;
+};
+
+/**
  * Request body for [`set_pricing_handler`].
  */
 export type SetPricingRequest = {
@@ -1183,6 +2855,301 @@ export type SharePermissionV2 = {
      */
     owner: string;
 };
+
+/**
+ * Telemetry sharing consent applied to an export job (dsh).
+ *
+ * Named [`SharingMode`] (not `FeedbackSharingMode`) so OpenAPI/utoipa emits a
+ * distinct schema from the feedback sidecar's consent enum. utoipa's
+ * `schema(rename = ...)` is a field rename, not a component-name alias.
+ */
+export type SharingMode = 'full' | 'feedback_only' | 'disabled';
+
+/**
+ * Catalog line served to Flue `useSkill` / `defineSkill`.
+ */
+export type SkillCatalogEntry = {
+    /**
+     * Full instructions (loaded on activation).
+     */
+    body: string;
+    /**
+     * Catalog description.
+     */
+    description: string;
+    /**
+     * Skill id.
+     */
+    id: string;
+    /**
+     * Scope.
+     */
+    scope: SkillScope;
+    /**
+     * Slug (Flue skill name).
+     */
+    slug: string;
+    /**
+     * Trust tier.
+     */
+    trust_tier: TrustTier;
+    /**
+     * Content hash at serve time.
+     */
+    version: string;
+};
+
+/**
+ * An eval run that may gate org/team promotion.
+ */
+export type SkillEvalRun = {
+    /**
+     * Pinned composition id.
+     */
+    composition_id: string;
+    /**
+     * When the run was recorded.
+     */
+    created_at: string;
+    /**
+     * Dataset / task set name.
+     */
+    dataset: string;
+    /**
+     * Run id.
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Whether the run passed the gate.
+     */
+    passed: boolean;
+    /**
+     * Proposal this run gates.
+     */
+    proposal_id?: string | null;
+    /**
+     * Full report blob.
+     */
+    report: unknown;
+    /**
+     * Optional numeric score.
+     */
+    score?: number | null;
+    /**
+     * Skill under test, when it already exists.
+     */
+    skill_id?: string | null;
+};
+
+/**
+ * A staged skill write awaiting (or having received) inbox review.
+ */
+export type SkillProposal = {
+    /**
+     * Team queue.
+     */
+    assignee_team_id?: string | null;
+    /**
+     * Direct assignee.
+     */
+    assignee_user_id?: string | null;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * When decided.
+     */
+    decided_at?: string | null;
+    /**
+     * Who decided.
+     */
+    decided_by?: string | null;
+    /**
+     * Decision note.
+     */
+    decision_note?: string | null;
+    /**
+     * Human-readable diff summary (evidence-backed, prime-agent `/refine` shape).
+     */
+    diff_summary: string;
+    /**
+     * Whether that eval passed.
+     */
+    eval_passed?: boolean | null;
+    /**
+     * Eval run that gated promotion, when any.
+     */
+    eval_run_id?: string | null;
+    /**
+     * Trace excerpts / eval pointers backing the change.
+     */
+    evidence: unknown;
+    /**
+     * Proposal id.
+     */
+    id: string;
+    /**
+     * Create / patch / archive.
+     */
+    kind: ProposalKind;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Owner team when targeting team scope.
+     */
+    owner_team_id?: string | null;
+    /**
+     * Owner user when targeting user scope.
+     */
+    owner_user_id?: string | null;
+    /**
+     * Proposed body.
+     */
+    proposed_body: string;
+    /**
+     * Proposed catalog description.
+     */
+    proposed_description: string;
+    /**
+     * Proposed name.
+     */
+    proposed_name: string;
+    /**
+     * Proposing agent principal id, when an agent authored this.
+     */
+    proposer_agent_id?: string | null;
+    /**
+     * Proposing user id, when a human authored this.
+     */
+    proposer_user_id?: string | null;
+    /**
+     * Existing skill, when patching or archiving.
+     */
+    skill_id?: string | null;
+    /**
+     * Target slug.
+     */
+    slug: string;
+    /**
+     * Snapshot taken at approve time (for rollback).
+     */
+    snapshot_id?: string | null;
+    /**
+     * Review status.
+     */
+    status: ProposalStatus;
+    /**
+     * Target scope.
+     */
+    target_scope: SkillScope;
+    /**
+     * Last updated at.
+     */
+    updated_at: string;
+};
+
+/**
+ * A governed skill record.
+ */
+export type SkillRecord = {
+    /**
+     * Soft-delete timestamp.
+     */
+    archived_at?: string | null;
+    /**
+     * Full SKILL.md body (instructions).
+     */
+    body: string;
+    /**
+     * SHA-256 hex of `body`.
+     */
+    content_hash: string;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * One-or-two sentence description (the catalog line the model always sees).
+     */
+    description: string;
+    /**
+     * Skill id.
+     */
+    id: string;
+    /**
+     * Display name.
+     */
+    name: string;
+    /**
+     * Whether an agent generated this content.
+     */
+    okf_generated: boolean;
+    /**
+     * Source URIs or ids.
+     */
+    okf_sources: Array<string>;
+    /**
+     * Lifecycle status.
+     */
+    okf_status: OkfStatus;
+    /**
+     * OKF type (`skill`).
+     */
+    okf_type: string;
+    /**
+     * Whether a human has verified the content.
+     */
+    okf_verified: boolean;
+    /**
+     * Owning organization; `None` for platform skills.
+     */
+    org_id?: number | null;
+    /**
+     * Owner team when `scope` is `team`.
+     */
+    owner_team_id?: string | null;
+    /**
+     * Owner user when `scope` is `user`.
+     */
+    owner_user_id?: string | null;
+    /**
+     * Ownership scope.
+     */
+    scope: SkillScope;
+    /**
+     * Stable slug (directory name / Flue skill name).
+     */
+    slug: string;
+    /**
+     * When the content should be considered stale.
+     */
+    stale_after?: string | null;
+    /**
+     * Trust tier.
+     */
+    trust_tier: TrustTier;
+    /**
+     * Last updated at.
+     */
+    updated_at: string;
+    /**
+     * Monotonic version; each approve/rollback bumps this.
+     */
+    version: number;
+};
+
+/**
+ * Who a skill is owned by. Personal skills may auto-apply; team and org
+ * skills always go through proposal review before they become active.
+ */
+export type SkillScope = 'user' | 'team' | 'org' | 'platform';
 
 /**
  * Metadata for one staged Slack channel.
@@ -1317,11 +3284,201 @@ export type StructuredCompletionResponse = {
  */
 export type TargetType = 'user' | 'team';
 
+/**
+ * A tenant extension package.
+ */
+export type TenantExtension = {
+    /**
+     * When activated.
+     */
+    activated_at?: string | null;
+    /**
+     * SHA-256 of the artifact.
+     */
+    artifact_hash: string;
+    /**
+     * Created at.
+     */
+    created_at: string;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Extension id.
+     */
+    id: string;
+    /**
+     * marketplace.json-style manifest.
+     */
+    manifest: unknown;
+    /**
+     * Owning organization.
+     */
+    org_id: number;
+    /**
+     * Agent principal acting as this extension.
+     */
+    principal_id?: string | null;
+    /**
+     * Token scopes granted to the extension principal.
+     */
+    scopes: Array<string>;
+    /**
+     * Host SDK semver this artifact was stamped against.
+     */
+    sdk_semver: string;
+    /**
+     * Slug unique per org.
+     */
+    slug: string;
+    /**
+     * Status.
+     */
+    status: ExtensionStatus;
+    /**
+     * Updated at.
+     */
+    updated_at: string;
+    /**
+     * Package semver.
+     */
+    version: string;
+};
+
+/**
+ * A live (or disconnected) mirror of a Macro entity onto an external ticket.
+ */
+export type TicketMirror = {
+    /**
+     * When disconnected; native entity is unchanged.
+     */
+    disconnected_at?: string | null;
+    /**
+     * External ticket id.
+     */
+    foreign_id: string;
+    /**
+     * External ticket URL (backlink).
+     */
+    foreign_url?: string | null;
+    /**
+     * Mirror id.
+     */
+    id: string;
+    /**
+     * Last successful mirror.
+     */
+    last_mirrored_at: string;
+    /**
+     * Macro entity id.
+     */
+    native_entity_id: string;
+    /**
+     * Macro entity type (source of truth).
+     */
+    native_entity_type: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Provider.
+     */
+    provider: MirrorProvider;
+    /**
+     * External status snapshot.
+     */
+    status: string;
+    /**
+     * Summary mirrored outward.
+     */
+    summary: string;
+};
+
+/**
+ * An org-configurable policy row: which decision applies to an agent +
+ * tool pair, and who approves when the decision is `require_approval`.
+ */
+export type ToolPolicy = {
+    /**
+     * Agent slug pattern (`techops`, `*`, `tech*`).
+     */
+    agent_slug: string;
+    /**
+     * Approver team queue, when `require_approval`.
+     */
+    approver_team_id?: string | null;
+    /**
+     * Direct approver, when `require_approval`.
+     */
+    approver_user_id?: string | null;
+    /**
+     * The decision this policy imposes.
+     */
+    decision: PolicyDecision;
+    /**
+     * Policy id.
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Tool name pattern (`send_email`, `*`, `email.*`).
+     */
+    tool_name: string;
+};
+
 export type ToolSet = {
     type: 'all';
 } | {
     type: 'none';
 };
+
+/**
+ * A trace-refinement job result that emitted a proposal.
+ */
+export type TraceRefinement = {
+    /**
+     * When the job ran.
+     */
+    created_at: string;
+    /**
+     * Evidence excerpt stored with the job.
+     */
+    evidence_excerpt: unknown;
+    /**
+     * Job id.
+     */
+    id: string;
+    /**
+     * Owning organization.
+     */
+    org_id?: number | null;
+    /**
+     * Proposal that was emitted.
+     */
+    proposal_id?: string | null;
+    /**
+     * Session the evidence was drawn from, when any.
+     */
+    session_id?: string | null;
+    /**
+     * Window end.
+     */
+    window_end: string;
+    /**
+     * Window start.
+     */
+    window_start: string;
+};
+
+/**
+ * Hermes-style trust tier recorded in skill provenance.
+ */
+export type TrustTier = 'builtin' | 'verified' | 'community' | 'untrusted';
 
 export type UpdateChannelSharePermission = {
     accessLevel?: null | AccessLevel;
@@ -1399,6 +3556,122 @@ export type UpdateToolResponseRequest = {
      * The tool call ID whose response should be updated.
      */
     toolCallId: string;
+};
+
+/**
+ * Upsert-edge body.
+ */
+export type UpsertEdgeRequest = {
+    /**
+     * Attributes.
+     */
+    attributes?: unknown;
+    /**
+     * Source node.
+     */
+    from_node_id: string;
+    /**
+     * Relationship.
+     */
+    relationship: string;
+    /**
+     * Target node.
+     */
+    to_node_id: string;
+};
+
+/**
+ * Upsert-knowledge body.
+ */
+export type UpsertKnowledgeRequest = {
+    /**
+     * Body.
+     */
+    body: string;
+    /**
+     * Human-authored flag.
+     */
+    human_authored?: boolean;
+    /**
+     * Generated flag.
+     */
+    okf_generated?: boolean;
+    /**
+     * Sources.
+     */
+    okf_sources?: Array<string>;
+    /**
+     * Slug.
+     */
+    slug: string;
+    /**
+     * Title.
+     */
+    title: string;
+};
+
+/**
+ * Upsert body.
+ */
+export type UpsertMirrorRequest = {
+    /**
+     * External id.
+     */
+    foreign_id: string;
+    /**
+     * Backlink.
+     */
+    foreign_url?: string | null;
+    /**
+     * Native entity id.
+     */
+    native_entity_id: string;
+    /**
+     * Native entity type.
+     */
+    native_entity_type: string;
+    /**
+     * Organization.
+     */
+    org_id?: number | null;
+    /**
+     * Provider.
+     */
+    provider: MirrorProvider;
+    /**
+     * Status.
+     */
+    status: string;
+    /**
+     * Summary.
+     */
+    summary: string;
+};
+
+/**
+ * Upsert-node body.
+ */
+export type UpsertNodeRequest = {
+    /**
+     * Attributes.
+     */
+    attributes?: unknown;
+    /**
+     * Display name.
+     */
+    display_name: string;
+    /**
+     * Native entity id.
+     */
+    native_entity_id?: string | null;
+    /**
+     * Native entity type.
+     */
+    native_entity_type?: string | null;
+    /**
+     * Node type.
+     */
+    node_type: string;
 };
 
 /**
@@ -1512,6 +3785,44 @@ export type UsageSummary = {
 };
 
 /**
+ * Personal inbox view.
+ */
+export type UserApprovalsResponse = {
+    /**
+     * Pending requests assigned directly to the user.
+     */
+    assigned: Array<ApprovalRequest>;
+    /**
+     * Pending requests on the user's teams' queues.
+     */
+    team_queue: Array<ApprovalRequest>;
+};
+
+/**
+ * Personal inbox view.
+ */
+export type UserEscalationsResponse = {
+    /**
+     * Items assigned to (or claimed by) the user, non-terminal.
+     */
+    assigned: Array<Escalation>;
+    /**
+     * Unclaimed items on the user's teams' queues.
+     */
+    claimable: Array<Escalation>;
+};
+
+/**
+ * Personal unified inbox.
+ */
+export type UserInboxResponse = {
+    /**
+     * Cards from escalations, approvals, and skill proposals, newest first.
+     */
+    items: Array<InboxItem>;
+};
+
+/**
  * UserPdfRect is in UserSpace
  * (0,0) top left
  * percent page units
@@ -1526,10 +3837,38 @@ export type UserPdfRect = {
 };
 
 /**
+ * Personal inbox view.
+ */
+export type UserProposalsResponse = {
+    /**
+     * Pending proposals assigned directly to the user.
+     */
+    assigned: Array<SkillProposal>;
+    /**
+     * Pending proposals on the user's teams' queues.
+     */
+    team_queue: Array<SkillProposal>;
+};
+
+/**
  * User tools are pending until a user executes them
  */
 export type UserToolResponseValue = 'PendingUserExecution' | 'Rejected' | {
     UserAction: unknown;
+};
+
+/**
+ * Chain verification result.
+ */
+export type VerifyChainResponse = {
+    /**
+     * The first broken seq when invalid.
+     */
+    first_broken_seq?: number | null;
+    /**
+     * Whether the whole chain verifies.
+     */
+    valid: boolean;
 };
 
 /**
@@ -1561,6 +3900,699 @@ export type WebCitation = {
 export type WithChatId = {
     chat_id: string;
 };
+
+export type AgentGateHandlerData = {
+    body: GateToolCallRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-approvals/gate';
+};
+
+export type AgentGateHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: ApprovalErrorBody;
+    /**
+     * Missing scope
+     */
+    403: ApprovalErrorBody;
+};
+
+export type AgentGateHandlerError = AgentGateHandlerErrors[keyof AgentGateHandlerErrors];
+
+export type AgentGateHandlerResponses = {
+    /**
+     * The gate outcome
+     */
+    200: GateOutcome;
+};
+
+export type AgentGateHandlerResponse = AgentGateHandlerResponses[keyof AgentGateHandlerResponses];
+
+export type AgentGetApprovalHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/agent-approvals/{id}';
+};
+
+export type AgentGetApprovalHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: ApprovalErrorBody;
+};
+
+export type AgentGetApprovalHandlerError = AgentGetApprovalHandlerErrors[keyof AgentGetApprovalHandlerErrors];
+
+export type AgentGetApprovalHandlerResponses = {
+    /**
+     * The approval request
+     */
+    200: ApprovalRequest;
+};
+
+export type AgentGetApprovalHandlerResponse = AgentGetApprovalHandlerResponses[keyof AgentGetApprovalHandlerResponses];
+
+export type AgentCancelApprovalHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/agent-approvals/{id}/cancel';
+};
+
+export type AgentCancelApprovalHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: ApprovalErrorBody;
+    /**
+     * Not pending
+     */
+    409: ApprovalErrorBody;
+};
+
+export type AgentCancelApprovalHandlerError = AgentCancelApprovalHandlerErrors[keyof AgentCancelApprovalHandlerErrors];
+
+export type AgentCancelApprovalHandlerResponses = {
+    /**
+     * The cancelled request
+     */
+    200: ApprovalRequest;
+};
+
+export type AgentCancelApprovalHandlerResponse = AgentCancelApprovalHandlerResponses[keyof AgentCancelApprovalHandlerResponses];
+
+export type AgentCreateEscalationHandlerData = {
+    body: CreateEscalationRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-escalations';
+};
+
+export type AgentCreateEscalationHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: EscalationErrorBody;
+    /**
+     * Missing scope
+     */
+    403: EscalationErrorBody;
+};
+
+export type AgentCreateEscalationHandlerError = AgentCreateEscalationHandlerErrors[keyof AgentCreateEscalationHandlerErrors];
+
+export type AgentCreateEscalationHandlerResponses = {
+    /**
+     * The routed escalation
+     */
+    200: Escalation;
+};
+
+export type AgentCreateEscalationHandlerResponse = AgentCreateEscalationHandlerResponses[keyof AgentCreateEscalationHandlerResponses];
+
+export type AgentGetEscalationHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/agent-escalations/{id}';
+};
+
+export type AgentGetEscalationHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: EscalationErrorBody;
+};
+
+export type AgentGetEscalationHandlerError = AgentGetEscalationHandlerErrors[keyof AgentGetEscalationHandlerErrors];
+
+export type AgentGetEscalationHandlerResponses = {
+    /**
+     * The escalation
+     */
+    200: Escalation;
+};
+
+export type AgentGetEscalationHandlerResponse = AgentGetEscalationHandlerResponses[keyof AgentGetEscalationHandlerResponses];
+
+export type AgentGetConsentHandlerData = {
+    body?: never;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-feedback/{session_id}/consent';
+};
+
+export type AgentGetConsentHandlerResponses = {
+    /**
+     * Consent
+     */
+    200: ConsentRecord;
+};
+
+export type AgentGetConsentHandlerResponse = AgentGetConsentHandlerResponses[keyof AgentGetConsentHandlerResponses];
+
+export type UserSetConsentHandlerData = {
+    body: ConsentRequest;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-feedback/{session_id}/consent';
+};
+
+export type UserSetConsentHandlerResponses = {
+    /**
+     * Consent
+     */
+    200: ConsentRecord;
+};
+
+export type UserSetConsentHandlerResponse = UserSetConsentHandlerResponses[keyof UserSetConsentHandlerResponses];
+
+export type AgentListRatingsHandlerData = {
+    body?: never;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-feedback/{session_id}/ratings';
+};
+
+export type AgentListRatingsHandlerResponses = {
+    /**
+     * Ratings
+     */
+    200: Array<MessageRating>;
+};
+
+export type AgentListRatingsHandlerResponse = AgentListRatingsHandlerResponses[keyof AgentListRatingsHandlerResponses];
+
+export type AgentRateHandlerData = {
+    body: RateRequest;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-feedback/{session_id}/ratings';
+};
+
+export type AgentRateHandlerResponses = {
+    /**
+     * The rating
+     */
+    200: MessageRating;
+};
+
+export type AgentRateHandlerResponse = AgentRateHandlerResponses[keyof AgentRateHandlerResponses];
+
+export type UserRateHandlerData = {
+    body: RateRequest;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-feedback/{session_id}/user-ratings';
+};
+
+export type UserRateHandlerResponses = {
+    /**
+     * The rating
+     */
+    200: MessageRating;
+};
+
+export type UserRateHandlerResponse = UserRateHandlerResponses[keyof UserRateHandlerResponses];
+
+export type UpsertEdgeHandlerData = {
+    body: UpsertEdgeRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-graph/edges';
+};
+
+export type UpsertEdgeHandlerResponses = {
+    /**
+     * The edge
+     */
+    200: GraphEdge;
+};
+
+export type UpsertEdgeHandlerResponse = UpsertEdgeHandlerResponses[keyof UpsertEdgeHandlerResponses];
+
+export type UpsertKnowledgeHandlerData = {
+    body: UpsertKnowledgeRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-graph/knowledge';
+};
+
+export type UpsertKnowledgeHandlerResponses = {
+    /**
+     * The document
+     */
+    200: KnowledgeDocument;
+};
+
+export type UpsertKnowledgeHandlerResponse = UpsertKnowledgeHandlerResponses[keyof UpsertKnowledgeHandlerResponses];
+
+export type UpsertNodeHandlerData = {
+    body: UpsertNodeRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-graph/nodes';
+};
+
+export type UpsertNodeHandlerResponses = {
+    /**
+     * The node
+     */
+    200: GraphNode;
+};
+
+export type UpsertNodeHandlerResponse = UpsertNodeHandlerResponses[keyof UpsertNodeHandlerResponses];
+
+export type NeighborsHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/agent-graph/nodes/{id}/neighbors';
+};
+
+export type NeighborsHandlerResponses = {
+    /**
+     * Neighbors
+     */
+    200: Array<Neighbor>;
+};
+
+export type NeighborsHandlerResponse = NeighborsHandlerResponses[keyof NeighborsHandlerResponses];
+
+export type ListPrincipalsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-identity/principals';
+};
+
+export type ListPrincipalsHandlerResponses = {
+    /**
+     * Principals in the org
+     */
+    200: Array<PrincipalResponse>;
+};
+
+export type ListPrincipalsHandlerResponse = ListPrincipalsHandlerResponses[keyof ListPrincipalsHandlerResponses];
+
+export type CreatePrincipalHandlerData = {
+    body: CreatePrincipalRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-identity/principals';
+};
+
+export type CreatePrincipalHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: IdentityErrorBody;
+    /**
+     * Slug already taken
+     */
+    409: IdentityErrorBody;
+};
+
+export type CreatePrincipalHandlerError = CreatePrincipalHandlerErrors[keyof CreatePrincipalHandlerErrors];
+
+export type CreatePrincipalHandlerResponses = {
+    /**
+     * The created principal
+     */
+    200: PrincipalResponse;
+};
+
+export type CreatePrincipalHandlerResponse = CreatePrincipalHandlerResponses[keyof CreatePrincipalHandlerResponses];
+
+export type DisablePrincipalHandlerData = {
+    body?: never;
+    path: {
+        principal_id: string;
+    };
+    query?: never;
+    url: '/agent-identity/principals/{principal_id}/disable';
+};
+
+export type DisablePrincipalHandlerResponses = {
+    /**
+     * Principal disabled
+     */
+    204: void;
+};
+
+export type DisablePrincipalHandlerResponse = DisablePrincipalHandlerResponses[keyof DisablePrincipalHandlerResponses];
+
+export type MintTokenHandlerData = {
+    body: MintTokenRequest;
+    path: {
+        principal_id: string;
+    };
+    query?: never;
+    url: '/agent-identity/principals/{principal_id}/tokens';
+};
+
+export type MintTokenHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: IdentityErrorBody;
+    /**
+     * Principal not found
+     */
+    404: IdentityErrorBody;
+};
+
+export type MintTokenHandlerError = MintTokenHandlerErrors[keyof MintTokenHandlerErrors];
+
+export type MintTokenHandlerResponses = {
+    /**
+     * The minted token (bearer shown once)
+     */
+    200: MintTokenResponse;
+};
+
+export type MintTokenHandlerResponse = MintTokenHandlerResponses[keyof MintTokenHandlerResponses];
+
+export type RevokeTokenHandlerData = {
+    body?: never;
+    path: {
+        token_id: string;
+    };
+    query?: never;
+    url: '/agent-identity/tokens/{token_id}/revoke';
+};
+
+export type RevokeTokenHandlerResponses = {
+    /**
+     * Token revoked
+     */
+    204: void;
+};
+
+export type RevokeTokenHandlerResponse = RevokeTokenHandlerResponses[keyof RevokeTokenHandlerResponses];
+
+export type AgentQueryEventsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-ledger/agent-events';
+};
+
+export type AgentQueryEventsHandlerErrors = {
+    /**
+     * Missing scope
+     */
+    403: LedgerErrorBody;
+};
+
+export type AgentQueryEventsHandlerError = AgentQueryEventsHandlerErrors[keyof AgentQueryEventsHandlerErrors];
+
+export type AgentQueryEventsHandlerResponses = {
+    /**
+     * Matching events in the agent's org
+     */
+    200: Array<EventResponse>;
+};
+
+export type AgentQueryEventsHandlerResponse = AgentQueryEventsHandlerResponses[keyof AgentQueryEventsHandlerResponses];
+
+export type QueryEventsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-ledger/events';
+};
+
+export type QueryEventsHandlerResponses = {
+    /**
+     * Matching events
+     */
+    200: Array<EventResponse>;
+};
+
+export type QueryEventsHandlerResponse = QueryEventsHandlerResponses[keyof QueryEventsHandlerResponses];
+
+export type ExportEventsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-ledger/export';
+};
+
+export type ExportEventsHandlerResponses = {
+    /**
+     * NDJSON export of matching events
+     */
+    200: unknown;
+};
+
+export type OpenSessionHandlerData = {
+    body: OpenSessionRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-ledger/sessions';
+};
+
+export type OpenSessionHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: LedgerErrorBody;
+    /**
+     * Missing scope
+     */
+    403: LedgerErrorBody;
+};
+
+export type OpenSessionHandlerError = OpenSessionHandlerErrors[keyof OpenSessionHandlerErrors];
+
+export type OpenSessionHandlerResponses = {
+    /**
+     * The session mapping
+     */
+    200: SessionMappingResponse;
+};
+
+export type OpenSessionHandlerResponse = OpenSessionHandlerResponses[keyof OpenSessionHandlerResponses];
+
+export type FindSessionByThreadHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-ledger/sessions/by-thread';
+};
+
+export type FindSessionByThreadHandlerErrors = {
+    /**
+     * No session for this thread
+     */
+    404: LedgerErrorBody;
+};
+
+export type FindSessionByThreadHandlerError = FindSessionByThreadHandlerErrors[keyof FindSessionByThreadHandlerErrors];
+
+export type FindSessionByThreadHandlerResponses = {
+    /**
+     * The session mapping
+     */
+    200: SessionMappingResponse;
+};
+
+export type FindSessionByThreadHandlerResponse = FindSessionByThreadHandlerResponses[keyof FindSessionByThreadHandlerResponses];
+
+export type ListSessionEventsHandlerData = {
+    body?: never;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-ledger/sessions/{session_id}/events';
+};
+
+export type ListSessionEventsHandlerErrors = {
+    /**
+     * Session not found
+     */
+    404: LedgerErrorBody;
+};
+
+export type ListSessionEventsHandlerError = ListSessionEventsHandlerErrors[keyof ListSessionEventsHandlerErrors];
+
+export type ListSessionEventsHandlerResponses = {
+    /**
+     * Events in seq order
+     */
+    200: Array<EventResponse>;
+};
+
+export type ListSessionEventsHandlerResponse = ListSessionEventsHandlerResponses[keyof ListSessionEventsHandlerResponses];
+
+export type AppendEventsHandlerData = {
+    body: AppendEventsRequest;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-ledger/sessions/{session_id}/events';
+};
+
+export type AppendEventsHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: LedgerErrorBody;
+    /**
+     * Missing scope
+     */
+    403: LedgerErrorBody;
+    /**
+     * Session not found
+     */
+    404: LedgerErrorBody;
+};
+
+export type AppendEventsHandlerError = AppendEventsHandlerErrors[keyof AppendEventsHandlerErrors];
+
+export type AppendEventsHandlerResponses = {
+    /**
+     * The stored events
+     */
+    200: Array<EventResponse>;
+};
+
+export type AppendEventsHandlerResponse = AppendEventsHandlerResponses[keyof AppendEventsHandlerResponses];
+
+export type RecordOutcomeHandlerData = {
+    body: RecordOutcomeRequest;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-ledger/sessions/{session_id}/outcome';
+};
+
+export type RecordOutcomeHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: LedgerErrorBody;
+    /**
+     * Session not found
+     */
+    404: LedgerErrorBody;
+};
+
+export type RecordOutcomeHandlerError = RecordOutcomeHandlerErrors[keyof RecordOutcomeHandlerErrors];
+
+export type RecordOutcomeHandlerResponses = {
+    /**
+     * Outcome recorded
+     */
+    204: void;
+};
+
+export type RecordOutcomeHandlerResponse = RecordOutcomeHandlerResponses[keyof RecordOutcomeHandlerResponses];
+
+export type VerifyChainHandlerData = {
+    body?: never;
+    path: {
+        session_id: string;
+    };
+    query?: never;
+    url: '/agent-ledger/sessions/{session_id}/verify';
+};
+
+export type VerifyChainHandlerResponses = {
+    /**
+     * Verification result
+     */
+    200: VerifyChainResponse;
+};
+
+export type VerifyChainHandlerResponse = VerifyChainHandlerResponses[keyof VerifyChainHandlerResponses];
+
+export type AgentCatalogHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/agent-skills';
+};
+
+export type AgentCatalogHandlerResponses = {
+    /**
+     * Skill catalog
+     */
+    200: Array<SkillCatalogEntry>;
+};
+
+export type AgentCatalogHandlerResponse = AgentCatalogHandlerResponses[keyof AgentCatalogHandlerResponses];
+
+export type AgentProposeHandlerData = {
+    body: ProposeSkillRequest;
+    path?: never;
+    query?: never;
+    url: '/agent-skills';
+};
+
+export type AgentProposeHandlerResponses = {
+    /**
+     * The proposal
+     */
+    200: SkillProposal;
+};
+
+export type AgentProposeHandlerResponse = AgentProposeHandlerResponses[keyof AgentProposeHandlerResponses];
+
+export type AgentGetSkillHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Skill id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/agent-skills/{id}';
+};
+
+export type AgentGetSkillHandlerResponses = {
+    /**
+     * The skill
+     */
+    200: SkillRecord;
+};
+
+export type AgentGetSkillHandlerResponse = AgentGetSkillHandlerResponses[keyof AgentGetSkillHandlerResponses];
 
 export type SetPricingHandlerData = {
     body: SetPricingRequest;
@@ -1642,6 +4674,242 @@ export type UpsertAiProjectionResponses = {
 };
 
 export type UpsertAiProjectionResponse = UpsertAiProjectionResponses[keyof UpsertAiProjectionResponses];
+
+export type ListPoliciesHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/approval-policies';
+};
+
+export type ListPoliciesHandlerResponses = {
+    /**
+     * All tool policies
+     */
+    200: Array<ToolPolicy>;
+};
+
+export type ListPoliciesHandlerResponse = ListPoliciesHandlerResponses[keyof ListPoliciesHandlerResponses];
+
+export type UpsertPolicyHandlerData = {
+    body: ToolPolicy;
+    path?: never;
+    query?: never;
+    url: '/approval-policies';
+};
+
+export type UpsertPolicyHandlerResponses = {
+    /**
+     * The stored policy
+     */
+    200: ToolPolicy;
+};
+
+export type UpsertPolicyHandlerResponse = UpsertPolicyHandlerResponses[keyof UpsertPolicyHandlerResponses];
+
+export type DeletePolicyHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Policy id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/approval-policies/{id}';
+};
+
+export type DeletePolicyHandlerErrors = {
+    /**
+     * No such policy
+     */
+    404: ApprovalErrorBody;
+};
+
+export type DeletePolicyHandlerError = DeletePolicyHandlerErrors[keyof DeletePolicyHandlerErrors];
+
+export type DeletePolicyHandlerResponses = {
+    /**
+     * Deleted
+     */
+    204: void;
+};
+
+export type DeletePolicyHandlerResponse = DeletePolicyHandlerResponses[keyof DeletePolicyHandlerResponses];
+
+export type ListMyApprovalsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/approvals/mine';
+};
+
+export type ListMyApprovalsHandlerResponses = {
+    /**
+     * Assigned and team-queue approvals
+     */
+    200: UserApprovalsResponse;
+};
+
+export type ListMyApprovalsHandlerResponse = ListMyApprovalsHandlerResponses[keyof ListMyApprovalsHandlerResponses];
+
+export type ListTeamApprovalsHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Team id
+         */
+        team_id: string;
+    };
+    query?: never;
+    url: '/approvals/teams/{team_id}';
+};
+
+export type ListTeamApprovalsHandlerErrors = {
+    /**
+     * Not a member
+     */
+    403: ApprovalErrorBody;
+};
+
+export type ListTeamApprovalsHandlerError = ListTeamApprovalsHandlerErrors[keyof ListTeamApprovalsHandlerErrors];
+
+export type ListTeamApprovalsHandlerResponses = {
+    /**
+     * The team's approvals
+     */
+    200: Array<ApprovalRequest>;
+};
+
+export type ListTeamApprovalsHandlerResponse = ListTeamApprovalsHandlerResponses[keyof ListTeamApprovalsHandlerResponses];
+
+export type GetApprovalHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/approvals/{id}';
+};
+
+export type GetApprovalHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: ApprovalErrorBody;
+};
+
+export type GetApprovalHandlerError = GetApprovalHandlerErrors[keyof GetApprovalHandlerErrors];
+
+export type GetApprovalHandlerResponses = {
+    /**
+     * The approval request
+     */
+    200: ApprovalRequest;
+};
+
+export type GetApprovalHandlerResponse = GetApprovalHandlerResponses[keyof GetApprovalHandlerResponses];
+
+export type DecideApprovalHandlerData = {
+    body: DecideRequest;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/approvals/{id}/decide';
+};
+
+export type DecideApprovalHandlerErrors = {
+    /**
+     * Not allowed
+     */
+    403: ApprovalErrorBody;
+    /**
+     * Not pending
+     */
+    409: ApprovalErrorBody;
+};
+
+export type DecideApprovalHandlerError = DecideApprovalHandlerErrors[keyof DecideApprovalHandlerErrors];
+
+export type DecideApprovalHandlerResponses = {
+    /**
+     * The decided request
+     */
+    200: ApprovalRequest;
+};
+
+export type DecideApprovalHandlerResponse = DecideApprovalHandlerResponses[keyof DecideApprovalHandlerResponses];
+
+export type ReassignApprovalHandlerData = {
+    body: ReassignApprovalRequest;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/approvals/{id}/reassign';
+};
+
+export type ReassignApprovalHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: ApprovalErrorBody;
+    /**
+     * Not allowed
+     */
+    403: ApprovalErrorBody;
+};
+
+export type ReassignApprovalHandlerError = ReassignApprovalHandlerErrors[keyof ReassignApprovalHandlerErrors];
+
+export type ReassignApprovalHandlerResponses = {
+    /**
+     * The reassigned request
+     */
+    200: ApprovalRequest;
+};
+
+export type ReassignApprovalHandlerResponse = ReassignApprovalHandlerResponses[keyof ReassignApprovalHandlerResponses];
+
+export type ListApprovalTransitionsHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Approval request id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/approvals/{id}/transitions';
+};
+
+export type ListApprovalTransitionsHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: ApprovalErrorBody;
+};
+
+export type ListApprovalTransitionsHandlerError = ListApprovalTransitionsHandlerErrors[keyof ListApprovalTransitionsHandlerErrors];
+
+export type ListApprovalTransitionsHandlerResponses = {
+    /**
+     * Transitions, oldest first
+     */
+    200: Array<ApprovalTransition>;
+};
+
+export type ListApprovalTransitionsHandlerResponse = ListApprovalTransitionsHandlerResponses[keyof ListApprovalTransitionsHandlerResponses];
 
 export type GetChatsForAttachmentHandlerData = {
     body?: never;
@@ -2070,6 +5338,342 @@ export type GetCitationHandlerResponses = {
 
 export type GetCitationHandlerResponse = GetCitationHandlerResponses[keyof GetCitationHandlerResponses];
 
+export type ListExpertsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/escalation-routing/experts';
+};
+
+export type ListExpertsHandlerResponses = {
+    /**
+     * All expert profiles
+     */
+    200: Array<ExpertProfile>;
+};
+
+export type ListExpertsHandlerResponse = ListExpertsHandlerResponses[keyof ListExpertsHandlerResponses];
+
+export type UpsertExpertHandlerData = {
+    body: ExpertProfile;
+    path?: never;
+    query?: never;
+    url: '/escalation-routing/experts';
+};
+
+export type UpsertExpertHandlerResponses = {
+    /**
+     * The stored profile
+     */
+    200: ExpertProfile;
+};
+
+export type UpsertExpertHandlerResponse = UpsertExpertHandlerResponses[keyof UpsertExpertHandlerResponses];
+
+export type ListRulesHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/escalation-routing/rules';
+};
+
+export type ListRulesHandlerResponses = {
+    /**
+     * All routing rules
+     */
+    200: Array<RoutingRule>;
+};
+
+export type ListRulesHandlerResponse = ListRulesHandlerResponses[keyof ListRulesHandlerResponses];
+
+export type UpsertRuleHandlerData = {
+    body: RoutingRule;
+    path?: never;
+    query?: never;
+    url: '/escalation-routing/rules';
+};
+
+export type UpsertRuleHandlerResponses = {
+    /**
+     * The stored rule
+     */
+    200: RoutingRule;
+};
+
+export type UpsertRuleHandlerResponse = UpsertRuleHandlerResponses[keyof UpsertRuleHandlerResponses];
+
+export type DeleteRuleHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Rule id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalation-routing/rules/{id}';
+};
+
+export type DeleteRuleHandlerErrors = {
+    /**
+     * No such rule
+     */
+    404: EscalationErrorBody;
+};
+
+export type DeleteRuleHandlerError = DeleteRuleHandlerErrors[keyof DeleteRuleHandlerErrors];
+
+export type DeleteRuleHandlerResponses = {
+    /**
+     * Deleted
+     */
+    204: void;
+};
+
+export type DeleteRuleHandlerResponse = DeleteRuleHandlerResponses[keyof DeleteRuleHandlerResponses];
+
+export type ListMyEscalationsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/escalations/mine';
+};
+
+export type ListMyEscalationsHandlerResponses = {
+    /**
+     * Assigned and claimable escalations
+     */
+    200: UserEscalationsResponse;
+};
+
+export type ListMyEscalationsHandlerResponse = ListMyEscalationsHandlerResponses[keyof ListMyEscalationsHandlerResponses];
+
+export type ListTeamEscalationsHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Team id
+         */
+        team_id: string;
+    };
+    query?: never;
+    url: '/escalations/teams/{team_id}';
+};
+
+export type ListTeamEscalationsHandlerErrors = {
+    /**
+     * Not a member
+     */
+    403: EscalationErrorBody;
+};
+
+export type ListTeamEscalationsHandlerError = ListTeamEscalationsHandlerErrors[keyof ListTeamEscalationsHandlerErrors];
+
+export type ListTeamEscalationsHandlerResponses = {
+    /**
+     * The team's escalations
+     */
+    200: Array<Escalation>;
+};
+
+export type ListTeamEscalationsHandlerResponse = ListTeamEscalationsHandlerResponses[keyof ListTeamEscalationsHandlerResponses];
+
+export type GetEscalationHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}';
+};
+
+export type GetEscalationHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: EscalationErrorBody;
+};
+
+export type GetEscalationHandlerError = GetEscalationHandlerErrors[keyof GetEscalationHandlerErrors];
+
+export type GetEscalationHandlerResponses = {
+    /**
+     * The escalation
+     */
+    200: Escalation;
+};
+
+export type GetEscalationHandlerResponse = GetEscalationHandlerResponses[keyof GetEscalationHandlerResponses];
+
+export type CancelEscalationHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}/cancel';
+};
+
+export type CancelEscalationHandlerErrors = {
+    /**
+     * Not allowed
+     */
+    403: EscalationErrorBody;
+    /**
+     * Already terminal
+     */
+    409: EscalationErrorBody;
+};
+
+export type CancelEscalationHandlerError = CancelEscalationHandlerErrors[keyof CancelEscalationHandlerErrors];
+
+export type CancelEscalationHandlerResponses = {
+    /**
+     * The cancelled escalation
+     */
+    200: Escalation;
+};
+
+export type CancelEscalationHandlerResponse = CancelEscalationHandlerResponses[keyof CancelEscalationHandlerResponses];
+
+export type ClaimEscalationHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}/claim';
+};
+
+export type ClaimEscalationHandlerErrors = {
+    /**
+     * Not allowed
+     */
+    403: EscalationErrorBody;
+    /**
+     * Not open
+     */
+    409: EscalationErrorBody;
+};
+
+export type ClaimEscalationHandlerError = ClaimEscalationHandlerErrors[keyof ClaimEscalationHandlerErrors];
+
+export type ClaimEscalationHandlerResponses = {
+    /**
+     * The claimed escalation
+     */
+    200: Escalation;
+};
+
+export type ClaimEscalationHandlerResponse = ClaimEscalationHandlerResponses[keyof ClaimEscalationHandlerResponses];
+
+export type ReassignEscalationHandlerData = {
+    body: ReassignRequest;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}/reassign';
+};
+
+export type ReassignEscalationHandlerErrors = {
+    /**
+     * Invalid request
+     */
+    400: EscalationErrorBody;
+    /**
+     * Not allowed
+     */
+    403: EscalationErrorBody;
+};
+
+export type ReassignEscalationHandlerError = ReassignEscalationHandlerErrors[keyof ReassignEscalationHandlerErrors];
+
+export type ReassignEscalationHandlerResponses = {
+    /**
+     * The reassigned escalation
+     */
+    200: Escalation;
+};
+
+export type ReassignEscalationHandlerResponse = ReassignEscalationHandlerResponses[keyof ReassignEscalationHandlerResponses];
+
+export type ResolveEscalationHandlerData = {
+    body: ResolveRequest;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}/resolve';
+};
+
+export type ResolveEscalationHandlerErrors = {
+    /**
+     * Not allowed
+     */
+    403: EscalationErrorBody;
+    /**
+     * Already terminal
+     */
+    409: EscalationErrorBody;
+};
+
+export type ResolveEscalationHandlerError = ResolveEscalationHandlerErrors[keyof ResolveEscalationHandlerErrors];
+
+export type ResolveEscalationHandlerResponses = {
+    /**
+     * The resolved escalation
+     */
+    200: Escalation;
+};
+
+export type ResolveEscalationHandlerResponse = ResolveEscalationHandlerResponses[keyof ResolveEscalationHandlerResponses];
+
+export type ListTransitionsHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Escalation id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/escalations/{id}/transitions';
+};
+
+export type ListTransitionsHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: EscalationErrorBody;
+};
+
+export type ListTransitionsHandlerError = ListTransitionsHandlerErrors[keyof ListTransitionsHandlerErrors];
+
+export type ListTransitionsHandlerResponses = {
+    /**
+     * Transitions, oldest first
+     */
+    200: Array<EscalationTransition>;
+};
+
+export type ListTransitionsHandlerResponse = ListTransitionsHandlerResponses[keyof ListTransitionsHandlerResponses];
+
 export type HealthHandlerData = {
     body?: never;
     path?: never;
@@ -2195,6 +5799,56 @@ export type GetStateHandlerResponses = {
 };
 
 export type GetStateHandlerResponse = GetStateHandlerResponses[keyof GetStateHandlerResponses];
+
+export type ListMyInboxHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/inbox/mine';
+};
+
+export type ListMyInboxHandlerResponses = {
+    /**
+     * Unified inbox cards, newest first
+     */
+    200: UserInboxResponse;
+};
+
+export type ListMyInboxHandlerResponse = ListMyInboxHandlerResponses[keyof ListMyInboxHandlerResponses];
+
+export type RegisterAccountHandlerData = {
+    body: RegisterAccountRequest;
+    path?: never;
+    query?: never;
+    url: '/lifecycle-connectors/accounts';
+};
+
+export type RegisterAccountHandlerResponses = {
+    /**
+     * The account
+     */
+    200: ConnectorAccount;
+};
+
+export type RegisterAccountHandlerResponse = RegisterAccountHandlerResponses[keyof RegisterAccountHandlerResponses];
+
+export type IngestHandlerData = {
+    body: IngestRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/lifecycle-connectors/accounts/{id}/ingest';
+};
+
+export type IngestHandlerResponses = {
+    /**
+     * Stored records
+     */
+    200: Array<ConnectorRecord>;
+};
+
+export type IngestHandlerResponse = IngestHandlerResponses[keyof IngestHandlerResponses];
 
 export type DeleteMcpServerData = {
     body?: never;
@@ -2452,6 +6106,120 @@ export type GetBatchPreviewResponses = {
 
 export type GetBatchPreviewResponse2 = GetBatchPreviewResponses[keyof GetBatchPreviewResponses];
 
+export type RecordEvalHandlerData = {
+    body: RecordEvalRequest;
+    path?: never;
+    query?: never;
+    url: '/skill-evals';
+};
+
+export type RecordEvalHandlerResponses = {
+    /**
+     * Recorded eval
+     */
+    200: SkillEvalRun;
+};
+
+export type RecordEvalHandlerResponse = RecordEvalHandlerResponses[keyof RecordEvalHandlerResponses];
+
+export type ListMyProposalsHandlerData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/skill-proposals/mine';
+};
+
+export type ListMyProposalsHandlerResponses = {
+    /**
+     * Inbox view
+     */
+    200: UserProposalsResponse;
+};
+
+export type ListMyProposalsHandlerResponse = ListMyProposalsHandlerResponses[keyof ListMyProposalsHandlerResponses];
+
+export type GetProposalHandlerData = {
+    body?: never;
+    path: {
+        /**
+         * Proposal id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/skill-proposals/{id}';
+};
+
+export type GetProposalHandlerErrors = {
+    /**
+     * Not found
+     */
+    404: GovernanceErrorBody;
+};
+
+export type GetProposalHandlerError = GetProposalHandlerErrors[keyof GetProposalHandlerErrors];
+
+export type GetProposalHandlerResponses = {
+    /**
+     * The skill proposal
+     */
+    200: SkillProposal;
+};
+
+export type GetProposalHandlerResponse = GetProposalHandlerResponses[keyof GetProposalHandlerResponses];
+
+export type DecideProposalHandlerData = {
+    body: DecideProposalRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/skill-proposals/{id}/decide';
+};
+
+export type DecideProposalHandlerResponses = {
+    /**
+     * Updated proposal
+     */
+    200: SkillProposal;
+};
+
+export type DecideProposalHandlerResponse = DecideProposalHandlerResponses[keyof DecideProposalHandlerResponses];
+
+export type RollbackProposalHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/skill-proposals/{id}/rollback';
+};
+
+export type RollbackProposalHandlerResponses = {
+    /**
+     * Restored skill
+     */
+    200: SkillRecord;
+};
+
+export type RollbackProposalHandlerResponse = RollbackProposalHandlerResponses[keyof RollbackProposalHandlerResponses];
+
+export type RefineHandlerData = {
+    body: RefineRequest;
+    path?: never;
+    query?: never;
+    url: '/skill-refinements';
+};
+
+export type RefineHandlerResponses = {
+    /**
+     * Refinement job + proposal
+     */
+    200: TraceRefinement;
+};
+
+export type RefineHandlerResponse = RefineHandlerResponses[keyof RefineHandlerResponses];
+
 export type SendChatMessageData = {
     body: HttpSendChatMessageRequest;
     path?: never;
@@ -2550,3 +6318,123 @@ export type StructuredCompletionResponses = {
 };
 
 export type StructuredCompletionResponse2 = StructuredCompletionResponses[keyof StructuredCompletionResponses];
+
+export type RegisterExtensionHandlerData = {
+    body: RegisterExtensionRequest;
+    path?: never;
+    query?: never;
+    url: '/tenant-extensions';
+};
+
+export type RegisterExtensionHandlerResponses = {
+    /**
+     * The extension
+     */
+    200: TenantExtension;
+};
+
+export type RegisterExtensionHandlerResponse = RegisterExtensionHandlerResponses[keyof RegisterExtensionHandlerResponses];
+
+export type ActivateExtensionHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/tenant-extensions/{id}/activate';
+};
+
+export type ActivateExtensionHandlerResponses = {
+    /**
+     * Activated extension
+     */
+    200: TenantExtension;
+};
+
+export type ActivateExtensionHandlerResponse = ActivateExtensionHandlerResponses[keyof ActivateExtensionHandlerResponses];
+
+export type DisableExtensionHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/tenant-extensions/{id}/disable';
+};
+
+export type DisableExtensionHandlerResponses = {
+    /**
+     * Disabled extension
+     */
+    200: TenantExtension;
+};
+
+export type DisableExtensionHandlerResponse = DisableExtensionHandlerResponses[keyof DisableExtensionHandlerResponses];
+
+export type RollbackExtensionHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/tenant-extensions/{id}/rollback';
+};
+
+export type RollbackExtensionHandlerResponses = {
+    /**
+     * Rolled-back extension
+     */
+    200: TenantExtension;
+};
+
+export type RollbackExtensionHandlerResponse = RollbackExtensionHandlerResponses[keyof RollbackExtensionHandlerResponses];
+
+export type UpsertMirrorHandlerData = {
+    body: UpsertMirrorRequest;
+    path?: never;
+    query?: never;
+    url: '/ticket-mirrors';
+};
+
+export type UpsertMirrorHandlerResponses = {
+    /**
+     * The mirror
+     */
+    200: TicketMirror;
+};
+
+export type UpsertMirrorHandlerResponse = UpsertMirrorHandlerResponses[keyof UpsertMirrorHandlerResponses];
+
+export type DisconnectMirrorHandlerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/ticket-mirrors/{id}/disconnect';
+};
+
+export type DisconnectMirrorHandlerResponses = {
+    /**
+     * Disconnected mirror
+     */
+    200: TicketMirror;
+};
+
+export type DisconnectMirrorHandlerResponse = DisconnectMirrorHandlerResponses[keyof DisconnectMirrorHandlerResponses];
+
+export type RunExportHandlerData = {
+    body: RunExportRequest;
+    path?: never;
+    query?: never;
+    url: '/training-export';
+};
+
+export type RunExportHandlerResponses = {
+    /**
+     * Job + projected events
+     */
+    200: RunExportResponse;
+};
+
+export type RunExportHandlerResponse = RunExportHandlerResponses[keyof RunExportHandlerResponses];
