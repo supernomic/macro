@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, org_id, scope, owner_user_id, owner_team_id, slug, name,\n                   description, body, trust_tier, okf_type, okf_sources,\n                   okf_generated, okf_verified, okf_status, stale_after,\n                   content_hash, version, created_at, updated_at, archived_at\n            FROM agent_skills\n            WHERE (org_id IS NOT DISTINCT FROM $1 OR scope = 'platform')\n              AND archived_at IS NULL\n            ORDER BY updated_at DESC\n            LIMIT $2\n            ",
+  "query": "\n            SELECT id, org_id, scope, owner_user_id, owner_team_id, slug, name,\n                   description, body, trust_tier, okf_type, okf_sources,\n                   okf_generated, okf_verified, okf_status, stale_after,\n                   content_hash, version, created_at, updated_at, archived_at\n            FROM agent_skills\n            WHERE archived_at IS NULL\n              AND (\n                scope = 'platform'\n                OR (\n                  org_id IS NOT DISTINCT FROM $1\n                  AND (\n                    scope = 'org'\n                    OR (scope = 'user' AND $2::text IS NOT NULL AND owner_user_id = $2)\n                    OR (\n                      scope = 'team'\n                      AND cardinality($3::uuid[]) > 0\n                      AND owner_team_id = ANY($3::uuid[])\n                    )\n                  )\n                )\n              )\n            ORDER BY updated_at DESC\n            LIMIT $4\n            ",
   "describe": {
     "columns": [
       {
@@ -112,6 +112,8 @@
     "parameters": {
       "Left": [
         "Int4",
+        "Text",
+        "UuidArray",
         "Int8"
       ]
     },
@@ -139,5 +141,5 @@
       true
     ]
   },
-  "hash": "04a93e928ac47eea6d947b80e3de8c672bb351ec7c56385cf7ba4d8b25c88b9c"
+  "hash": "85d95ba57761d1b66500b9781fd66ef3a608faaf3dbe51f19d97ac8175572ec6"
 }
