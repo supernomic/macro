@@ -47,7 +47,8 @@ Flue agent fn ──> tool layer (this repo) ──> @macro/sdk ──> Macro Ru
 2. **Name** tools `snake_case`, verb-first: `search_documents`,
    `create_escalation`, `update_ticket`. The tool name must match the
    `tool:<name>` scope it requires.
-3. **Schemas**: every tool declares a Zod input schema and returns a typed
+3. **Schemas**: every tool declares a Valibot input schema (Flue's native
+   schema library; must be a top-level object schema) and returns a typed
    result. No `any`. Optional fields must have descriptions; the model reads
    them.
 4. **All Macro access goes through `@macro/sdk`.** Never `fetch` a Macro
@@ -129,9 +130,13 @@ Rules:
 ```
 apps/agents/
   src/
+    app.ts         # Hono application (agent mounts + channel ingress)
+    config.ts      # env configuration (tokens, hosts, composition pins)
     agents/        # agent compositions (super agent, domain overlays)
     channels/      # Slack + native channel wiring
-    ledger/        # ledger client + event emitters
+    ledger/        # ledger client + TS mirror of the event vocabulary
+    macro/         # @macro/sdk client factory for agent principals
+    sessions/      # Flue conversation ↔ Macro session binding
     tools/         # tool layer (one file per tool)
       toolkit.ts   # defineMacroTool wrapper (ledger + errors + idempotency)
     instrumentation/ # Braintrust/OTel wiring

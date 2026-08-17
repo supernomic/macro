@@ -1,0 +1,29 @@
+{
+	"name": "@macro/agents",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"description": "Macro's super agent + domain agents service, built on the Flue durable-agent framework.",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"check": "tsc --noEmit",
+		"lint": "biome check",
+		"format": "biome format --write"
+	},
+	"dependencies": {
+		"@flue/postgres": "2.0.3",
+		"@flue/runtime": "2.0.3",
+		"@macro/sdk": "file:../../packages/sdk",
+		"hono": "^4.12.27",
+		"postgres": "^3.4.7",
+		"valibot": "^1.1.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.12",
+		"@flue/vite": "2.0.3",
+		"@types/node": "^22.14.0",
+		"typescript": "^5.9.2",
+		"vite": "^8.0.0"
+	}
+}

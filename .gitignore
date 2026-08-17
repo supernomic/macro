@@ -3,6 +3,7 @@
 **/.env*
 **/*.env
 **/*.env.*
+!**/.env.example
 **/.dev.vars*
 .idea/
 **/.DS_Store
