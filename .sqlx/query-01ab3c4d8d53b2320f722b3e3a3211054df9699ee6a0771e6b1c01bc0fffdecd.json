@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, skill_id, proposal_id, composition_id, dataset,\n                   passed, score, report, created_at\n            FROM agent_skill_eval_runs\n            WHERE proposal_id = $1\n            ORDER BY created_at DESC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "skill_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "proposal_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "composition_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "dataset",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "passed",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "score",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "report",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "01ab3c4d8d53b2320f722b3e3a3211054df9699ee6a0771e6b1c01bc0fffdecd"
+}

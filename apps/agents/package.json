@@ -15,11 +15,13 @@
 		"format": "biome format --write"
 	},
 	"dependencies": {
+		"@flue/opentelemetry": "2.0.3",
 		"@flue/postgres": "2.0.3",
 		"@flue/runtime": "2.0.3",
 		"@flue/slack": "2.0.3",
 		"@macro/sdk": "file:../../packages/sdk",
 		"@slack/web-api": "^8.0.0",
+		"braintrust": "^3.17.0",
 		"hono": "4.12.32",
 		"postgres": "^3.4.7",
 		"valibot": "^1.1.0"

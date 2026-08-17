@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE training_export_jobs\n            SET status = $2,\n                row_count = $3,\n                artifact_uri = $4,\n                error = $5,\n                completed_at = $6\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5d428bcf292ac58caa3819b463abe39d4b10ce08841f6a45b081c165aaa1312e"
+}

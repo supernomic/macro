@@ -89,6 +89,13 @@ agent_identity = { path = "../../crates/agent_identity" }
 agent_ledger = { path = "../../crates/agent_ledger" }
 escalations = { path = "../../crates/escalations" }
 approvals = { path = "../../crates/approvals" }
+skill_governance = { path = "../../crates/skill_governance" }
+entity_graph = { path = "../../crates/entity_graph" }
+lifecycle_connectors = { path = "../../crates/lifecycle_connectors" }
+ticket_mirrors = { path = "../../crates/ticket_mirrors" }
+tenant_extensions = { path = "../../crates/tenant_extensions" }
+training_export = { path = "../../crates/training_export" }
+agent_feedback = { path = "../../crates/agent_feedback" }
 memory = { path = "../../crates/memory" }
 onboarding = { path = "../../crates/onboarding" }
 model = { path = "../../crates/model" }

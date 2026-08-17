@@ -20,6 +20,10 @@ import {
   type EscalationCallbackPayload,
   resumeFromEscalation,
 } from './escalations/resume.ts';
+import { runTraceRefinement } from './jobs/trace-refine.ts';
+import { superAgentRuntimeInstance } from './sessions/macro-session.ts';
+import './instrumentation/braintrust.ts';
+import './instrumentation/otel.ts';
 
 const app = new Hono();
 
@@ -65,6 +69,29 @@ app.post('/callbacks/approvals/:conversationId', async (c) => {
   }
   await resumeFromApproval(c.req.param('conversationId'), payload);
   return c.json({ ok: true });
+});
+
+// Operator-triggered trace refinement: distill candidates into org-scope
+// skill proposals. Verified by the same shared callback token.
+app.post('/jobs/trace-refine', async (c) => {
+  const expected = config.escalationCallbackToken();
+  if (expected) {
+    const auth = c.req.header('authorization');
+    if (auth !== `Bearer ${expected}`) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+  }
+  const body = (await c.req.json()) as {
+    candidates?: Parameters<typeof runTraceRefinement>[1];
+  };
+  if (!Array.isArray(body.candidates)) {
+    return c.json({ error: 'malformed payload' }, 400);
+  }
+  const result = await runTraceRefinement(
+    superAgentRuntimeInstance(),
+    body.candidates,
+  );
+  return c.json(result);
 });
 
 export default app;

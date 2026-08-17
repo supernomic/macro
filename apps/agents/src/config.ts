@@ -102,4 +102,19 @@ export const config = {
    * `{"C0123":"proactive","C0456":"silent"}`.
    */
   slackChannelModes: optional('SLACK_CHANNEL_MODES', '{}'),
+
+  /**
+   * Braintrust API key. When unset, the observer does not initialize and
+   * the service runs without trace export.
+   */
+  braintrustApiKey: () => process.env.BRAINTRUST_API_KEY,
+
+  /** Braintrust project that receives traces. */
+  braintrustProjectName: optional('BRAINTRUST_PROJECT_NAME', 'macro-agents'),
+
+  /**
+   * OTLP HTTP endpoint for Flue OpenTelemetry export. When unset, the
+   * GenAI instrumentation is not registered.
+   */
+  otelExporterEndpoint: () => process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
 } as const;

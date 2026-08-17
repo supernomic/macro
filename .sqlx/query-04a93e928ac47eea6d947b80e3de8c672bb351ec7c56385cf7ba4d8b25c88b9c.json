@@ -1,0 +1,143 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, scope, owner_user_id, owner_team_id, slug, name,\n                   description, body, trust_tier, okf_type, okf_sources,\n                   okf_generated, okf_verified, okf_status, stale_after,\n                   content_hash, version, created_at, updated_at, archived_at\n            FROM agent_skills\n            WHERE (org_id IS NOT DISTINCT FROM $1 OR scope = 'platform')\n              AND archived_at IS NULL\n            ORDER BY updated_at DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "scope",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "owner_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "owner_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "body",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "trust_tier",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "okf_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "okf_sources",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "okf_generated",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "okf_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "okf_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "stale_after",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "content_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "version",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 20,
+        "name": "archived_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "04a93e928ac47eea6d947b80e3de8c672bb351ec7c56385cf7ba4d8b25c88b9c"
+}

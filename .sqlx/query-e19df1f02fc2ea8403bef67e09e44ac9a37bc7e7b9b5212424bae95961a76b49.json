@@ -1,0 +1,113 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT e.id as edge_id, e.org_id as edge_org, e.from_node_id, e.to_node_id,\n                   e.relationship, e.attributes as edge_attrs, e.created_at as edge_created,\n                   n.id as node_id, n.org_id as node_org, n.node_type, n.display_name,\n                   n.attributes as node_attrs, n.native_entity_type, n.native_entity_id,\n                   n.created_at as node_created, n.updated_at as node_updated\n            FROM entity_graph_edges e\n            JOIN entity_graph_nodes n\n              ON n.id = CASE WHEN e.from_node_id = $1 THEN e.to_node_id ELSE e.from_node_id END\n            WHERE (e.from_node_id = $1 OR e.to_node_id = $1)\n              AND ($2::text IS NULL OR e.relationship = $2)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "edge_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "edge_org",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "from_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "to_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "relationship",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "edge_attrs",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "edge_created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "node_org",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "node_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "node_attrs",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "native_entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "native_entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "node_created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 15,
+        "name": "node_updated",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e19df1f02fc2ea8403bef67e09e44ac9a37bc7e7b9b5212424bae95961a76b49"
+}

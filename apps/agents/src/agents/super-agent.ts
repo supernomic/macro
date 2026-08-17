@@ -19,10 +19,14 @@ import {
   sessionContextFor,
   superAgentRuntimeInstance,
 } from '../sessions/macro-session.ts';
+import { mountGovernedSkills } from '../skills/mount.ts';
 import { readDocument } from '../tools/documents/read-document.ts';
 import { createEscalation } from '../tools/escalations/create-escalation.ts';
+import { recordFeedback } from '../tools/feedback/record-feedback.ts';
+import { lookupGraphNeighbors } from '../tools/graph/lookup-neighbors.ts';
 import { queryMyHistory } from '../tools/ledger/query-my-history.ts';
 import { searchDocuments } from '../tools/search/search-documents.ts';
+import { proposeSkill } from '../tools/skills/propose-skill.ts';
 import { replyInSlackThread } from '../tools/slack/reply-in-slack-thread.ts';
 import { bindMacroTools, type MacroToolDef } from '../tools/toolkit.ts';
 
@@ -44,6 +48,11 @@ Ground rules:
   you got stuck. Then tell the user an expert will follow up. The expert's
   answer arrives back in this conversation later — relay it in your own
   words when it does.
+- When a working resolution is worth teaching others, capture it with
+  propose_skill rather than burying it in chat. Team/org skills go to
+  inbox review.
+- When the user praises, corrects, or rates an answer, record it with
+  record_feedback against the relevant ledger seq.
 - Be concise. Answer first, cite sources after.`;
 
 const DELEGATION_INSTRUCTIONS = `
@@ -90,6 +99,9 @@ export function SuperAgent({ id }: { id: string }) {
     searchDocuments,
     readDocument,
     queryMyHistory,
+    proposeSkill,
+    recordFeedback,
+    lookupGraphNeighbors,
     createEscalation({
       conversationId: id,
       requesterDisplay: slack?.startedBy
@@ -111,6 +123,9 @@ export function SuperAgent({ id }: { id: string }) {
   })) {
     useTool(tool);
   }
+
+  mountGovernedSkills(session, session.runtime.skillsCatalog);
+  session.pinRequestHeader();
 
   // Domain specialists (techops first). Only domains whose principal token
   // is configured are offered; the delegate's tools run under the domain's

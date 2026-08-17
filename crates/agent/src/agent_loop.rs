@@ -19,6 +19,11 @@ const DEFAULT_MAX_TOKENS: u64 = 16_000;
 
 /// Factory for creating per-request agent sessions.
 ///
+/// **Frozen surface.** Do not extend this loop with new agent products,
+/// channels, or scheduled workflows. New conversational agents belong in
+/// `apps/agents` (Flue). Bugfixes and safety patches only — see
+/// `docs/AGENT_LOOP_MIGRATION.md`.
+///
 /// Routes each session to the provider serving the selected model id (see
 /// [`ModelRouter`]). The model is a
 /// plain api-id string so the frontend can select it directly; backend

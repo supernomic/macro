@@ -10,6 +10,7 @@
  */
 
 import { readDocument } from '../tools/documents/read-document.ts';
+import { lookupGraphNeighbors } from '../tools/graph/lookup-neighbors.ts';
 import { queryMyHistory } from '../tools/ledger/query-my-history.ts';
 import { searchDocuments } from '../tools/search/search-documents.ts';
 import type { DomainAgentSpec } from './registry.ts';
@@ -43,6 +44,6 @@ Ground rules:
   plausibly owns it.
 - Your final message goes back to the requesting agent verbatim: make it a
   complete, self-contained answer.`,
-  tools: [searchDocuments, readDocument, queryMyHistory],
+  tools: [searchDocuments, readDocument, queryMyHistory, lookupGraphNeighbors],
   compositionId: 'techops-agent/v1',
 };

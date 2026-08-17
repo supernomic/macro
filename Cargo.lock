@@ -154,6 +154,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent_feedback"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
+]
+
+[[package]]
 name = "agent_identity"
 version = "0.1.0"
 dependencies = [
@@ -4392,6 +4410,7 @@ name = "document_cognition_service"
 version = "0.1.0"
 dependencies = [
  "agent",
+ "agent_feedback",
  "agent_identity",
  "agent_ledger",
  "aho-corasick",
@@ -4426,6 +4445,7 @@ dependencies = [
  "email_service_client",
  "entity_access",
  "entity_access_management",
+ "entity_graph",
  "escalations",
  "foreign_entity",
  "frecency",
@@ -4436,6 +4456,7 @@ dependencies = [
  "last_online_tracker",
  "lazy_static",
  "lexical_client",
+ "lifecycle_connectors",
  "log",
  "macro_auth",
  "macro_authorization",
@@ -4477,6 +4498,7 @@ dependencies = [
  "secretsmanager_client",
  "serde",
  "serde_json",
+ "skill_governance",
  "soup",
  "sqlx",
  "sqs_client",
@@ -4485,13 +4507,16 @@ dependencies = [
  "stream",
  "strum 0.27.2",
  "sync_service_client",
+ "tenant_extensions",
  "thiserror 2.0.18",
+ "ticket_mirrors",
  "time",
  "tokio",
  "tokio-util",
  "tower 0.5.3",
  "tower-http",
  "tracing",
+ "training_export",
  "unfurl_service",
  "url",
  "utoipa",
@@ -5517,6 +5542,27 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+ "workspace-hack",
+]
+
+[[package]]
+name = "entity_graph"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "hex",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
  "workspace-hack",
 ]
 
@@ -8348,6 +8394,26 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "lifecycle_connectors"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "entity_graph",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -14011,6 +14077,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "skill_governance"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "hex",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
+]
+
+[[package]]
 name = "skills"
 version = "0.1.0"
 dependencies = [
@@ -14996,6 +15083,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "tenant_extensions"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
+]
+
+[[package]]
 name = "tendril"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15075,6 +15181,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f60246a4944f24f6e018aa17cdeffb7818b76356965d03b07d6a9886e8962185"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "ticket_mirrors"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -15620,6 +15745,26 @@ dependencies = [
  "tracing-subscriber",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "training_export"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "agent_ledger",
+ "axum",
+ "chrono",
+ "macro_authorization",
+ "macro_uuid",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
 ]
 
 [[package]]

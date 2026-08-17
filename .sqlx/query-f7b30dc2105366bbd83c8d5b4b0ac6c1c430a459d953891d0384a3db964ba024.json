@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_skills SET\n                name = $2,\n                description = $3,\n                body = $4,\n                trust_tier = $5,\n                okf_sources = $6,\n                okf_generated = $7,\n                okf_verified = $8,\n                okf_status = $9,\n                stale_after = $10,\n                content_hash = $11,\n                version = $12,\n                updated_at = $13,\n                archived_at = $14\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Bool",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f7b30dc2105366bbd83c8d5b4b0ac6c1c430a459d953891d0384a3db964ba024"
+}

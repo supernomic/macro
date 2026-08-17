@@ -38,9 +38,12 @@ Flue agent fn ──> tool layer (this repo) ──> @macro/sdk ──> Macro Ru
 - Scope grammar (mirrors `crates/agent_identity`): colon-separated segments,
   trailing `:*` wildcard. Examples: `tool:search`, `tool:*`,
   `api:documents:read`, `ledger:append`, `escalation:create`,
-  `approval:gate`, `approval:query`. Every agent token that runs tools
-  must include `approval:gate` so the Macro-side policy floor is
-  evaluated before each call.
+  `approval:gate`, `approval:query`, `skill:read`, `skill:propose`,
+  `feedback:read`, `feedback:write`, `graph:read`, `graph:write`. Every
+  agent token that runs tools must include `approval:gate` so the
+  Macro-side policy floor is evaluated before each call. Tokens that
+  inject governed skills also need `skill:read`; tokens that capture
+  ratings need `feedback:write`.
 
 ## Tool conventions
 
@@ -147,6 +150,9 @@ instructions, own tools; only the final answer returns). Declared in
 - Braintrust spans wrap every turn and tool call with the Macro session id,
   ledger seq range, and `composition_id` as metadata, so Braintrust traces
   and ledger rows are joinable.
+- OpenTelemetry GenAI spans (`@flue/opentelemetry`) register when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Conversation content stays on the
+  ledger; OTel export is content-free besides composition/conversation ids.
 - Never log secrets, tokens, or raw customer document bodies to Braintrust;
   the ledger (customer-owned) is the full-fidelity record, Braintrust holds
   eval/observability projections.
@@ -170,6 +176,10 @@ apps/agents/
     ledger/        # ledger client + TS mirror of the event vocabulary
     macro/         # @macro/sdk client factory for agent principals
     sessions/      # Flue conversation ↔ Macro session binding
+    skills/        # governed-skill client + Flue useSkill mount
+    feedback/      # rating sidecar client
+    graph/         # entity-graph client
+    jobs/          # operator jobs (trace refinement)
     tools/         # tool layer (one file per tool)
       toolkit.ts   # defineMacroTool wrapper (ledger + errors + idempotency)
     instrumentation/ # Braintrust/OTel wiring

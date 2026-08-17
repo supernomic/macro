@@ -17,6 +17,9 @@ use crate::model::{
     response::attachments::GetChatsForAttachmentResponse,
     stream::{ChatStream, SendChatMessagePayload, StreamError, ToolSet},
 };
+use agent_feedback::inbound::axum_router::{
+    self as feedback_api, ConsentRequest, FeedbackErrorBody, RateRequest,
+};
 use agent_identity::inbound::axum_router::{
     self as agent_identity_api, CreatePrincipalRequest, IdentityErrorBody, MintTokenRequest,
     MintTokenResponse, PrincipalResponse,
@@ -34,17 +37,37 @@ use approvals::inbound::axum_router::{
     self as approvals_api, ApprovalErrorBody, DecideRequest, GateToolCallRequest,
     ReassignApprovalRequest, UserApprovalsResponse,
 };
+use entity_graph::inbound::axum_router::{
+    self as entity_graph_api, GraphErrorBody, Neighbor, UpsertEdgeRequest, UpsertKnowledgeRequest,
+    UpsertNodeRequest,
+};
 use escalations::inbound::axum_router::{
     self as escalations_api, CreateEscalationRequest, EscalationErrorBody, ReassignRequest,
     ResolveRequest, UserEscalationsResponse,
 };
 use import::inbound::axum_router::{self as import_api, RunImportRequest};
+use lifecycle_connectors::inbound::axum_router::{
+    self as lifecycle_api, ConnectorErrorBody, IngestRequest, RegisterAccountRequest,
+};
 use mcp_client::inbound::axum_router::{
     self as mcp_api, AddServerRequest, ServerResponse, StartAuthRequest, StartAuthResponse,
     UpdateServerRequest,
 };
 use memory::inbound::axum_router::{self as memory_api, MemoryErrorBody, MemoryResponse};
 use onboarding::inbound::axum_router::{self as onboarding_api, CompleteOnboardingRequest};
+use skill_governance::inbound::axum_router::{
+    self as skill_governance_api, DecideProposalRequest, GovernanceErrorBody, ProposeSkillRequest,
+    RecordEvalRequest, RefineRequest, UserProposalsResponse,
+};
+use tenant_extensions::inbound::axum_router::{
+    self as extensions_api, ExtensionErrorBody, RegisterExtensionRequest,
+};
+use ticket_mirrors::inbound::axum_router::{
+    self as mirrors_api, MirrorErrorBody, UpsertMirrorRequest,
+};
+use training_export::inbound::axum_router::{
+    self as export_api, ExportErrorBody, RunExportRequest, RunExportResponse,
+};
 
 use crate::api::preview::get_batch_preview::{GetBatchPreviewRequest, GetBatchPreviewResponse};
 
@@ -143,6 +166,32 @@ use utoipa::OpenApi;
             approvals_api::list_policies_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             approvals_api::upsert_policy_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             approvals_api::delete_policy_handler::<crate::api::context::DcsApprovalService, approvals::outbound::PgPolicyRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::agent_catalog_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::agent_get_skill_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::agent_propose_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::list_my_proposals_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::decide_proposal_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::rollback_proposal_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::record_eval_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            skill_governance_api::refine_handler::<crate::api::context::DcsSkillGovernanceService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            entity_graph_api::upsert_node_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            entity_graph_api::upsert_edge_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            entity_graph_api::neighbors_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            entity_graph_api::upsert_knowledge_handler::<crate::api::context::DcsGraphService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            lifecycle_api::register_account_handler::<crate::api::context::DcsConnectorService, crate::api::context::DcsAuthorizationService>,
+            lifecycle_api::ingest_handler::<crate::api::context::DcsConnectorService, crate::api::context::DcsAuthorizationService>,
+            mirrors_api::upsert_mirror_handler::<crate::api::context::DcsMirrorService, crate::api::context::DcsAuthorizationService>,
+            mirrors_api::disconnect_mirror_handler::<crate::api::context::DcsMirrorService, crate::api::context::DcsAuthorizationService>,
+            extensions_api::register_extension_handler::<crate::api::context::DcsExtensionService, crate::api::context::DcsAuthorizationService>,
+            extensions_api::activate_extension_handler::<crate::api::context::DcsExtensionService, crate::api::context::DcsAuthorizationService>,
+            extensions_api::rollback_extension_handler::<crate::api::context::DcsExtensionService, crate::api::context::DcsAuthorizationService>,
+            extensions_api::disable_extension_handler::<crate::api::context::DcsExtensionService, crate::api::context::DcsAuthorizationService>,
+            export_api::run_export_handler::<crate::api::context::DcsExportService, crate::api::context::DcsAuthorizationService>,
+            feedback_api::agent_rate_handler::<crate::api::context::DcsFeedbackService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            feedback_api::agent_list_ratings_handler::<crate::api::context::DcsFeedbackService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            feedback_api::agent_get_consent_handler::<crate::api::context::DcsFeedbackService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            feedback_api::user_set_consent_handler::<crate::api::context::DcsFeedbackService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            feedback_api::user_rate_handler::<crate::api::context::DcsFeedbackService, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             import_api::get_state_handler,
             import_api::run_import_handler,
             import_api::retry_gather_handler,
@@ -282,6 +331,69 @@ use utoipa::OpenApi;
                 approvals::domain::model::GateOutcome,
                 approvals::domain::model::PolicyDecision,
                 approvals::domain::model::ToolPolicy,
+
+                // Skills governance
+                ProposeSkillRequest,
+                DecideProposalRequest,
+                RecordEvalRequest,
+                RefineRequest,
+                UserProposalsResponse,
+                GovernanceErrorBody,
+                skill_governance::domain::model::SkillCatalogEntry,
+                skill_governance::domain::model::SkillRecord,
+                skill_governance::domain::model::SkillProposal,
+                skill_governance::domain::model::SkillEvalRun,
+                skill_governance::domain::model::TraceRefinement,
+                skill_governance::domain::model::SkillScope,
+                skill_governance::domain::model::TrustTier,
+
+                // Entity graph
+                UpsertNodeRequest,
+                UpsertEdgeRequest,
+                UpsertKnowledgeRequest,
+                Neighbor,
+                GraphErrorBody,
+                entity_graph::domain::model::GraphNode,
+                entity_graph::domain::model::GraphEdge,
+                entity_graph::domain::model::KnowledgeDocument,
+
+                // Lifecycle connectors
+                RegisterAccountRequest,
+                IngestRequest,
+                ConnectorErrorBody,
+                lifecycle_connectors::domain::model::ConnectorAccount,
+                lifecycle_connectors::domain::model::ConnectorRecord,
+                lifecycle_connectors::domain::model::Provider,
+                lifecycle_connectors::domain::model::IngestRecord,
+
+                // Ticket mirrors
+                UpsertMirrorRequest,
+                MirrorErrorBody,
+                ticket_mirrors::domain::model::TicketMirror,
+                ticket_mirrors::domain::model::MirrorProvider,
+
+                // Tenant extensions
+                RegisterExtensionRequest,
+                ExtensionErrorBody,
+                tenant_extensions::domain::model::TenantExtension,
+
+                // Training export
+                RunExportRequest,
+                RunExportResponse,
+                ExportErrorBody,
+                training_export::domain::model::ExportJob,
+                training_export::domain::model::ProjectedEvent,
+                training_export::domain::model::Projection,
+                training_export::domain::model::SharingMode,
+
+                // Feedback sidecar
+                RateRequest,
+                ConsentRequest,
+                FeedbackErrorBody,
+                agent_feedback::domain::model::MessageRating,
+                agent_feedback::domain::model::ConsentRecord,
+                agent_feedback::domain::model::RatingValue,
+                agent_feedback::domain::model::FeedbackSharingMode,
 
                 // Import pipeline
                 import::domain::models::ImportState,

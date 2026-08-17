@@ -120,6 +120,58 @@ pub type DcsApprovalService = approvals::domain::service::ApprovalServiceImpl<
 /// The agent-facing approval facade (scope + tenancy policy).
 pub type DcsApprovalFacade = approvals::domain::facade::AgentApprovalFacade<DcsApprovalService>;
 
+/// Governed skills service (catalog, proposals, evals, refinements).
+pub type DcsSkillGovernanceService = skill_governance::domain::service::SkillGovernanceServiceImpl<
+    skill_governance::outbound::PgSkillRepo,
+    skill_governance::outbound::PgProposalRepo,
+    skill_governance::outbound::PgTeamMembership,
+>;
+
+/// Agent-facing skills facade (scope + tenancy policy).
+pub type DcsSkillGovernanceFacade =
+    skill_governance::domain::facade::AgentSkillFacade<DcsSkillGovernanceService>;
+
+/// Entity-graph service wired to Postgres.
+pub type DcsGraphService =
+    entity_graph::domain::service::GraphServiceImpl<entity_graph::outbound::PgGraphRepo>;
+
+/// Agent-facing graph facade (scope + tenancy policy).
+pub type DcsGraphFacade = entity_graph::domain::facade::AgentGraphFacade<DcsGraphService>;
+
+/// Lifecycle connector service (Okta / Iru / Meraki → entity graph).
+pub type DcsConnectorService = lifecycle_connectors::domain::service::ConnectorServiceImpl<
+    lifecycle_connectors::outbound::PgConnectorRepo,
+    lifecycle_connectors::outbound::EntityGraphIngest<DcsGraphService>,
+>;
+
+/// Ticket-mirror service (Zendesk / Jira) with a no-op external client until
+/// HTTP adapters land.
+pub type DcsMirrorService = ticket_mirrors::domain::service::MirrorServiceImpl<
+    ticket_mirrors::outbound::PgMirrorRepo,
+    ticket_mirrors::outbound::NoopTicketClient,
+>;
+
+/// Per-tenant extension registry (activate / rollback / disable).
+pub type DcsExtensionService = tenant_extensions::domain::service::ExtensionServiceImpl<
+    tenant_extensions::outbound::PgExtensionRepo,
+>;
+
+/// Training-export projections over the session ledger.
+pub type DcsExportService = training_export::domain::service::ExportServiceImpl<
+    training_export::outbound::LedgerServiceReader<DcsAgentLedgerService>,
+    training_export::outbound::PgExportJobRepo,
+>;
+
+/// Feedback sidecar (editable ratings + consent).
+pub type DcsFeedbackService = agent_feedback::domain::service::FeedbackServiceImpl<
+    agent_feedback::outbound::PgRatingRepo,
+    agent_feedback::outbound::PgConsentRepo,
+>;
+
+/// Agent-facing feedback facade (scope checks).
+pub type DcsFeedbackFacade =
+    agent_feedback::domain::facade::AgentFeedbackFacade<DcsFeedbackService>;
+
 /// The AI cost service wired to the Postgres usage repo.
 pub type DcsUsageService =
     ai_usage::domain::service::UsageServiceImpl<ai_usage::outbound::PgUsageRepo>;
@@ -184,6 +236,15 @@ pub struct ApiContext {
     pub approval_service: Arc<DcsApprovalService>,
     pub approval_facade: Arc<DcsApprovalFacade>,
     pub approval_policies: Arc<approvals::outbound::PgPolicyRepo>,
+    pub skill_governance_service: Arc<DcsSkillGovernanceService>,
+    pub skill_governance_facade: Arc<DcsSkillGovernanceFacade>,
+    pub graph_service: Arc<DcsGraphService>,
+    pub graph_facade: Arc<DcsGraphFacade>,
+    pub connector_service: Arc<DcsConnectorService>,
+    pub mirror_service: Arc<DcsMirrorService>,
+    pub extension_service: Arc<DcsExtensionService>,
+    pub export_service: Arc<DcsExportService>,
+    pub feedback_facade: Arc<DcsFeedbackFacade>,
     pub usage_service: Arc<DcsUsageService>,
     pub ai_projections_service: Arc<DcsAiProjectionService>,
     pub properties_tool_context: ToolPropertiesToolContext,

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO lifecycle_connector_records (\n                id, account_id, external_id, record_type, payload, graph_node_id, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT (account_id, record_type, external_id)\n            DO UPDATE SET\n                payload = EXCLUDED.payload,\n                graph_node_id = EXCLUDED.graph_node_id,\n                updated_at = EXCLUDED.updated_at\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9f9bf7de585786c33124dc50ec3e2a7bcfa383995f079fe9c1253952497f7661"
+}

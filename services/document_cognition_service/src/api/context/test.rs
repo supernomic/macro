@@ -468,6 +468,54 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         approval_service.as_ref().clone(),
     ));
 
+    let skill_governance_service =
+        skill_governance::domain::service::SkillGovernanceServiceImpl::new(
+            skill_governance::outbound::PgSkillRepo::new(pool.clone()),
+            skill_governance::outbound::PgProposalRepo::new(pool.clone()),
+            skill_governance::outbound::PgTeamMembership::new(pool.clone()),
+        );
+    let skill_governance_facade = Arc::new(
+        skill_governance::domain::facade::AgentSkillFacade::new(skill_governance_service.clone()),
+    );
+    let skill_governance_service = Arc::new(skill_governance_service);
+
+    let graph_service = entity_graph::domain::service::GraphServiceImpl::new(
+        entity_graph::outbound::PgGraphRepo::new(pool.clone()),
+    );
+    let graph_facade = Arc::new(entity_graph::domain::facade::AgentGraphFacade::new(
+        graph_service.clone(),
+    ));
+    let connector_service = Arc::new(
+        lifecycle_connectors::domain::service::ConnectorServiceImpl::new(
+            lifecycle_connectors::outbound::PgConnectorRepo::new(pool.clone()),
+            lifecycle_connectors::outbound::EntityGraphIngest::new(graph_service.clone()),
+        ),
+    );
+    let graph_service = Arc::new(graph_service);
+
+    let mirror_service = Arc::new(ticket_mirrors::domain::service::MirrorServiceImpl::new(
+        ticket_mirrors::outbound::PgMirrorRepo::new(pool.clone()),
+        ticket_mirrors::outbound::NoopTicketClient,
+    ));
+
+    let extension_service = Arc::new(
+        tenant_extensions::domain::service::ExtensionServiceImpl::new(
+            tenant_extensions::outbound::PgExtensionRepo::new(pool.clone()),
+        ),
+    );
+
+    let export_service = Arc::new(training_export::domain::service::ExportServiceImpl::new(
+        training_export::outbound::LedgerServiceReader::new(agent_ledger_service.as_ref().clone()),
+        training_export::outbound::PgExportJobRepo::new(pool.clone()),
+    ));
+
+    let feedback_facade = Arc::new(agent_feedback::domain::facade::AgentFeedbackFacade::new(
+        agent_feedback::domain::service::FeedbackServiceImpl::new(
+            agent_feedback::outbound::PgRatingRepo::new(pool.clone()),
+            agent_feedback::outbound::PgConsentRepo::new(pool.clone()),
+        ),
+    ));
+
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
         ai_usage::outbound::PgUsageRepo::new(pool.clone()),
     ));
@@ -548,6 +596,15 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         approval_service,
         approval_facade,
         approval_policies,
+        skill_governance_service,
+        skill_governance_facade,
+        graph_service,
+        graph_facade,
+        connector_service,
+        mirror_service,
+        extension_service,
+        export_service,
+        feedback_facade,
         usage_service,
         ai_projections_service,
         properties_tool_context,

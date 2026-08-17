@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO agent_session_consent (\n                session_id, org_id, sharing_mode, set_by, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (session_id)\n            DO UPDATE SET\n                org_id = EXCLUDED.org_id,\n                sharing_mode = EXCLUDED.sharing_mode,\n                set_by = EXCLUDED.set_by,\n                updated_at = EXCLUDED.updated_at\n            RETURNING session_id, org_id, sharing_mode, set_by, updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "sharing_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "set_by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "095dabdc5a0430915e6143e2b3f23689f86402791c61f3e40e079de656d98473"
+}

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id, target_seq, rating, note, rated_by, updated_at\n            FROM agent_message_ratings\n            WHERE session_id = $1\n            ORDER BY target_seq ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "target_seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "rating",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 3,
+        "name": "note",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "rated_by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e65fdcf2d6e768c3f832e79bc44944c537665da00499a22e4f928e0ea058ff9b"
+}

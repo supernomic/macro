@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ticket_mirrors\n            SET disconnected_at = now()\n            WHERE id = $1 AND disconnected_at IS NULL\n            RETURNING id, org_id, provider, native_entity_type, native_entity_id,\n                      foreign_id, foreign_url, summary, status, last_mirrored_at,\n                      disconnected_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "native_entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "native_entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "foreign_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "foreign_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_mirrored_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "disconnected_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "5f912f56842a1a86e57df330f3b831da87f96127a550e5c0b10171c874d95eec"
+}

@@ -12,6 +12,8 @@ import type { Macro } from '@macro/sdk';
 import { ApprovalsClient } from '../approvals/client.ts';
 import { config } from '../config.ts';
 import { EscalationsClient } from '../escalations/client.ts';
+import { FeedbackClient } from '../feedback/client.ts';
+import { GraphClient } from '../graph/client.ts';
 import { LedgerClient } from '../ledger/client.ts';
 import type {
   ExternalThreadKind,
@@ -20,6 +22,7 @@ import type {
   SessionMapping,
 } from '../ledger/events.ts';
 import { macroClientFor } from '../macro/client.ts';
+import { type SkillCatalogEntry, SkillsClient } from '../skills/client.ts';
 
 /** Identity + plumbing for one agent principal. */
 export interface AgentRuntime {
@@ -33,6 +36,16 @@ export interface AgentRuntime {
   escalations: EscalationsClient;
   /** Approval-gate client authenticated as this principal. */
   approvals: ApprovalsClient;
+  /** Skills-governance client authenticated as this principal. */
+  skills: SkillsClient;
+  /** Feedback sidecar client authenticated as this principal. */
+  feedback: FeedbackClient;
+  /** Entity-graph client authenticated as this principal. */
+  graph: GraphClient;
+  /** Cached governed-skill catalog (filled asynchronously after boot). */
+  skillsCatalog: SkillCatalogEntry[];
+  /** Conversation ids that already have a `request_header` pin. */
+  pinnedHeaderConversations: Set<string>;
   /** Pinned composition id for this agent definition. */
   compositionId: string;
 }
@@ -55,6 +68,8 @@ export class MacroSessionContext {
   };
   private mapping: Promise<SessionMapping> | undefined;
   private appendChain: Promise<unknown> = Promise.resolve();
+  /** Skill id → version already logged as `skill_injected` on this session. */
+  private readonly injectedSkillVersions = new Map<string, string>();
 
   constructor(opts: {
     runtime: AgentRuntime;
@@ -90,6 +105,57 @@ export class MacroSessionContext {
     // the failed append's caller still sees its own rejection.
     this.appendChain = next.catch(() => {});
     return next;
+  }
+
+  /**
+   * Append `skill_injected` the first time this conversation sees a given
+   * skill version. Re-logs if the catalog version changes.
+   */
+  recordSkillInjection(skill: SkillCatalogEntry): void {
+    if (this.injectedSkillVersions.get(skill.id) === skill.version) {
+      return;
+    }
+    this.injectedSkillVersions.set(skill.id, skill.version);
+    void this.append({
+      payload: {
+        type: 'skill_injected',
+        data: { skill_id: skill.id, version: skill.version },
+      },
+      actor_kind: 'agent',
+      actor_id: this.runtime.agentSlug,
+    });
+  }
+
+  /**
+   * Pin this conversation's composition on the ledger once. Eval grouping
+   * and training export join on `composition_id`; the snapshot is the
+   * reconstructable request header for this agent definition.
+   */
+  pinRequestHeader(): void {
+    if (this.runtime.pinnedHeaderConversations.has(this.conversationId)) {
+      return;
+    }
+    this.runtime.pinnedHeaderConversations.add(this.conversationId);
+    const skillVersions: Record<string, string> = {};
+    for (const skill of this.runtime.skillsCatalog) {
+      skillVersions[skill.slug] = skill.version;
+    }
+    void this.append({
+      payload: {
+        type: 'request_header',
+        data: {
+          rendered_system_prompt: `composition:${this.runtime.compositionId}`,
+          tool_schemas: [],
+          provider: 'flue',
+          model: config.superAgentModel,
+          sampling: {},
+          skill_versions: skillVersions,
+          composition_id: this.runtime.compositionId,
+        },
+      },
+      actor_kind: 'agent',
+      actor_id: this.runtime.agentSlug,
+    });
   }
 }
 
@@ -142,11 +208,45 @@ export function runtimeFor(spec: {
         baseUrl: config.ledgerBaseUrl,
         token: spec.token,
       }),
+      skills: new SkillsClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      feedback: new FeedbackClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      graph: new GraphClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      skillsCatalog: [],
+      pinnedHeaderConversations: new Set<string>(),
       compositionId: spec.compositionId,
     };
     runtimes.set(spec.agentSlug, runtime);
+    const built = runtime;
+    void built.skills
+      .catalog()
+      .then((entries) => {
+        built.skillsCatalog = entries;
+      })
+      .catch(() => {
+        // Catalog is best-effort. A failed fetch leaves the agent running
+        // without governed skills until process restart.
+      });
   }
   return runtime;
+}
+
+/** Look up the pinned composition id for a live agent slug, if mounted. */
+export function compositionIdFor(
+  agentSlug: string | undefined,
+): string | undefined {
+  if (!agentSlug) {
+    return undefined;
+  }
+  return runtimes.get(agentSlug)?.compositionId;
 }
 
 /** The super agent's runtime (token from `MACRO_SUPER_AGENT_TOKEN`). */

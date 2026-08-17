@@ -1,0 +1,107 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, slug, title, body, okf_type, okf_sources,\n                   okf_generated, okf_verified, okf_status, stale_after,\n                   content_hash, human_authored, created_at, updated_at\n            FROM knowledge_documents\n            WHERE org_id IS NOT DISTINCT FROM $1 AND slug = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "body",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "okf_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "okf_sources",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "okf_generated",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "okf_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "okf_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "stale_after",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "content_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "human_authored",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ff4130a83e642e87e89eca9adb3411fb088495a230007957ae248b1366039ae2"
+}
