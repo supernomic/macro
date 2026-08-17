@@ -4403,6 +4403,7 @@ dependencies = [
  "email_service_client",
  "entity_access",
  "entity_access_management",
+ "escalations",
  "foreign_entity",
  "frecency",
  "futures",
@@ -5579,6 +5580,26 @@ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "escalations"
+version = "0.1.0"
+dependencies = [
+ "agent_identity",
+ "axum",
+ "chrono",
+ "macro_authorization",
+ "macro_uuid",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "utoipa",
+ "workspace-hack",
 ]
 
 [[package]]

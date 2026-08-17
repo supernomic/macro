@@ -10,6 +10,7 @@
 
 import type { Macro } from '@macro/sdk';
 import { config } from '../config.ts';
+import { EscalationsClient } from '../escalations/client.ts';
 import { LedgerClient } from '../ledger/client.ts';
 import type {
   ExternalThreadKind,
@@ -27,6 +28,8 @@ export interface AgentRuntime {
   macro: Macro;
   /** Ledger client authenticated as this principal. */
   ledger: LedgerClient;
+  /** Escalations client authenticated as this principal. */
+  escalations: EscalationsClient;
   /** Pinned composition id for this agent definition. */
   compositionId: string;
 }
@@ -124,6 +127,10 @@ export function runtimeFor(spec: {
       agentSlug: spec.agentSlug,
       macro: macroClientFor(spec.token),
       ledger: new LedgerClient({
+        baseUrl: config.ledgerBaseUrl,
+        token: spec.token,
+      }),
+      escalations: new EscalationsClient({
         baseUrl: config.ledgerBaseUrl,
         token: spec.token,
       }),

@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id, seq, data, actor_kind, actor_id, org_id,\n                   occurred_at, source_event_seqs, prev_hash, hash\n            FROM agent_events\n            WHERE session_id = $1 AND seq >= $2\n            ORDER BY seq ASC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "occurred_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "source_event_seqs",
+        "type_info": "Int8Array"
+      },
+      {
+        "ordinal": 8,
+        "name": "prev_hash",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 9,
+        "name": "hash",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b1ac9174fc65ff10b1b73311ec81916b73d4448ab3f07ae77450d16c65c355a7"
+}

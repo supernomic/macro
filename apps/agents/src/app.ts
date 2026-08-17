@@ -11,6 +11,11 @@ import { createAgentRouter } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 import { SuperAgent } from './agents/super-agent.ts';
 import { channel as slack } from './channels/slack.ts';
+import { config } from './config.ts';
+import {
+  type EscalationCallbackPayload,
+  resumeFromEscalation,
+} from './escalations/resume.ts';
 
 const app = new Hono();
 
@@ -20,5 +25,24 @@ app.route('/agents/super-agent', createAgentRouter(SuperAgent));
 
 // Slack Events API endpoint: POST /channels/slack/events (verified ingress).
 app.route('/channels/slack', slack.route());
+
+// Escalation resume callback: Macro posts here when an expert resolves (or
+// cancels) an escalation, and the answer is dispatched back into the
+// conversation that escalated. Verified by the shared callback token.
+app.post('/callbacks/escalations/:conversationId', async (c) => {
+  const expected = config.escalationCallbackToken();
+  if (expected) {
+    const auth = c.req.header('authorization');
+    if (auth !== `Bearer ${expected}`) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+  }
+  const payload = (await c.req.json()) as EscalationCallbackPayload;
+  if (!payload.escalation_id || !payload.status) {
+    return c.json({ error: 'malformed payload' }, 400);
+  }
+  await resumeFromEscalation(c.req.param('conversationId'), payload);
+  return c.json({ ok: true });
+});
 
 export default app;

@@ -75,6 +75,9 @@ fn api_router(api_context: ApiContext) -> Router {
     let agent_identity_service = api_context.agent_identity_service.clone();
     let agent_ledger_service = api_context.agent_ledger_service.clone();
     let agent_ledger_facade = api_context.agent_ledger_facade.clone();
+    let escalation_service = api_context.escalation_service.clone();
+    let escalation_facade = api_context.escalation_facade.clone();
+    let escalation_routing = api_context.escalation_routing.clone();
     let usage_service = api_context.usage_service.clone();
     let ai_projections_service = api_context.ai_projections_service.clone();
     let import_service = api_context.import_service.clone();
@@ -111,6 +114,15 @@ fn api_router(api_context: ApiContext) -> Router {
             agent_ledger::inbound::axum_router::AgentLedgerRouterState {
                 facade: agent_ledger_facade,
                 ledger: agent_ledger_service,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(escalations::inbound::axum_router::escalations_router(
+            escalations::inbound::axum_router::EscalationRouterState {
+                facade: escalation_facade,
+                service: escalation_service,
+                routing: escalation_routing,
                 identity: agent_identity_service,
                 authorization_state: authorization_state.clone(),
             },

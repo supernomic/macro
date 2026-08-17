@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_principals SET disabled_at = NOW()\n            WHERE id = $1 AND disabled_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5ccf350ce417e509167ca918369caeacb26eb9028f3667f2a821b4fa21084c45"
+}

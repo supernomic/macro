@@ -20,6 +20,7 @@ import {
   superAgentRuntimeInstance,
 } from '../sessions/macro-session.ts';
 import { readDocument } from '../tools/documents/read-document.ts';
+import { createEscalation } from '../tools/escalations/create-escalation.ts';
 import { queryMyHistory } from '../tools/ledger/query-my-history.ts';
 import { searchDocuments } from '../tools/search/search-documents.ts';
 import { replyInSlackThread } from '../tools/slack/reply-in-slack-thread.ts';
@@ -33,10 +34,12 @@ Ground rules:
 - Before re-attempting a problem you may have seen before, check prior
   session history (query_my_history) so you don't repeat failed approaches
   and you reuse what already worked.
-- When you cannot resolve a request with your tools, say so plainly and
-  summarize what you tried. Do not guess. (Escalation to a human expert
-  arrives in a later capability; until then, an honest handoff summary is
-  the correct ending.)
+- When you cannot resolve a request with your tools, escalate to a human
+  expert with create_escalation instead of guessing. Your summary is the
+  expert's entire briefing: state the request, what you tried, and where
+  you got stuck. Then tell the user an expert will follow up. The expert's
+  answer arrives back in this conversation later — relay it in your own
+  words when it does.
 - Be concise. Answer first, cite sources after.`;
 
 const DELEGATION_INSTRUCTIONS = `
@@ -79,7 +82,18 @@ export function SuperAgent({ id }: { id: string }) {
       : undefined,
   });
 
-  const tools: MacroToolDef[] = [searchDocuments, readDocument, queryMyHistory];
+  const tools: MacroToolDef[] = [
+    searchDocuments,
+    readDocument,
+    queryMyHistory,
+    createEscalation({
+      conversationId: id,
+      requesterDisplay: slack?.startedBy
+        ? `slack:${slack.startedBy}`
+        : 'unknown',
+      sourceChannel: slack ? 'slack' : undefined,
+    }),
+  ];
   if (slack) {
     tools.push(
       replyInSlackThread({

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO agent_session_outcomes (session_id, outcome, summary)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (session_id) DO UPDATE\n            SET outcome = EXCLUDED.outcome,\n                summary = EXCLUDED.summary,\n                updated_at = NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d8862f104eabdec44c076bdc2edaf81fc6ed43375ed474c7bc89250477d5dd8e"
+}

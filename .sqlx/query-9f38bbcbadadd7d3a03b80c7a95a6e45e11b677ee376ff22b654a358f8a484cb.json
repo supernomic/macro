@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id, runtime_conversation_id, external_thread_kind,\n                   external_thread_key, org_id, agent_principal_id, created_at\n            FROM agent_session_map\n            WHERE external_thread_kind = $1 AND external_thread_key = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "runtime_conversation_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "external_thread_kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "external_thread_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "agent_principal_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "9f38bbcbadadd7d3a03b80c7a95a6e45e11b677ee376ff22b654a358f8a484cb"
+}

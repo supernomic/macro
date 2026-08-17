@@ -74,6 +74,27 @@ Macro's API boundary. Leave the variable unset to disable the domain — the
 model is never offered a specialist that isn't configured. See
 `CONTRIBUTING.md` ("Domain agents") for the full conventions.
 
+## Escalations (human-in-the-loop)
+
+When an agent can't resolve a request it calls the `create_escalation` tool
+(`src/tools/escalations/create-escalation.ts`), which files an escalation in
+Macro (`crates/escalations`). Macro routes it to an expert or team queue via
+configurable rules (availability, round-robin, claim semantics) and it
+surfaces in the Macro inbox.
+
+When the expert resolves it, Macro POSTs to
+`/callbacks/escalations/:conversationId` on this service
+(`src/escalations/resume.ts`), which logs the resolution to the ledger and
+resumes the durable conversation with the expert's answer.
+
+Configuration:
+
+- `AGENTS_PUBLIC_URL` — public base URL of this service, used to build the
+  callback URL sent with each escalation.
+- `ESCALATION_CALLBACK_TOKEN` — shared bearer token; set the same value in
+  Macro (`EscalationCallbackToken` env var on document-cognition-service) so
+  callbacks are verified.
+
 ## Durability
 
 - Flue conversation state: Postgres via `src/db.ts` when

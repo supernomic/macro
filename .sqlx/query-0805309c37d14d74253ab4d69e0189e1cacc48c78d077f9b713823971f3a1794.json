@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO escalation_routing_rules (\n                id, org_id, domain, position, tags, source_channel,\n                min_priority, target_kind, target_user_id, target_team_id\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            ON CONFLICT (id) DO UPDATE SET\n                domain = EXCLUDED.domain,\n                position = EXCLUDED.position,\n                tags = EXCLUDED.tags,\n                source_channel = EXCLUDED.source_channel,\n                min_priority = EXCLUDED.min_priority,\n                target_kind = EXCLUDED.target_kind,\n                target_user_id = EXCLUDED.target_user_id,\n                target_team_id = EXCLUDED.target_team_id\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Int4",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0805309c37d14d74253ab4d69e0189e1cacc48c78d077f9b713823971f3a1794"
+}

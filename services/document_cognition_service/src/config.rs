@@ -27,6 +27,9 @@ env_vars!(
 
 maybe_env_vars!(
     pub struct DocumentBatchLimit;
+    /// Bearer token sent with escalation-resolution callbacks so the agent
+    /// runtime can verify they came from Macro.
+    pub struct EscalationCallbackToken;
 );
 
 /// The configuration parameters for the application.

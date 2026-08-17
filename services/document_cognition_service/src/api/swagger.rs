@@ -30,6 +30,10 @@ use ai_projections::inbound::axum_router::upsert_projection::{
     ProjectionStateResponse, UpsertProjectionRequest,
 };
 use ai_usage::inbound::axum_router::{self as ai_usage_api};
+use escalations::inbound::axum_router::{
+    self as escalations_api, CreateEscalationRequest, EscalationErrorBody, ReassignRequest,
+    ResolveRequest, UserEscalationsResponse,
+};
 use import::inbound::axum_router::{self as import_api, RunImportRequest};
 use mcp_client::inbound::axum_router::{
     self as mcp_api, AddServerRequest, ServerResponse, StartAuthRequest, StartAuthResponse,
@@ -108,6 +112,21 @@ use utoipa::OpenApi;
             agent_ledger_api::query_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             agent_ledger_api::agent_query_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             agent_ledger_api::export_events_handler::<crate::api::context::DcsAgentLedgerService, agent_ledger::outbound::PgSessionMappingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::agent_create_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::agent_get_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::list_my_escalations_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::list_team_escalations_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::get_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::claim_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::reassign_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::resolve_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::cancel_escalation_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::list_transitions_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::list_rules_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::upsert_rule_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::delete_rule_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::list_experts_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
+            escalations_api::upsert_expert_handler::<crate::api::context::DcsEscalationService, escalations::outbound::PgRoutingRepo, crate::api::context::DcsAgentIdentityService, crate::api::context::DcsAuthorizationService>,
             import_api::get_state_handler,
             import_api::run_import_handler,
             import_api::retry_gather_handler,
@@ -220,6 +239,20 @@ use utoipa::OpenApi;
                 RecordOutcomeRequest,
                 VerifyChainResponse,
                 LedgerErrorBody,
+
+                // Escalations
+                CreateEscalationRequest,
+                UserEscalationsResponse,
+                ReassignRequest,
+                ResolveRequest,
+                EscalationErrorBody,
+                escalations::domain::model::Escalation,
+                escalations::domain::model::EscalationStatus,
+                escalations::domain::model::Priority,
+                escalations::domain::model::EscalationTransition,
+                escalations::domain::model::RoutingRule,
+                escalations::domain::model::RouteTarget,
+                escalations::domain::model::ExpertProfile,
 
                 // Import pipeline
                 import::domain::models::ImportState,

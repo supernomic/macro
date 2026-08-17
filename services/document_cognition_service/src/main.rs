@@ -557,6 +557,24 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized agent ledger service");
 
+    // Build the escalation service (expert routing + inbox handoff) and the
+    // agent-facing facade.
+    let escalation_routing = Arc::new(escalations::outbound::PgRoutingRepo::new(db.clone()));
+    let escalation_callback_token =
+        crate::config::EscalationCallbackToken::new().and_then(|t| t.value().map(str::to_string));
+    let escalation_service = Arc::new(escalations::domain::service::EscalationServiceImpl::new(
+        escalations::outbound::PgEscalationRepo::new(db.clone()),
+        escalation_routing.as_ref().clone(),
+        escalations::outbound::PgTeamMembership::new(db.clone()),
+        escalations::outbound::HttpCallbackClient::new(escalation_callback_token),
+        escalations::outbound::NoopNotifier,
+    ));
+    let escalation_facade = Arc::new(escalations::domain::facade::AgentEscalationFacade::new(
+        escalation_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized escalation service");
+
     // Build the AI cost service. It backs both the admin query/pricing router
     // and the usage recorder threaded through the tool service context.
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
@@ -688,6 +706,9 @@ async fn main() -> anyhow::Result<()> {
         agent_identity_service,
         agent_ledger_service,
         agent_ledger_facade,
+        escalation_service,
+        escalation_facade,
+        escalation_routing,
         usage_service,
         ai_projections_service,
         properties_tool_context,

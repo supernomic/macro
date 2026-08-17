@@ -93,6 +93,20 @@ pub type DcsAgentLedgerFacade = agent_ledger::domain::facade::AgentLedgerFacade<
     agent_ledger::outbound::PgSessionMappingRepo,
 >;
 
+/// The escalation service wired to the Postgres repos, MacroDB team
+/// membership, the HTTP resume-callback client, and the no-op notifier.
+pub type DcsEscalationService = escalations::domain::service::EscalationServiceImpl<
+    escalations::outbound::PgEscalationRepo,
+    escalations::outbound::PgRoutingRepo,
+    escalations::outbound::PgTeamMembership,
+    escalations::outbound::HttpCallbackClient,
+    escalations::outbound::NoopNotifier,
+>;
+
+/// The agent-facing escalation facade (scope + tenancy policy).
+pub type DcsEscalationFacade =
+    escalations::domain::facade::AgentEscalationFacade<DcsEscalationService>;
+
 /// The AI cost service wired to the Postgres usage repo.
 pub type DcsUsageService =
     ai_usage::domain::service::UsageServiceImpl<ai_usage::outbound::PgUsageRepo>;
@@ -151,6 +165,9 @@ pub struct ApiContext {
     pub agent_identity_service: Arc<DcsAgentIdentityService>,
     pub agent_ledger_service: Arc<DcsAgentLedgerService>,
     pub agent_ledger_facade: Arc<DcsAgentLedgerFacade>,
+    pub escalation_service: Arc<DcsEscalationService>,
+    pub escalation_facade: Arc<DcsEscalationFacade>,
+    pub escalation_routing: Arc<escalations::outbound::PgRoutingRepo>,
     pub usage_service: Arc<DcsUsageService>,
     pub ai_projections_service: Arc<DcsAiProjectionService>,
     pub properties_tool_context: ToolPropertiesToolContext,

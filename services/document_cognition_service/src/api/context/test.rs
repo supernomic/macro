@@ -443,6 +443,18 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
     ));
     let agent_ledger_service = Arc::new(agent_ledger_service);
 
+    let escalation_routing = Arc::new(escalations::outbound::PgRoutingRepo::new(pool.clone()));
+    let escalation_service = Arc::new(escalations::domain::service::EscalationServiceImpl::new(
+        escalations::outbound::PgEscalationRepo::new(pool.clone()),
+        escalation_routing.as_ref().clone(),
+        escalations::outbound::PgTeamMembership::new(pool.clone()),
+        escalations::outbound::HttpCallbackClient::new(None),
+        escalations::outbound::NoopNotifier,
+    ));
+    let escalation_facade = Arc::new(escalations::domain::facade::AgentEscalationFacade::new(
+        escalation_service.as_ref().clone(),
+    ));
+
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
         ai_usage::outbound::PgUsageRepo::new(pool.clone()),
     ));
@@ -517,6 +529,9 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
         agent_identity_service,
         agent_ledger_service,
         agent_ledger_facade,
+        escalation_service,
+        escalation_facade,
+        escalation_routing,
         usage_service,
         ai_projections_service,
         properties_tool_context,

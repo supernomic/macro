@@ -69,6 +69,19 @@ export const config = {
   domainAgentToken: (slug: string): string | undefined =>
     process.env[`MACRO_${slug.toUpperCase().replace(/-/g, '_')}_AGENT_TOKEN`],
 
+  /**
+   * Public base URL of this agents service, used to build escalation
+   * resume-callback URLs that Macro calls back on.
+   */
+  publicBaseUrl: optional('AGENTS_PUBLIC_URL', 'http://localhost:3000'),
+
+  /**
+   * Shared bearer token Macro presents on escalation resume callbacks
+   * (`ESCALATION_CALLBACK_TOKEN` on the Macro side). When unset, callbacks
+   * are accepted unverified — local development only.
+   */
+  escalationCallbackToken: () => process.env.ESCALATION_CALLBACK_TOKEN,
+
   /** Slack signing secret for inbound event verification. */
   slackSigningSecret: () => required('SLACK_SIGNING_SECRET'),
 
