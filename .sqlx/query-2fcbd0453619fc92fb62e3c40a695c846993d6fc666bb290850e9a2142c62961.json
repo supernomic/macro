@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE agent_skill_proposals SET\n                skill_id = $2,\n                status = $3,\n                snapshot_id = $4,\n                eval_run_id = $5,\n                eval_passed = $6,\n                decided_by = $7,\n                decision_note = $8,\n                decided_at = $9,\n                updated_at = $10\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2fcbd0453619fc92fb62e3c40a695c846993d6fc666bb290850e9a2142c62961"
+}

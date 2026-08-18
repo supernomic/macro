@@ -86,6 +86,7 @@ import { ContextMenu } from '@kobalte/core/context-menu';
 import BellSimpleIcon from '@phosphor/bell-simple.svg';
 import CaretRightIcon from '@phosphor/caret-right.svg';
 import CaretUpIcon from '@phosphor/caret-up.svg';
+import CheckCircleIcon from '@phosphor/check-circle.svg';
 import CompassIcon from '@phosphor/compass.svg';
 import DotsThreeIcon from '@phosphor/dots-three.svg';
 import GearIcon from '@phosphor/gear.svg';
@@ -129,8 +130,8 @@ interface SidebarItem {
   icon?: Component<
     JSX.SvgSVGAttributes<SVGSVGElement> | { triggerAnimation?: boolean }
   >;
-  hotkey: ValidHotkey;
-  hotkeyToken: HotkeyToken;
+  hotkey?: ValidHotkey;
+  hotkeyToken?: HotkeyToken;
   standaloneHotkey?: boolean;
   hiddenFromSidebar?: boolean;
 }
@@ -456,7 +457,9 @@ export const GoToHotkeys = () => {
   });
 
   const registeredGoToKeys = () =>
-    new Set<ValidHotkey>(links().map((link) => link.hotkey));
+    new Set<ValidHotkey>(
+      links().flatMap((link) => (link.hotkey ? [link.hotkey] : []))
+    );
 
   // When the go to command scope is active, we want to prevent
   // other default hotkeys from running. So doing "g" + some key
@@ -490,7 +493,8 @@ export const GoToHotkeys = () => {
   // This must be reactive because prod feature flags can add links after the
   // initial render (e.g. Home), and Hotkey UI resolves tokens from the registry.
   createEffect(() => {
-    const disposers = links().map((link) => {
+    const disposers = links().flatMap((link) => {
+      if (!link.hotkey || !link.hotkeyToken) return [];
       const openSidebarView = (e?: KeyboardEvent) => {
         e?.preventDefault();
         if (goToHotkeyVisible()) {
@@ -524,14 +528,16 @@ export const GoToHotkeys = () => {
         return true;
       };
 
-      return registerHotkey({
-        hotkey: link.hotkey,
-        scopeId: link.standaloneHotkey ? 'global' : GO_TO_COMMAND_SCOPE,
-        hotkeyToken: link.hotkeyToken,
-        description: `Go to ${link.label}`,
-        keyDownHandler: openSidebarView,
-        icon: link.icon,
-      });
+      return [
+        registerHotkey({
+          hotkey: link.hotkey,
+          scopeId: link.standaloneHotkey ? 'global' : GO_TO_COMMAND_SCOPE,
+          hotkeyToken: link.hotkeyToken,
+          description: `Go to ${link.label}`,
+          keyDownHandler: openSidebarView,
+          icon: link.icon,
+        }),
+      ];
     });
 
     onCleanup(() => {
@@ -756,7 +762,9 @@ const SidebarDropdownLink = (
         </div>
       </Show>
       <span class="min-w-0 flex-1 truncate text-ink">{props.label}</span>
-      <Hotkey token={props.hotkeyToken} theme="subtle" class="ml-6" />
+      <Show when={props.hotkeyToken}>
+        {(token) => <Hotkey token={token()} theme="subtle" class="ml-6" />}
+      </Show>
     </Dropdown.Item>
   );
 };
@@ -1044,6 +1052,13 @@ const REMINDERS_LINK: SidebarItem = {
   hotkeyToken: TOKENS.sidebar.goTo.reminders,
 };
 
+const AGENT_REVIEW_LINK: SidebarItem = {
+  id: 'agent-review',
+  label: 'Agent Review',
+  href: '/agent-review',
+  icon: CheckCircleIcon,
+};
+
 /**
  * Assemble the ordered sidebar link list: the static links plus Home, Getting
  * started, and the flag-gated Activity, Calendar, Calls, and CRM entries in
@@ -1103,6 +1118,8 @@ const buildSidebarLinks = (
       ...links.slice(idx + 1),
     ];
   }
+
+  links = [...links, AGENT_REVIEW_LINK];
 
   return links;
 };
@@ -1345,7 +1362,14 @@ export const AppSidebar = (props: AppSidebarProps) => {
   // lives in the collapsible Workspace section. `findLink` drops ids that
   // `buildSidebarLinks` gated out, so flag-gated rows need no filter here.
   const topLinks = createMemo(() =>
-    ['home', 'getting-started', 'inbox', 'activity', 'reminders']
+    [
+      'home',
+      'getting-started',
+      'inbox',
+      'activity',
+      'reminders',
+      'agent-review',
+    ]
       .filter(
         (id) => id !== 'getting-started' || !gettingStartedVisibility.hidden()
       )
@@ -1829,9 +1853,11 @@ const SidebarLink = (props: SidebarLinkProps) => {
         onMouseEnter={() => setIsHovering(true)}
         label={`Go to ${props.label}`}
         hotkey={
-          props.standaloneHotkey
-            ? props.hotkeyToken
-            : [TOKENS.sidebar.goToLeader, props.hotkeyToken]
+          props.hotkeyToken
+            ? props.standaloneHotkey
+              ? props.hotkeyToken
+              : [TOKENS.sidebar.goToLeader, props.hotkeyToken]
+            : undefined
         }
         tooltipDisabled={props.sidebarState !== 'slim'}
         onMouseLeave={() => setIsHovering(false)}
@@ -1947,32 +1973,40 @@ const SidebarLink = (props: SidebarLinkProps) => {
         >
           <div class="group-data-[slim=true]/sidebar:hidden ml-auto">
             <div class="flex gap-1 items-center text-ink-extra-muted font-normal text-xxs">
-              <Show when={!props.standaloneHotkey}>
-                <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
-                  <Hotkey token={TOKENS.sidebar.goToLeader} />
-                </div>
-                <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
-                  <Hotkey token={props.hotkeyToken} />
-                </div>
+              <Show when={!props.standaloneHotkey && props.hotkeyToken}>
+                {(token) => (
+                  <>
+                    <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
+                      <Hotkey token={TOKENS.sidebar.goToLeader} />
+                    </div>
+                    <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
+                      <Hotkey token={token()} />
+                    </div>
+                  </>
+                )}
               </Show>
-              <Show when={props.standaloneHotkey}>
-                <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
-                  <Hotkey token={props.hotkeyToken} />
-                </div>
+              <Show when={props.standaloneHotkey && props.hotkeyToken}>
+                {(token) => (
+                  <div class="text-xxs text-ink-extra-muted rounded-sm ml-auto border border-ink/5 px-1.5 py-0.5 -my-1">
+                    <Hotkey token={token()} />
+                  </div>
+                )}
               </Show>
             </div>
           </div>
         </Show>
-        <Show when={props.hotkeyVisible}>
-          <div
-            class={cn(
-              'text-xs size-4 rounded-xs flex items-center justify-center overflow-hidden bg-accent/10 border border-accent/30 text-accent',
-              props.sidebarState === 'slim' && 'absolute -bottom-1 -right-1',
-              props.sidebarState !== 'slim' && 'relative p-1 ml-auto'
-            )}
-          >
-            <Hotkey token={props.hotkeyToken} />
-          </div>
+        <Show when={props.hotkeyVisible && props.hotkeyToken}>
+          {(token) => (
+            <div
+              class={cn(
+                'text-xs size-4 rounded-xs flex items-center justify-center overflow-hidden bg-accent/10 border border-accent/30 text-accent',
+                props.sidebarState === 'slim' && 'absolute -bottom-1 -right-1',
+                props.sidebarState !== 'slim' && 'relative p-1 ml-auto'
+              )}
+            >
+              <Hotkey token={token()} />
+            </div>
+          )}
         </Show>
       </NavRow>
     </SidebarOpenInSplitMenu>

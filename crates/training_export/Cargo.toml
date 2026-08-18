@@ -1,0 +1,27 @@
+[package]
+edition = "2024"
+name = "training_export"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+agent_feedback = { path = "../agent_feedback" }
+agent_identity = { path = "../agent_identity" }
+agent_ledger = { path = "../agent_ledger" }
+axum = { workspace = true }
+chrono = { workspace = true }
+macro_authorization = { path = "../macro_authorization", default-features = false, features = [
+  "axum",
+] }
+macro_uuid = { path = "../macro_uuid" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+utoipa = { workspace = true }
+
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }

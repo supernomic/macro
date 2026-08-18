@@ -5,6 +5,20 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: [
+        '**/proc/**',
+        '/proc/**',
+        '//proc/**',
+        '**/.git/**',
+        '**/node_modules/**',
+      ],
+    },
+    fs: {
+      deny: ['/proc', '//proc'],
+    },
+  },
   plugins: [
     tsconfigPaths(),
     solidPlugin(),
@@ -166,13 +180,21 @@ export default defineConfig({
         },
       },
       {
+        extends: './src/lib/core/vitest.config.ts',
+        test: {
+          environment: 'jsdom',
+          include: ['src/features/agent-inbox/**/*.{test,spec}.{ts,tsx}'],
+          name: 'agent-inbox',
+        },
+      },
+      {
         // App-shell and feature tests without a specialized environment.
         extends: './src/lib/core/vitest.config.ts',
         test: {
           environment: 'jsdom',
           exclude: [
             ...configDefaults.exclude,
-            'src/features/{theme,block-channel,block-call,block-pr,block-md,channel,notifications,block-email}/**/*',
+            'src/features/{theme,block-channel,block-call,block-pr,block-md,channel,notifications,block-email,agent-inbox}/**/*',
           ],
           include: [
             'src/components/**/*.{test,spec}.{ts,tsx}',

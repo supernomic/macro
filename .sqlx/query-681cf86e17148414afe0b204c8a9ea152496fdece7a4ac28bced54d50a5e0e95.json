@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO escalation_round_robin (rule_id, last_user_id)\n            VALUES ($1, $2)\n            ON CONFLICT (rule_id) DO UPDATE SET\n                last_user_id = EXCLUDED.last_user_id,\n                updated_at = now()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "681cf86e17148414afe0b204c8a9ea152496fdece7a4ac28bced54d50a5e0e95"
+}

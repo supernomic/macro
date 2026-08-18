@@ -1,0 +1,26 @@
+[package]
+edition = "2024"
+name = "agent_inbox"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+approvals = { path = "../approvals" }
+axum = { workspace = true }
+chrono = { workspace = true }
+escalations = { path = "../escalations" }
+macro_authorization = { path = "../macro_authorization", default-features = false, features = [
+  "axum",
+] }
+macro_uuid = { path = "../macro_uuid" }
+serde = { workspace = true }
+skill_governance = { path = "../skill_governance" }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+utoipa = { workspace = true }
+
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt"] }

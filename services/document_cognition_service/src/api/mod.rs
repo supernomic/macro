@@ -72,6 +72,25 @@ pub async fn setup_and_serve(state: ApiContext) -> anyhow::Result<()> {
 
 fn api_router(api_context: ApiContext) -> Router {
     let memory_service = api_context.memory_service.clone();
+    // Clone identity into every router except the last consumer (feedback).
+    let agent_identity_service = api_context.agent_identity_service.clone();
+    let agent_ledger_service = api_context.agent_ledger_service.clone();
+    let agent_ledger_facade = api_context.agent_ledger_facade.clone();
+    let escalation_service = api_context.escalation_service.clone();
+    let escalation_facade = api_context.escalation_facade.clone();
+    let escalation_routing = api_context.escalation_routing.clone();
+    let approval_service = api_context.approval_service.clone();
+    let approval_facade = api_context.approval_facade.clone();
+    let approval_policies = api_context.approval_policies.clone();
+    let skill_governance_service = api_context.skill_governance_service.clone();
+    let skill_governance_facade = api_context.skill_governance_facade.clone();
+    let inbox_service = api_context.inbox_service.clone();
+    let graph_facade = api_context.graph_facade.clone();
+    let connector_service = api_context.connector_service.clone();
+    let mirror_service = api_context.mirror_service.clone();
+    let extension_service = api_context.extension_service.clone();
+    let export_service = api_context.export_service.clone();
+    let feedback_facade = api_context.feedback_facade.clone();
     let usage_service = api_context.usage_service.clone();
     let ai_projections_service = api_context.ai_projections_service.clone();
     let import_service = api_context.import_service.clone();
@@ -95,6 +114,98 @@ fn api_router(api_context: ApiContext) -> Router {
         .merge(memory::inbound::axum_router::memory_router(
             memory::inbound::axum_router::MemoryRouterState {
                 service: memory_service,
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(agent_identity::inbound::axum_router::agent_identity_router(
+            agent_identity::inbound::axum_router::AgentIdentityRouterState {
+                service: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(agent_ledger::inbound::axum_router::agent_ledger_router(
+            agent_ledger::inbound::axum_router::AgentLedgerRouterState {
+                facade: agent_ledger_facade,
+                ledger: agent_ledger_service,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(escalations::inbound::axum_router::escalations_router(
+            escalations::inbound::axum_router::EscalationRouterState {
+                facade: escalation_facade,
+                service: escalation_service,
+                routing: escalation_routing,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(approvals::inbound::axum_router::approvals_router(
+            approvals::inbound::axum_router::ApprovalRouterState {
+                facade: approval_facade,
+                service: approval_service,
+                policies: approval_policies,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(
+            skill_governance::inbound::axum_router::skill_governance_router(
+                skill_governance::inbound::axum_router::SkillGovernanceRouterState {
+                    facade: skill_governance_facade,
+                    service: skill_governance_service,
+                    identity: agent_identity_service.clone(),
+                    authorization_state: authorization_state.clone(),
+                },
+            ),
+        )
+        .merge(agent_inbox::inbound::axum_router::inbox_router(
+            agent_inbox::inbound::axum_router::InboxRouterState {
+                service: inbox_service,
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(entity_graph::inbound::axum_router::entity_graph_router(
+            entity_graph::inbound::axum_router::GraphRouterState {
+                facade: graph_facade,
+                identity: agent_identity_service.clone(),
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(
+            lifecycle_connectors::inbound::axum_router::lifecycle_connectors_router(
+                lifecycle_connectors::inbound::axum_router::ConnectorRouterState {
+                    service: connector_service,
+                    authorization_state: authorization_state.clone(),
+                },
+            ),
+        )
+        .merge(ticket_mirrors::inbound::axum_router::ticket_mirrors_router(
+            ticket_mirrors::inbound::axum_router::MirrorRouterState {
+                service: mirror_service,
+                authorization_state: authorization_state.clone(),
+            },
+        ))
+        .merge(
+            tenant_extensions::inbound::axum_router::tenant_extensions_router(
+                tenant_extensions::inbound::axum_router::ExtensionRouterState {
+                    service: extension_service,
+                    authorization_state: authorization_state.clone(),
+                },
+            ),
+        )
+        .merge(
+            training_export::inbound::axum_router::training_export_router(
+                training_export::inbound::axum_router::ExportRouterState {
+                    service: export_service,
+                    authorization_state: authorization_state.clone(),
+                },
+            ),
+        )
+        .merge(agent_feedback::inbound::axum_router::agent_feedback_router(
+            agent_feedback::inbound::axum_router::FeedbackRouterState {
+                facade: feedback_facade,
+                identity: agent_identity_service,
                 authorization_state: authorization_state.clone(),
             },
         ))

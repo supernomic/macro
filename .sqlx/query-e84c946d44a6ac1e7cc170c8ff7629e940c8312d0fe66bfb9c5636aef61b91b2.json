@@ -1,0 +1,120 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO knowledge_documents (\n                id, org_id, slug, title, body, okf_type, okf_sources,\n                okf_generated, okf_verified, okf_status, stale_after,\n                content_hash, human_authored, created_at, updated_at\n            )\n            VALUES (\n                $1, $2, $3, $4, $5, $6, $7,\n                $8, $9, $10, $11,\n                $12, $13, $14, $15\n            )\n            ON CONFLICT (org_id, slug)\n            DO UPDATE SET\n                title = CASE\n                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored\n                    THEN knowledge_documents.title\n                    ELSE EXCLUDED.title\n                END,\n                body = CASE\n                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored\n                    THEN knowledge_documents.body\n                    ELSE EXCLUDED.body\n                END,\n                okf_sources = CASE\n                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored\n                    THEN knowledge_documents.okf_sources\n                    ELSE EXCLUDED.okf_sources\n                END,\n                okf_generated = CASE\n                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored\n                    THEN knowledge_documents.okf_generated\n                    ELSE EXCLUDED.okf_generated\n                END,\n                okf_status = EXCLUDED.okf_status,\n                content_hash = CASE\n                    WHEN knowledge_documents.human_authored AND NOT EXCLUDED.human_authored\n                    THEN knowledge_documents.content_hash\n                    ELSE EXCLUDED.content_hash\n                END,\n                human_authored = knowledge_documents.human_authored OR EXCLUDED.human_authored,\n                updated_at = EXCLUDED.updated_at\n            RETURNING id, org_id, slug, title, body, okf_type, okf_sources,\n                      okf_generated, okf_verified, okf_status, stale_after,\n                      content_hash, human_authored, created_at, updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "body",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "okf_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "okf_sources",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "okf_generated",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "okf_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "okf_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "stale_after",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "content_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "human_authored",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Bool",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e84c946d44a6ac1e7cc170c8ff7629e940c8312d0fe66bfb9c5636aef61b91b2"
+}

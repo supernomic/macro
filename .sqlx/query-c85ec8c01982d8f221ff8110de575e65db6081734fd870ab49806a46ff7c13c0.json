@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO tenant_extension_catalogs (org_id, catalog, updated_at, updated_by)\n            VALUES ($1, $2, $3, $4)\n            ON CONFLICT (org_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Jsonb",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c85ec8c01982d8f221ff8110de575e65db6081734fd870ab49806a46ff7c13c0"
+}

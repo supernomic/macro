@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO agent_skill_proposals (\n                id, org_id, skill_id, kind, slug, target_scope,\n                owner_user_id, owner_team_id, proposed_name, proposed_description,\n                proposed_body, diff_summary, evidence, proposer_agent_id,\n                proposer_user_id, status, assignee_user_id, assignee_team_id,\n                snapshot_id, eval_run_id, eval_passed, decided_by, decision_note,\n                decided_at, created_at, updated_at\n            )\n            VALUES (\n                $1, $2, $3, $4, $5, $6,\n                $7, $8, $9, $10,\n                $11, $12, $13, $14,\n                $15, $16, $17, $18,\n                $19, $20, $21, $22, $23,\n                $24, $25, $26\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cc2abdbb00ff79188018810354065a71427c828b35208258f85b446224e1e888"
+}

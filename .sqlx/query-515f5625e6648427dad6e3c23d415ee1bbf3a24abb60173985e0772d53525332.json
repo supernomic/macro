@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO escalation_experts (user_id, org_id, domains, tags, available)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (user_id) DO UPDATE SET\n                org_id = EXCLUDED.org_id,\n                domains = EXCLUDED.domains,\n                tags = EXCLUDED.tags,\n                available = EXCLUDED.available,\n                updated_at = now()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "TextArray",
+        "TextArray",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "515f5625e6648427dad6e3c23d415ee1bbf3a24abb60173985e0772d53525332"
+}

@@ -214,6 +214,19 @@ function MyActivityViewWrapper() {
 
 registerComponent('activity', withAuth(MyActivityViewWrapper));
 
+const AgentReviewView = lazy(() =>
+  import('@app/features/agent-inbox/agent-review-view').then((module) => ({
+    default: module.AgentReviewView,
+  }))
+);
+
+function TrackedAgentReviewView() {
+  usePageViewTracking('agent-review');
+  return <AgentReviewView />;
+}
+
+registerComponent('agent-review', withAuth(TrackedAgentReviewView));
+
 registerComponent(
   'reminders',
   withAuth(() => {

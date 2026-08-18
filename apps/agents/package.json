@@ -1,0 +1,38 @@
+{
+	"name": "@macro/agents",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"overrides": {
+		"hono": "4.12.32"
+	},
+	"description": "Macro's super agent + domain agents service, built on the Flue durable-agent framework.",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"check": "tsc --noEmit",
+		"lint": "biome check",
+		"format": "biome format --write",
+		"test": "bun test src"
+	},
+	"dependencies": {
+		"@flue/opentelemetry": "2.0.3",
+		"@flue/postgres": "2.0.3",
+		"@flue/runtime": "2.0.3",
+		"@flue/slack": "2.0.3",
+		"@macro/sdk": "file:../../packages/sdk",
+		"@slack/web-api": "^8.0.0",
+		"braintrust": "^3.17.0",
+		"hono": "4.12.32",
+		"postgres": "^3.4.7",
+		"valibot": "^1.1.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.12",
+		"@flue/cli": "^2.0.3",
+		"@flue/vite": "2.0.3",
+		"@types/node": "^22.14.0",
+		"typescript": "^5.9.2",
+		"vite": "^8.0.0"
+	}
+}

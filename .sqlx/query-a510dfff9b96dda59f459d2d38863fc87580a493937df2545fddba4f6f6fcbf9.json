@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, agent_slug, session_id, requester_user_id,\n                   requester_display, tool_name, arguments,\n                   arguments_digest, summary, status, assignee_user_id,\n                   assignee_team_id, callback_url, decided_by,\n                   decision_note, created_at, decided_at, consumed_at\n            FROM approval_requests\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "agent_slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "requester_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "requester_display",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "tool_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "arguments",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
+        "name": "arguments_digest",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "assignee_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "assignee_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "callback_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "decided_by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "decision_note",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 17,
+        "name": "decided_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 18,
+        "name": "consumed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "a510dfff9b96dda59f459d2d38863fc87580a493937df2545fddba4f6f6fcbf9"
+}

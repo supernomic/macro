@@ -1,4 +1,5 @@
 //! HTTP endpoint for sending chat messages with streaming responses.
+use super::flue_chat::{self, FlueChatClient, FlueTurnEvent};
 use super::util::chat_message::ai_request::build_chat_messages;
 use super::util::chat_message::toolset::choose_tools_prompt;
 use super::util::chat_message::{store_conversation_messages, store_incoming_message};
@@ -513,11 +514,124 @@ fn stream_and_save_message(
             stream_id: stream_id.clone(),
             chat_id: chat_id.clone(),
             message_id: user_message_id,
-            content: user_message_content,
+            content: user_message_content.clone(),
             attachments: user_message_attachments,
         };
         if let Ok(json) = serde_json::to_value(&user_msg) {
             yield json;
+        }
+
+        // Gated Flue cutover. Unset / false `FLUENT_DCS_CHAT` (or a missing
+        // `FLUENT_BASE_URL`) keeps the frozen AgentLoop path below identical.
+        if let Some(target) = flue_chat::flue_chat_target_from_env() {
+            let mut was_cancelled = false;
+            let mut accumulated_parts: Vec<AssistantMessagePart> = Vec::new();
+            let mut is_first_token = false;
+            let client = FlueChatClient::new(&target);
+            let mut flue_stream = std::pin::pin!(flue_chat::stream_flue_turn(
+                client,
+                chat_id.clone(),
+                user_message_content,
+                user_cancellsation.clone(),
+            ));
+            while let Some(event) = flue_stream.next().await {
+                match event {
+                    FlueTurnEvent::Part(message_part) => {
+                        if !is_first_token {
+                            is_first_token = true;
+                            log::log_timing(
+                                log::LatencyMetric::TimeToFirstToken,
+                                &model,
+                                now.elapsed(),
+                            );
+                        }
+                        accumulated_parts.push(message_part.clone());
+                        let response = ChatStream::ChatMessageResponse {
+                            stream_id: stream_id.clone(),
+                            chat_id: chat_id.clone(),
+                            message_id: message_id.clone(),
+                            content: message_part,
+                        };
+                        if let Ok(json) = serde_json::to_value(&response) {
+                            yield json;
+                        }
+                    }
+                    FlueTurnEvent::Failed(error) => {
+                        tracing::error!(
+                            error = ?error,
+                            chat_id = %chat_id,
+                            user_id = %user_id,
+                            stream_id = %stream_id,
+                            "flue chat turn failed"
+                        );
+                        let stream_error = StreamError::InternalError {
+                            stream_id: stream_id.clone(),
+                        };
+                        if let Ok(json) = serde_json::to_value(ChatStream::Error(stream_error)) {
+                            yield json;
+                        }
+                    }
+                    FlueTurnEvent::Finished { cancelled } => {
+                        was_cancelled = cancelled;
+                    }
+                }
+            }
+
+            let end_msg = ChatStream::StreamEnd {
+                stream_id: stream_id.clone(),
+            };
+            if let Ok(json) = serde_json::to_value(&end_msg) {
+                yield json;
+            }
+
+            let resolved_parts =
+                resolve_pending_tool_calls(agent::merge_consecutive_parts(accumulated_parts));
+            let new_messages = if resolved_parts.is_empty() {
+                vec![]
+            } else {
+                vec![agent::types::ChatMessage {
+                    role: agent::types::Role::Assistant,
+                    content: ChatMessageContent::AssistantMessageParts(resolved_parts),
+                    attachments: None,
+                }]
+            };
+            let assistant_text = new_messages
+                .iter()
+                .find(|m| m.role == agent::types::Role::Assistant)
+                .and_then(|m| m.content.assistant_message_text());
+
+            if let Err(err) = store_conversation_messages(
+                ctx.clone(),
+                &chat_id,
+                new_messages,
+                &model,
+                Some(message_id.clone()),
+            )
+            .await
+            {
+                tracing::error!(
+                    error=?err,
+                    chat_id = %chat_id,
+                    user_id = %user_id,
+                    stream_id = %stream_id,
+                    was_cancelled = was_cancelled,
+                    "failed to store conversation messages"
+                );
+            }
+
+            if !was_cancelled
+                && let Some(text) = assistant_text
+            {
+                notify(
+                    ctx.connection_repo.clone(),
+                    ctx.notification_ingress_service.clone(),
+                    chat_id.clone(),
+                    message_id.clone(),
+                    text,
+                    user_id.clone(),
+                );
+            }
+            return;
         }
 
         let mcp_records = mcp_store.list(&user_id).await.unwrap_or_default();

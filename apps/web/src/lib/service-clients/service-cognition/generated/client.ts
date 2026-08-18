@@ -6,36 +6,86 @@
  */
 import type {
   AddServerRequest,
+  AppendEventsRequest,
+  ApprovalErrorBody,
+  ApprovalRequest,
+  ApprovalTransition,
   CallToolRequest,
   CallToolResponse,
   ChatHistory,
   ChatHistoryBatchMessagesRequest,
   ChatMessageError,
   CompleteOnboardingRequest,
+  ConnectorAccount,
+  ConnectorRecord,
+  ConsentRecord,
+  ConsentRequest,
   CreateChatRequest,
+  CreateEscalationRequest,
+  CreatePrincipalRequest,
+  DecideProposalRequest,
+  DecideRequest,
   DeleteMcpServerParams,
   DocumentTextPart,
   ErrorBody,
   ErrorResponse,
+  Escalation,
+  EscalationErrorBody,
+  EscalationTransition,
+  EventResponse,
+  ExpertProfile,
+  GateOutcome,
+  GateToolCallRequest,
   GetBatchPreviewRequest,
   GetBatchPreviewResponse,
   GetChatPermissionsResponse,
   GetChatResponse,
   GetChatsForAttachmentResponse,
+  GovernanceErrorBody,
+  GraphEdge,
+  GraphNode,
   HttpSendChatMessageRequest,
+  IdentityErrorBody,
+  IngestRequest,
+  KnowledgeDocument,
+  LedgerErrorBody,
   McpAuthCallbackParams,
   MemoryErrorBody,
   MemoryResponse,
+  MessageRating,
+  MintTokenRequest,
+  MintTokenResponse,
+  Neighbor,
   OnboardingRow,
   OnboardingState,
+  OpenSessionRequest,
   PatchChatRequest,
+  PrincipalResponse,
   ProjectionStateResponse,
+  ProposeSkillRequest,
+  RateRequest,
+  ReassignApprovalRequest,
+  ReassignRequest,
+  RecordEvalRequest,
+  RecordOutcomeRequest,
+  RefineRequest,
+  RegisterAccountRequest,
+  RegisterExtensionRequest,
   RejectToolCallRequest,
+  ResolveRequest,
+  RoutingRule,
+  RunExportRequest,
+  RunExportResponse,
   RunImportOutcome,
   RunImportRequest,
   SendChatMessageResponse,
   ServerResponse,
+  SessionMappingResponse,
   SetPricingRequest,
+  SkillCatalogEntry,
+  SkillEvalRun,
+  SkillProposal,
+  SkillRecord,
   StartAuthRequest,
   StartAuthResponse,
   StopChatStreamError,
@@ -45,13 +95,1478 @@ import type {
   StructuredCompletionError,
   StructuredCompletionRequest,
   StructuredCompletionResponse,
+  TenantExtension,
+  TicketMirror,
+  ToolPolicy,
+  TraceRefinement,
   UpdateServerRequest,
   UpdateToolCallRequest,
   UpdateToolResponseRequest,
+  UpsertEdgeRequest,
+  UpsertKnowledgeRequest,
+  UpsertMirrorRequest,
+  UpsertNodeRequest,
   UpsertProjectionRequest,
   UsageRequest,
   UsageSummary,
+  UserApprovalsResponse,
+  UserEscalationsResponse,
+  UserInboxResponse,
+  UserProposalsResponse,
+  VerifyChainResponse,
 } from './schemas';
+
+/**
+ * @summary Gate a proposed tool call. Agent callers.
+ */
+export type agentGateHandlerResponse200 = {
+  data: GateOutcome;
+  status: 200;
+};
+
+export type agentGateHandlerResponse400 = {
+  data: ApprovalErrorBody;
+  status: 400;
+};
+
+export type agentGateHandlerResponse403 = {
+  data: ApprovalErrorBody;
+  status: 403;
+};
+
+export type agentGateHandlerResponseSuccess = agentGateHandlerResponse200 & {
+  headers: Headers;
+};
+export type agentGateHandlerResponseError = (
+  | agentGateHandlerResponse400
+  | agentGateHandlerResponse403
+) & {
+  headers: Headers;
+};
+
+export type agentGateHandlerResponse =
+  | agentGateHandlerResponseSuccess
+  | agentGateHandlerResponseError;
+
+export const getAgentGateHandlerUrl = () => {
+  return `/agent-approvals/gate`;
+};
+
+export const agentGateHandler = async (
+  gateToolCallRequest: GateToolCallRequest,
+  options?: RequestInit
+): Promise<agentGateHandlerResponse> => {
+  const res = await fetch(getAgentGateHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(gateToolCallRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentGateHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentGateHandlerResponse;
+};
+
+/**
+ * @summary Poll one approval request. Agent callers.
+ */
+export type agentGetApprovalHandlerResponse200 = {
+  data: ApprovalRequest;
+  status: 200;
+};
+
+export type agentGetApprovalHandlerResponse404 = {
+  data: ApprovalErrorBody;
+  status: 404;
+};
+
+export type agentGetApprovalHandlerResponseSuccess =
+  agentGetApprovalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type agentGetApprovalHandlerResponseError =
+  agentGetApprovalHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type agentGetApprovalHandlerResponse =
+  | agentGetApprovalHandlerResponseSuccess
+  | agentGetApprovalHandlerResponseError;
+
+export const getAgentGetApprovalHandlerUrl = (id: string) => {
+  return `/agent-approvals/${id}`;
+};
+
+export const agentGetApprovalHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<agentGetApprovalHandlerResponse> => {
+  const res = await fetch(getAgentGetApprovalHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentGetApprovalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentGetApprovalHandlerResponse;
+};
+
+/**
+ * @summary Cancel one of the agent's own pending requests. Agent callers.
+ */
+export type agentCancelApprovalHandlerResponse200 = {
+  data: ApprovalRequest;
+  status: 200;
+};
+
+export type agentCancelApprovalHandlerResponse404 = {
+  data: ApprovalErrorBody;
+  status: 404;
+};
+
+export type agentCancelApprovalHandlerResponse409 = {
+  data: ApprovalErrorBody;
+  status: 409;
+};
+
+export type agentCancelApprovalHandlerResponseSuccess =
+  agentCancelApprovalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type agentCancelApprovalHandlerResponseError = (
+  | agentCancelApprovalHandlerResponse404
+  | agentCancelApprovalHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type agentCancelApprovalHandlerResponse =
+  | agentCancelApprovalHandlerResponseSuccess
+  | agentCancelApprovalHandlerResponseError;
+
+export const getAgentCancelApprovalHandlerUrl = (id: string) => {
+  return `/agent-approvals/${id}/cancel`;
+};
+
+export const agentCancelApprovalHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<agentCancelApprovalHandlerResponse> => {
+  const res = await fetch(getAgentCancelApprovalHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentCancelApprovalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentCancelApprovalHandlerResponse;
+};
+
+/**
+ * @summary Create an escalation. Agent callers.
+ */
+export type agentCreateEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type agentCreateEscalationHandlerResponse400 = {
+  data: EscalationErrorBody;
+  status: 400;
+};
+
+export type agentCreateEscalationHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type agentCreateEscalationHandlerResponseSuccess =
+  agentCreateEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type agentCreateEscalationHandlerResponseError = (
+  | agentCreateEscalationHandlerResponse400
+  | agentCreateEscalationHandlerResponse403
+) & {
+  headers: Headers;
+};
+
+export type agentCreateEscalationHandlerResponse =
+  | agentCreateEscalationHandlerResponseSuccess
+  | agentCreateEscalationHandlerResponseError;
+
+export const getAgentCreateEscalationHandlerUrl = () => {
+  return `/agent-escalations`;
+};
+
+export const agentCreateEscalationHandler = async (
+  createEscalationRequest: CreateEscalationRequest,
+  options?: RequestInit
+): Promise<agentCreateEscalationHandlerResponse> => {
+  const res = await fetch(getAgentCreateEscalationHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createEscalationRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentCreateEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentCreateEscalationHandlerResponse;
+};
+
+/**
+ * @summary Poll one escalation. Agent callers.
+ */
+export type agentGetEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type agentGetEscalationHandlerResponse404 = {
+  data: EscalationErrorBody;
+  status: 404;
+};
+
+export type agentGetEscalationHandlerResponseSuccess =
+  agentGetEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type agentGetEscalationHandlerResponseError =
+  agentGetEscalationHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type agentGetEscalationHandlerResponse =
+  | agentGetEscalationHandlerResponseSuccess
+  | agentGetEscalationHandlerResponseError;
+
+export const getAgentGetEscalationHandlerUrl = (id: string) => {
+  return `/agent-escalations/${id}`;
+};
+
+export const agentGetEscalationHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<agentGetEscalationHandlerResponse> => {
+  const res = await fetch(getAgentGetEscalationHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentGetEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentGetEscalationHandlerResponse;
+};
+
+/**
+ * @summary Read session consent. Agent callers.
+ */
+export type agentGetConsentHandlerResponse200 = {
+  data: ConsentRecord;
+  status: 200;
+};
+
+export type agentGetConsentHandlerResponseSuccess =
+  agentGetConsentHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type agentGetConsentHandlerResponse =
+  agentGetConsentHandlerResponseSuccess;
+
+export const getAgentGetConsentHandlerUrl = (sessionId: string) => {
+  return `/agent-feedback/${sessionId}/consent`;
+};
+
+export const agentGetConsentHandler = async (
+  sessionId: string,
+  options?: RequestInit
+): Promise<agentGetConsentHandlerResponse> => {
+  const res = await fetch(getAgentGetConsentHandlerUrl(sessionId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentGetConsentHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentGetConsentHandlerResponse;
+};
+
+/**
+ * @summary Set sharing consent. User callers.
+ */
+export type userSetConsentHandlerResponse200 = {
+  data: ConsentRecord;
+  status: 200;
+};
+
+export type userSetConsentHandlerResponseSuccess =
+  userSetConsentHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type userSetConsentHandlerResponse =
+  userSetConsentHandlerResponseSuccess;
+
+export const getUserSetConsentHandlerUrl = (sessionId: string) => {
+  return `/agent-feedback/${sessionId}/consent`;
+};
+
+export const userSetConsentHandler = async (
+  sessionId: string,
+  consentRequest: ConsentRequest,
+  options?: RequestInit
+): Promise<userSetConsentHandlerResponse> => {
+  const res = await fetch(getUserSetConsentHandlerUrl(sessionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(consentRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: userSetConsentHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as userSetConsentHandlerResponse;
+};
+
+/**
+ * @summary List sidecar ratings. Agent callers.
+ */
+export type agentListRatingsHandlerResponse200 = {
+  data: MessageRating[];
+  status: 200;
+};
+
+export type agentListRatingsHandlerResponseSuccess =
+  agentListRatingsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type agentListRatingsHandlerResponse =
+  agentListRatingsHandlerResponseSuccess;
+
+export const getAgentListRatingsHandlerUrl = (sessionId: string) => {
+  return `/agent-feedback/${sessionId}/ratings`;
+};
+
+export const agentListRatingsHandler = async (
+  sessionId: string,
+  options?: RequestInit
+): Promise<agentListRatingsHandlerResponse> => {
+  const res = await fetch(getAgentListRatingsHandlerUrl(sessionId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentListRatingsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentListRatingsHandlerResponse;
+};
+
+/**
+ * @summary Rate a ledger event. Agent callers.
+ */
+export type agentRateHandlerResponse200 = {
+  data: MessageRating;
+  status: 200;
+};
+
+export type agentRateHandlerResponseSuccess = agentRateHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type agentRateHandlerResponse = agentRateHandlerResponseSuccess;
+
+export const getAgentRateHandlerUrl = (sessionId: string) => {
+  return `/agent-feedback/${sessionId}/ratings`;
+};
+
+export const agentRateHandler = async (
+  sessionId: string,
+  rateRequest: RateRequest,
+  options?: RequestInit
+): Promise<agentRateHandlerResponse> => {
+  const res = await fetch(getAgentRateHandlerUrl(sessionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(rateRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentRateHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentRateHandlerResponse;
+};
+
+/**
+ * @summary Rate a ledger event. User callers.
+ */
+export type userRateHandlerResponse200 = {
+  data: MessageRating;
+  status: 200;
+};
+
+export type userRateHandlerResponseSuccess = userRateHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type userRateHandlerResponse = userRateHandlerResponseSuccess;
+
+export const getUserRateHandlerUrl = (sessionId: string) => {
+  return `/agent-feedback/${sessionId}/user-ratings`;
+};
+
+export const userRateHandler = async (
+  sessionId: string,
+  rateRequest: RateRequest,
+  options?: RequestInit
+): Promise<userRateHandlerResponse> => {
+  const res = await fetch(getUserRateHandlerUrl(sessionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(rateRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: userRateHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as userRateHandlerResponse;
+};
+
+/**
+ * @summary Upsert an edge.
+ */
+export type upsertEdgeHandlerResponse200 = {
+  data: GraphEdge;
+  status: 200;
+};
+
+export type upsertEdgeHandlerResponseSuccess = upsertEdgeHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type upsertEdgeHandlerResponse = upsertEdgeHandlerResponseSuccess;
+
+export const getUpsertEdgeHandlerUrl = () => {
+  return `/agent-graph/edges`;
+};
+
+export const upsertEdgeHandler = async (
+  upsertEdgeRequest: UpsertEdgeRequest,
+  options?: RequestInit
+): Promise<upsertEdgeHandlerResponse> => {
+  const res = await fetch(getUpsertEdgeHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(upsertEdgeRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertEdgeHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertEdgeHandlerResponse;
+};
+
+/**
+ * @summary Upsert a knowledge document.
+ */
+export type upsertKnowledgeHandlerResponse200 = {
+  data: KnowledgeDocument;
+  status: 200;
+};
+
+export type upsertKnowledgeHandlerResponseSuccess =
+  upsertKnowledgeHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type upsertKnowledgeHandlerResponse =
+  upsertKnowledgeHandlerResponseSuccess;
+
+export const getUpsertKnowledgeHandlerUrl = () => {
+  return `/agent-graph/knowledge`;
+};
+
+export const upsertKnowledgeHandler = async (
+  upsertKnowledgeRequest: UpsertKnowledgeRequest,
+  options?: RequestInit
+): Promise<upsertKnowledgeHandlerResponse> => {
+  const res = await fetch(getUpsertKnowledgeHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(upsertKnowledgeRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertKnowledgeHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertKnowledgeHandlerResponse;
+};
+
+/**
+ * @summary Upsert a graph node.
+ */
+export type upsertNodeHandlerResponse200 = {
+  data: GraphNode;
+  status: 200;
+};
+
+export type upsertNodeHandlerResponseSuccess = upsertNodeHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type upsertNodeHandlerResponse = upsertNodeHandlerResponseSuccess;
+
+export const getUpsertNodeHandlerUrl = () => {
+  return `/agent-graph/nodes`;
+};
+
+export const upsertNodeHandler = async (
+  upsertNodeRequest: UpsertNodeRequest,
+  options?: RequestInit
+): Promise<upsertNodeHandlerResponse> => {
+  const res = await fetch(getUpsertNodeHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(upsertNodeRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertNodeHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertNodeHandlerResponse;
+};
+
+/**
+ * @summary List neighbors of a node.
+ */
+export type neighborsHandlerResponse200 = {
+  data: Neighbor[];
+  status: 200;
+};
+
+export type neighborsHandlerResponseSuccess = neighborsHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type neighborsHandlerResponse = neighborsHandlerResponseSuccess;
+
+export const getNeighborsHandlerUrl = (id: string) => {
+  return `/agent-graph/nodes/${id}/neighbors`;
+};
+
+export const neighborsHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<neighborsHandlerResponse> => {
+  const res = await fetch(getNeighborsHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: neighborsHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as neighborsHandlerResponse;
+};
+
+/**
+ * @summary List agent principals for an org.
+ */
+export type listPrincipalsHandlerResponse200 = {
+  data: PrincipalResponse[];
+  status: 200;
+};
+
+export type listPrincipalsHandlerResponseSuccess =
+  listPrincipalsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listPrincipalsHandlerResponse =
+  listPrincipalsHandlerResponseSuccess;
+
+export const getListPrincipalsHandlerUrl = () => {
+  return `/agent-identity/principals`;
+};
+
+export const listPrincipalsHandler = async (
+  options?: RequestInit
+): Promise<listPrincipalsHandlerResponse> => {
+  const res = await fetch(getListPrincipalsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listPrincipalsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listPrincipalsHandlerResponse;
+};
+
+/**
+ * @summary Create an agent principal. Internal callers only.
+ */
+export type createPrincipalHandlerResponse200 = {
+  data: PrincipalResponse;
+  status: 200;
+};
+
+export type createPrincipalHandlerResponse400 = {
+  data: IdentityErrorBody;
+  status: 400;
+};
+
+export type createPrincipalHandlerResponse409 = {
+  data: IdentityErrorBody;
+  status: 409;
+};
+
+export type createPrincipalHandlerResponseSuccess =
+  createPrincipalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type createPrincipalHandlerResponseError = (
+  | createPrincipalHandlerResponse400
+  | createPrincipalHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type createPrincipalHandlerResponse =
+  | createPrincipalHandlerResponseSuccess
+  | createPrincipalHandlerResponseError;
+
+export const getCreatePrincipalHandlerUrl = () => {
+  return `/agent-identity/principals`;
+};
+
+export const createPrincipalHandler = async (
+  createPrincipalRequest: CreatePrincipalRequest,
+  options?: RequestInit
+): Promise<createPrincipalHandlerResponse> => {
+  const res = await fetch(getCreatePrincipalHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createPrincipalRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createPrincipalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as createPrincipalHandlerResponse;
+};
+
+/**
+ * @summary Disable an agent principal (its tokens stop verifying). Internal callers
+only.
+ */
+export type disablePrincipalHandlerResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type disablePrincipalHandlerResponseSuccess =
+  disablePrincipalHandlerResponse204 & {
+    headers: Headers;
+  };
+
+export type disablePrincipalHandlerResponse =
+  disablePrincipalHandlerResponseSuccess;
+
+export const getDisablePrincipalHandlerUrl = (principalId: string) => {
+  return `/agent-identity/principals/${principalId}/disable`;
+};
+
+export const disablePrincipalHandler = async (
+  principalId: string,
+  options?: RequestInit
+): Promise<disablePrincipalHandlerResponse> => {
+  const res = await fetch(getDisablePrincipalHandlerUrl(principalId), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: disablePrincipalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as disablePrincipalHandlerResponse;
+};
+
+/**
+ * @summary Mint a scoped API token for a principal. Internal callers only.
+ */
+export type mintTokenHandlerResponse200 = {
+  data: MintTokenResponse;
+  status: 200;
+};
+
+export type mintTokenHandlerResponse400 = {
+  data: IdentityErrorBody;
+  status: 400;
+};
+
+export type mintTokenHandlerResponse404 = {
+  data: IdentityErrorBody;
+  status: 404;
+};
+
+export type mintTokenHandlerResponseSuccess = mintTokenHandlerResponse200 & {
+  headers: Headers;
+};
+export type mintTokenHandlerResponseError = (
+  | mintTokenHandlerResponse400
+  | mintTokenHandlerResponse404
+) & {
+  headers: Headers;
+};
+
+export type mintTokenHandlerResponse =
+  | mintTokenHandlerResponseSuccess
+  | mintTokenHandlerResponseError;
+
+export const getMintTokenHandlerUrl = (principalId: string) => {
+  return `/agent-identity/principals/${principalId}/tokens`;
+};
+
+export const mintTokenHandler = async (
+  principalId: string,
+  mintTokenRequest: MintTokenRequest,
+  options?: RequestInit
+): Promise<mintTokenHandlerResponse> => {
+  const res = await fetch(getMintTokenHandlerUrl(principalId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mintTokenRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: mintTokenHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as mintTokenHandlerResponse;
+};
+
+/**
+ * @summary Revoke an API token. Internal callers only.
+ */
+export type revokeTokenHandlerResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeTokenHandlerResponseSuccess =
+  revokeTokenHandlerResponse204 & {
+    headers: Headers;
+  };
+
+export type revokeTokenHandlerResponse = revokeTokenHandlerResponseSuccess;
+
+export const getRevokeTokenHandlerUrl = (tokenId: string) => {
+  return `/agent-identity/tokens/${tokenId}/revoke`;
+};
+
+export const revokeTokenHandler = async (
+  tokenId: string,
+  options?: RequestInit
+): Promise<revokeTokenHandlerResponse> => {
+  const res = await fetch(getRevokeTokenHandlerUrl(tokenId), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: revokeTokenHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as revokeTokenHandlerResponse;
+};
+
+/**
+ * @summary Org-scoped audit query for agent callers (self-query over past attempts,
+approvals, escalations). The org filter is forced server-side.
+ */
+export type agentQueryEventsHandlerResponse200 = {
+  data: EventResponse[];
+  status: 200;
+};
+
+export type agentQueryEventsHandlerResponse403 = {
+  data: LedgerErrorBody;
+  status: 403;
+};
+
+export type agentQueryEventsHandlerResponseSuccess =
+  agentQueryEventsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type agentQueryEventsHandlerResponseError =
+  agentQueryEventsHandlerResponse403 & {
+    headers: Headers;
+  };
+
+export type agentQueryEventsHandlerResponse =
+  | agentQueryEventsHandlerResponseSuccess
+  | agentQueryEventsHandlerResponseError;
+
+export const getAgentQueryEventsHandlerUrl = () => {
+  return `/agent-ledger/agent-events`;
+};
+
+export const agentQueryEventsHandler = async (
+  options?: RequestInit
+): Promise<agentQueryEventsHandlerResponse> => {
+  const res = await fetch(getAgentQueryEventsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentQueryEventsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentQueryEventsHandlerResponse;
+};
+
+/**
+ * @summary Cross-session audit query. Internal callers.
+ */
+export type queryEventsHandlerResponse200 = {
+  data: EventResponse[];
+  status: 200;
+};
+
+export type queryEventsHandlerResponseSuccess =
+  queryEventsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type queryEventsHandlerResponse = queryEventsHandlerResponseSuccess;
+
+export const getQueryEventsHandlerUrl = () => {
+  return `/agent-ledger/events`;
+};
+
+export const queryEventsHandler = async (
+  options?: RequestInit
+): Promise<queryEventsHandlerResponse> => {
+  const res = await fetch(getQueryEventsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: queryEventsHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as queryEventsHandlerResponse;
+};
+
+/**
+ * @summary Audit export as NDJSON (one event per line). Internal callers.
+ */
+export type exportEventsHandlerResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type exportEventsHandlerResponseSuccess =
+  exportEventsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type exportEventsHandlerResponse = exportEventsHandlerResponseSuccess;
+
+export const getExportEventsHandlerUrl = () => {
+  return `/agent-ledger/export`;
+};
+
+export const exportEventsHandler = async (
+  options?: RequestInit
+): Promise<exportEventsHandlerResponse> => {
+  const res = await fetch(getExportEventsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: exportEventsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as exportEventsHandlerResponse;
+};
+
+/**
+ * @summary Open (or resume) a session for a runtime conversation. Agent callers.
+ */
+export type openSessionHandlerResponse200 = {
+  data: SessionMappingResponse;
+  status: 200;
+};
+
+export type openSessionHandlerResponse400 = {
+  data: LedgerErrorBody;
+  status: 400;
+};
+
+export type openSessionHandlerResponse403 = {
+  data: LedgerErrorBody;
+  status: 403;
+};
+
+export type openSessionHandlerResponseSuccess =
+  openSessionHandlerResponse200 & {
+    headers: Headers;
+  };
+export type openSessionHandlerResponseError = (
+  | openSessionHandlerResponse400
+  | openSessionHandlerResponse403
+) & {
+  headers: Headers;
+};
+
+export type openSessionHandlerResponse =
+  | openSessionHandlerResponseSuccess
+  | openSessionHandlerResponseError;
+
+export const getOpenSessionHandlerUrl = () => {
+  return `/agent-ledger/sessions`;
+};
+
+export const openSessionHandler = async (
+  openSessionRequest: OpenSessionRequest,
+  options?: RequestInit
+): Promise<openSessionHandlerResponse> => {
+  const res = await fetch(getOpenSessionHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(openSessionRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: openSessionHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as openSessionHandlerResponse;
+};
+
+/**
+ * @summary Find the session anchored to an external thread. Agent callers.
+ */
+export type findSessionByThreadHandlerResponse200 = {
+  data: SessionMappingResponse;
+  status: 200;
+};
+
+export type findSessionByThreadHandlerResponse404 = {
+  data: LedgerErrorBody;
+  status: 404;
+};
+
+export type findSessionByThreadHandlerResponseSuccess =
+  findSessionByThreadHandlerResponse200 & {
+    headers: Headers;
+  };
+export type findSessionByThreadHandlerResponseError =
+  findSessionByThreadHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type findSessionByThreadHandlerResponse =
+  | findSessionByThreadHandlerResponseSuccess
+  | findSessionByThreadHandlerResponseError;
+
+export const getFindSessionByThreadHandlerUrl = () => {
+  return `/agent-ledger/sessions/by-thread`;
+};
+
+export const findSessionByThreadHandler = async (
+  options?: RequestInit
+): Promise<findSessionByThreadHandlerResponse> => {
+  const res = await fetch(getFindSessionByThreadHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: findSessionByThreadHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as findSessionByThreadHandlerResponse;
+};
+
+/**
+ * @summary Replay a session's events in order. Agent callers.
+ */
+export type listSessionEventsHandlerResponse200 = {
+  data: EventResponse[];
+  status: 200;
+};
+
+export type listSessionEventsHandlerResponse404 = {
+  data: LedgerErrorBody;
+  status: 404;
+};
+
+export type listSessionEventsHandlerResponseSuccess =
+  listSessionEventsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type listSessionEventsHandlerResponseError =
+  listSessionEventsHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type listSessionEventsHandlerResponse =
+  | listSessionEventsHandlerResponseSuccess
+  | listSessionEventsHandlerResponseError;
+
+export const getListSessionEventsHandlerUrl = (sessionId: string) => {
+  return `/agent-ledger/sessions/${sessionId}/events`;
+};
+
+export const listSessionEventsHandler = async (
+  sessionId: string,
+  options?: RequestInit
+): Promise<listSessionEventsHandlerResponse> => {
+  const res = await fetch(getListSessionEventsHandlerUrl(sessionId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listSessionEventsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listSessionEventsHandlerResponse;
+};
+
+/**
+ * @summary Append events to a session. Agent callers.
+ */
+export type appendEventsHandlerResponse200 = {
+  data: EventResponse[];
+  status: 200;
+};
+
+export type appendEventsHandlerResponse400 = {
+  data: LedgerErrorBody;
+  status: 400;
+};
+
+export type appendEventsHandlerResponse403 = {
+  data: LedgerErrorBody;
+  status: 403;
+};
+
+export type appendEventsHandlerResponse404 = {
+  data: LedgerErrorBody;
+  status: 404;
+};
+
+export type appendEventsHandlerResponseSuccess =
+  appendEventsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type appendEventsHandlerResponseError = (
+  | appendEventsHandlerResponse400
+  | appendEventsHandlerResponse403
+  | appendEventsHandlerResponse404
+) & {
+  headers: Headers;
+};
+
+export type appendEventsHandlerResponse =
+  | appendEventsHandlerResponseSuccess
+  | appendEventsHandlerResponseError;
+
+export const getAppendEventsHandlerUrl = (sessionId: string) => {
+  return `/agent-ledger/sessions/${sessionId}/events`;
+};
+
+export const appendEventsHandler = async (
+  sessionId: string,
+  appendEventsRequest: AppendEventsRequest,
+  options?: RequestInit
+): Promise<appendEventsHandlerResponse> => {
+  const res = await fetch(getAppendEventsHandlerUrl(sessionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(appendEventsRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: appendEventsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as appendEventsHandlerResponse;
+};
+
+/**
+ * @summary Record a session's terminal outcome. Agent callers.
+ */
+export type recordOutcomeHandlerResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type recordOutcomeHandlerResponse400 = {
+  data: LedgerErrorBody;
+  status: 400;
+};
+
+export type recordOutcomeHandlerResponse404 = {
+  data: LedgerErrorBody;
+  status: 404;
+};
+
+export type recordOutcomeHandlerResponseSuccess =
+  recordOutcomeHandlerResponse204 & {
+    headers: Headers;
+  };
+export type recordOutcomeHandlerResponseError = (
+  | recordOutcomeHandlerResponse400
+  | recordOutcomeHandlerResponse404
+) & {
+  headers: Headers;
+};
+
+export type recordOutcomeHandlerResponse =
+  | recordOutcomeHandlerResponseSuccess
+  | recordOutcomeHandlerResponseError;
+
+export const getRecordOutcomeHandlerUrl = (sessionId: string) => {
+  return `/agent-ledger/sessions/${sessionId}/outcome`;
+};
+
+export const recordOutcomeHandler = async (
+  sessionId: string,
+  recordOutcomeRequest: RecordOutcomeRequest,
+  options?: RequestInit
+): Promise<recordOutcomeHandlerResponse> => {
+  const res = await fetch(getRecordOutcomeHandlerUrl(sessionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(recordOutcomeRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: recordOutcomeHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as recordOutcomeHandlerResponse;
+};
+
+/**
+ * @summary Verify a session's hash chain. Internal callers.
+ */
+export type verifyChainHandlerResponse200 = {
+  data: VerifyChainResponse;
+  status: 200;
+};
+
+export type verifyChainHandlerResponseSuccess =
+  verifyChainHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type verifyChainHandlerResponse = verifyChainHandlerResponseSuccess;
+
+export const getVerifyChainHandlerUrl = (sessionId: string) => {
+  return `/agent-ledger/sessions/${sessionId}/verify`;
+};
+
+export const verifyChainHandler = async (
+  sessionId: string,
+  options?: RequestInit
+): Promise<verifyChainHandlerResponse> => {
+  const res = await fetch(getVerifyChainHandlerUrl(sessionId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: verifyChainHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as verifyChainHandlerResponse;
+};
+
+/**
+ * @summary List skills this agent may inject.
+ */
+export type agentCatalogHandlerResponse200 = {
+  data: SkillCatalogEntry[];
+  status: 200;
+};
+
+export type agentCatalogHandlerResponseSuccess =
+  agentCatalogHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type agentCatalogHandlerResponse = agentCatalogHandlerResponseSuccess;
+
+export const getAgentCatalogHandlerUrl = () => {
+  return `/agent-skills`;
+};
+
+export const agentCatalogHandler = async (
+  options?: RequestInit
+): Promise<agentCatalogHandlerResponse> => {
+  const res = await fetch(getAgentCatalogHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentCatalogHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentCatalogHandlerResponse;
+};
+
+/**
+ * @summary Open a staged skill proposal. Agent callers.
+ */
+export type agentProposeHandlerResponse200 = {
+  data: SkillProposal;
+  status: 200;
+};
+
+export type agentProposeHandlerResponseSuccess =
+  agentProposeHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type agentProposeHandlerResponse = agentProposeHandlerResponseSuccess;
+
+export const getAgentProposeHandlerUrl = () => {
+  return `/agent-skills`;
+};
+
+export const agentProposeHandler = async (
+  proposeSkillRequest: ProposeSkillRequest,
+  options?: RequestInit
+): Promise<agentProposeHandlerResponse> => {
+  const res = await fetch(getAgentProposeHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(proposeSkillRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentProposeHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentProposeHandlerResponse;
+};
+
+/**
+ * @summary Fetch one skill. Agent callers.
+ */
+export type agentGetSkillHandlerResponse200 = {
+  data: SkillRecord;
+  status: 200;
+};
+
+export type agentGetSkillHandlerResponseSuccess =
+  agentGetSkillHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type agentGetSkillHandlerResponse = agentGetSkillHandlerResponseSuccess;
+
+export const getAgentGetSkillHandlerUrl = (id: string) => {
+  return `/agent-skills/${id}`;
+};
+
+export const agentGetSkillHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<agentGetSkillHandlerResponse> => {
+  const res = await fetch(getAgentGetSkillHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: agentGetSkillHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as agentGetSkillHandlerResponse;
+};
 
 /**
  * @summary Set the pricing for a model and recompute its recorded rows. Admin only.
@@ -236,6 +1751,450 @@ export const upsertAiProjection = async (
     status: res.status,
     headers: res.headers,
   } as upsertAiProjectionResponse;
+};
+
+/**
+ * @summary List tool policies. Internal callers only.
+ */
+export type listPoliciesHandlerResponse200 = {
+  data: ToolPolicy[];
+  status: 200;
+};
+
+export type listPoliciesHandlerResponseSuccess =
+  listPoliciesHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listPoliciesHandlerResponse = listPoliciesHandlerResponseSuccess;
+
+export const getListPoliciesHandlerUrl = () => {
+  return `/approval-policies`;
+};
+
+export const listPoliciesHandler = async (
+  options?: RequestInit
+): Promise<listPoliciesHandlerResponse> => {
+  const res = await fetch(getListPoliciesHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listPoliciesHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listPoliciesHandlerResponse;
+};
+
+/**
+ * @summary Insert or replace a tool policy. Internal callers only.
+ */
+export type upsertPolicyHandlerResponse200 = {
+  data: ToolPolicy;
+  status: 200;
+};
+
+export type upsertPolicyHandlerResponseSuccess =
+  upsertPolicyHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type upsertPolicyHandlerResponse = upsertPolicyHandlerResponseSuccess;
+
+export const getUpsertPolicyHandlerUrl = () => {
+  return `/approval-policies`;
+};
+
+export const upsertPolicyHandler = async (
+  toolPolicy: ToolPolicy,
+  options?: RequestInit
+): Promise<upsertPolicyHandlerResponse> => {
+  const res = await fetch(getUpsertPolicyHandlerUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(toolPolicy),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertPolicyHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertPolicyHandlerResponse;
+};
+
+/**
+ * @summary Delete a tool policy. Internal callers only.
+ */
+export type deletePolicyHandlerResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deletePolicyHandlerResponse404 = {
+  data: ApprovalErrorBody;
+  status: 404;
+};
+
+export type deletePolicyHandlerResponseSuccess =
+  deletePolicyHandlerResponse204 & {
+    headers: Headers;
+  };
+export type deletePolicyHandlerResponseError =
+  deletePolicyHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type deletePolicyHandlerResponse =
+  | deletePolicyHandlerResponseSuccess
+  | deletePolicyHandlerResponseError;
+
+export const getDeletePolicyHandlerUrl = (id: string) => {
+  return `/approval-policies/${id}`;
+};
+
+export const deletePolicyHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<deletePolicyHandlerResponse> => {
+  const res = await fetch(getDeletePolicyHandlerUrl(id), {
+    ...options,
+    method: 'DELETE',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deletePolicyHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as deletePolicyHandlerResponse;
+};
+
+/**
+ * @summary The caller's personal inbox view: assigned plus team-queue items.
+ */
+export type listMyApprovalsHandlerResponse200 = {
+  data: UserApprovalsResponse;
+  status: 200;
+};
+
+export type listMyApprovalsHandlerResponseSuccess =
+  listMyApprovalsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listMyApprovalsHandlerResponse =
+  listMyApprovalsHandlerResponseSuccess;
+
+export const getListMyApprovalsHandlerUrl = () => {
+  return `/approvals/mine`;
+};
+
+export const listMyApprovalsHandler = async (
+  options?: RequestInit
+): Promise<listMyApprovalsHandlerResponse> => {
+  const res = await fetch(getListMyApprovalsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listMyApprovalsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listMyApprovalsHandlerResponse;
+};
+
+/**
+ * @summary A team's full queue (members only).
+ */
+export type listTeamApprovalsHandlerResponse200 = {
+  data: ApprovalRequest[];
+  status: 200;
+};
+
+export type listTeamApprovalsHandlerResponse403 = {
+  data: ApprovalErrorBody;
+  status: 403;
+};
+
+export type listTeamApprovalsHandlerResponseSuccess =
+  listTeamApprovalsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type listTeamApprovalsHandlerResponseError =
+  listTeamApprovalsHandlerResponse403 & {
+    headers: Headers;
+  };
+
+export type listTeamApprovalsHandlerResponse =
+  | listTeamApprovalsHandlerResponseSuccess
+  | listTeamApprovalsHandlerResponseError;
+
+export const getListTeamApprovalsHandlerUrl = (teamId: string) => {
+  return `/approvals/teams/${teamId}`;
+};
+
+export const listTeamApprovalsHandler = async (
+  teamId: string,
+  options?: RequestInit
+): Promise<listTeamApprovalsHandlerResponse> => {
+  const res = await fetch(getListTeamApprovalsHandlerUrl(teamId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listTeamApprovalsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listTeamApprovalsHandlerResponse;
+};
+
+/**
+ * @summary Fetch one approval request visible to the caller.
+ */
+export type getApprovalHandlerResponse200 = {
+  data: ApprovalRequest;
+  status: 200;
+};
+
+export type getApprovalHandlerResponse404 = {
+  data: ApprovalErrorBody;
+  status: 404;
+};
+
+export type getApprovalHandlerResponseSuccess =
+  getApprovalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type getApprovalHandlerResponseError = getApprovalHandlerResponse404 & {
+  headers: Headers;
+};
+
+export type getApprovalHandlerResponse =
+  | getApprovalHandlerResponseSuccess
+  | getApprovalHandlerResponseError;
+
+export const getGetApprovalHandlerUrl = (id: string) => {
+  return `/approvals/${id}`;
+};
+
+export const getApprovalHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<getApprovalHandlerResponse> => {
+  const res = await fetch(getGetApprovalHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getApprovalHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as getApprovalHandlerResponse;
+};
+
+/**
+ * @summary Approve or deny a pending request; resumes the agent runtime.
+ */
+export type decideApprovalHandlerResponse200 = {
+  data: ApprovalRequest;
+  status: 200;
+};
+
+export type decideApprovalHandlerResponse403 = {
+  data: ApprovalErrorBody;
+  status: 403;
+};
+
+export type decideApprovalHandlerResponse409 = {
+  data: ApprovalErrorBody;
+  status: 409;
+};
+
+export type decideApprovalHandlerResponseSuccess =
+  decideApprovalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type decideApprovalHandlerResponseError = (
+  | decideApprovalHandlerResponse403
+  | decideApprovalHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type decideApprovalHandlerResponse =
+  | decideApprovalHandlerResponseSuccess
+  | decideApprovalHandlerResponseError;
+
+export const getDecideApprovalHandlerUrl = (id: string) => {
+  return `/approvals/${id}/decide`;
+};
+
+export const decideApprovalHandler = async (
+  id: string,
+  decideRequest: DecideRequest,
+  options?: RequestInit
+): Promise<decideApprovalHandlerResponse> => {
+  const res = await fetch(getDecideApprovalHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(decideRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: decideApprovalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as decideApprovalHandlerResponse;
+};
+
+/**
+ * @summary Reassign a pending request to another user or team ("this isn't mine").
+ */
+export type reassignApprovalHandlerResponse200 = {
+  data: ApprovalRequest;
+  status: 200;
+};
+
+export type reassignApprovalHandlerResponse400 = {
+  data: ApprovalErrorBody;
+  status: 400;
+};
+
+export type reassignApprovalHandlerResponse403 = {
+  data: ApprovalErrorBody;
+  status: 403;
+};
+
+export type reassignApprovalHandlerResponseSuccess =
+  reassignApprovalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type reassignApprovalHandlerResponseError = (
+  | reassignApprovalHandlerResponse400
+  | reassignApprovalHandlerResponse403
+) & {
+  headers: Headers;
+};
+
+export type reassignApprovalHandlerResponse =
+  | reassignApprovalHandlerResponseSuccess
+  | reassignApprovalHandlerResponseError;
+
+export const getReassignApprovalHandlerUrl = (id: string) => {
+  return `/approvals/${id}/reassign`;
+};
+
+export const reassignApprovalHandler = async (
+  id: string,
+  reassignApprovalRequest: ReassignApprovalRequest,
+  options?: RequestInit
+): Promise<reassignApprovalHandlerResponse> => {
+  const res = await fetch(getReassignApprovalHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reassignApprovalRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: reassignApprovalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as reassignApprovalHandlerResponse;
+};
+
+/**
+ * @summary An approval request's audited transition history.
+ */
+export type listApprovalTransitionsHandlerResponse200 = {
+  data: ApprovalTransition[];
+  status: 200;
+};
+
+export type listApprovalTransitionsHandlerResponse404 = {
+  data: ApprovalErrorBody;
+  status: 404;
+};
+
+export type listApprovalTransitionsHandlerResponseSuccess =
+  listApprovalTransitionsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type listApprovalTransitionsHandlerResponseError =
+  listApprovalTransitionsHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type listApprovalTransitionsHandlerResponse =
+  | listApprovalTransitionsHandlerResponseSuccess
+  | listApprovalTransitionsHandlerResponseError;
+
+export const getListApprovalTransitionsHandlerUrl = (id: string) => {
+  return `/approvals/${id}/transitions`;
+};
+
+export const listApprovalTransitionsHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<listApprovalTransitionsHandlerResponse> => {
+  const res = await fetch(getListApprovalTransitionsHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listApprovalTransitionsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listApprovalTransitionsHandlerResponse;
 };
 
 export type getChatsForAttachmentHandlerResponse200 = {
@@ -1165,6 +3124,639 @@ export const getCitationHandler = async (
 };
 
 /**
+ * @summary List expert profiles. Internal callers only.
+ */
+export type listExpertsHandlerResponse200 = {
+  data: ExpertProfile[];
+  status: 200;
+};
+
+export type listExpertsHandlerResponseSuccess =
+  listExpertsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listExpertsHandlerResponse = listExpertsHandlerResponseSuccess;
+
+export const getListExpertsHandlerUrl = () => {
+  return `/escalation-routing/experts`;
+};
+
+export const listExpertsHandler = async (
+  options?: RequestInit
+): Promise<listExpertsHandlerResponse> => {
+  const res = await fetch(getListExpertsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listExpertsHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listExpertsHandlerResponse;
+};
+
+/**
+ * @summary Insert or replace an expert profile (availability, domains, tags).
+Internal callers only.
+ */
+export type upsertExpertHandlerResponse200 = {
+  data: ExpertProfile;
+  status: 200;
+};
+
+export type upsertExpertHandlerResponseSuccess =
+  upsertExpertHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type upsertExpertHandlerResponse = upsertExpertHandlerResponseSuccess;
+
+export const getUpsertExpertHandlerUrl = () => {
+  return `/escalation-routing/experts`;
+};
+
+export const upsertExpertHandler = async (
+  expertProfile: ExpertProfile,
+  options?: RequestInit
+): Promise<upsertExpertHandlerResponse> => {
+  const res = await fetch(getUpsertExpertHandlerUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(expertProfile),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertExpertHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertExpertHandlerResponse;
+};
+
+/**
+ * @summary List routing rules. Internal callers only.
+ */
+export type listRulesHandlerResponse200 = {
+  data: RoutingRule[];
+  status: 200;
+};
+
+export type listRulesHandlerResponseSuccess = listRulesHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type listRulesHandlerResponse = listRulesHandlerResponseSuccess;
+
+export const getListRulesHandlerUrl = () => {
+  return `/escalation-routing/rules`;
+};
+
+export const listRulesHandler = async (
+  options?: RequestInit
+): Promise<listRulesHandlerResponse> => {
+  const res = await fetch(getListRulesHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listRulesHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listRulesHandlerResponse;
+};
+
+/**
+ * @summary Insert or replace a routing rule. Internal callers only.
+ */
+export type upsertRuleHandlerResponse200 = {
+  data: RoutingRule;
+  status: 200;
+};
+
+export type upsertRuleHandlerResponseSuccess = upsertRuleHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type upsertRuleHandlerResponse = upsertRuleHandlerResponseSuccess;
+
+export const getUpsertRuleHandlerUrl = () => {
+  return `/escalation-routing/rules`;
+};
+
+export const upsertRuleHandler = async (
+  routingRule: RoutingRule,
+  options?: RequestInit
+): Promise<upsertRuleHandlerResponse> => {
+  const res = await fetch(getUpsertRuleHandlerUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(routingRule),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertRuleHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertRuleHandlerResponse;
+};
+
+/**
+ * @summary Delete a routing rule. Internal callers only.
+ */
+export type deleteRuleHandlerResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteRuleHandlerResponse404 = {
+  data: EscalationErrorBody;
+  status: 404;
+};
+
+export type deleteRuleHandlerResponseSuccess = deleteRuleHandlerResponse204 & {
+  headers: Headers;
+};
+export type deleteRuleHandlerResponseError = deleteRuleHandlerResponse404 & {
+  headers: Headers;
+};
+
+export type deleteRuleHandlerResponse =
+  | deleteRuleHandlerResponseSuccess
+  | deleteRuleHandlerResponseError;
+
+export const getDeleteRuleHandlerUrl = (id: string) => {
+  return `/escalation-routing/rules/${id}`;
+};
+
+export const deleteRuleHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<deleteRuleHandlerResponse> => {
+  const res = await fetch(getDeleteRuleHandlerUrl(id), {
+    ...options,
+    method: 'DELETE',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deleteRuleHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as deleteRuleHandlerResponse;
+};
+
+/**
+ * @summary The caller's personal inbox view: assigned plus claimable items.
+ */
+export type listMyEscalationsHandlerResponse200 = {
+  data: UserEscalationsResponse;
+  status: 200;
+};
+
+export type listMyEscalationsHandlerResponseSuccess =
+  listMyEscalationsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listMyEscalationsHandlerResponse =
+  listMyEscalationsHandlerResponseSuccess;
+
+export const getListMyEscalationsHandlerUrl = () => {
+  return `/escalations/mine`;
+};
+
+export const listMyEscalationsHandler = async (
+  options?: RequestInit
+): Promise<listMyEscalationsHandlerResponse> => {
+  const res = await fetch(getListMyEscalationsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listMyEscalationsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listMyEscalationsHandlerResponse;
+};
+
+/**
+ * @summary A team's full queue (members only): unclaimed and claimed items.
+ */
+export type listTeamEscalationsHandlerResponse200 = {
+  data: Escalation[];
+  status: 200;
+};
+
+export type listTeamEscalationsHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type listTeamEscalationsHandlerResponseSuccess =
+  listTeamEscalationsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type listTeamEscalationsHandlerResponseError =
+  listTeamEscalationsHandlerResponse403 & {
+    headers: Headers;
+  };
+
+export type listTeamEscalationsHandlerResponse =
+  | listTeamEscalationsHandlerResponseSuccess
+  | listTeamEscalationsHandlerResponseError;
+
+export const getListTeamEscalationsHandlerUrl = (teamId: string) => {
+  return `/escalations/teams/${teamId}`;
+};
+
+export const listTeamEscalationsHandler = async (
+  teamId: string,
+  options?: RequestInit
+): Promise<listTeamEscalationsHandlerResponse> => {
+  const res = await fetch(getListTeamEscalationsHandlerUrl(teamId), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listTeamEscalationsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listTeamEscalationsHandlerResponse;
+};
+
+/**
+ * @summary Fetch one escalation visible to the caller.
+ */
+export type getEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type getEscalationHandlerResponse404 = {
+  data: EscalationErrorBody;
+  status: 404;
+};
+
+export type getEscalationHandlerResponseSuccess =
+  getEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type getEscalationHandlerResponseError =
+  getEscalationHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type getEscalationHandlerResponse =
+  | getEscalationHandlerResponseSuccess
+  | getEscalationHandlerResponseError;
+
+export const getGetEscalationHandlerUrl = (id: string) => {
+  return `/escalations/${id}`;
+};
+
+export const getEscalationHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<getEscalationHandlerResponse> => {
+  const res = await fetch(getGetEscalationHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as getEscalationHandlerResponse;
+};
+
+/**
+ * @summary Cancel without a resolution.
+ */
+export type cancelEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type cancelEscalationHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type cancelEscalationHandlerResponse409 = {
+  data: EscalationErrorBody;
+  status: 409;
+};
+
+export type cancelEscalationHandlerResponseSuccess =
+  cancelEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type cancelEscalationHandlerResponseError = (
+  | cancelEscalationHandlerResponse403
+  | cancelEscalationHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type cancelEscalationHandlerResponse =
+  | cancelEscalationHandlerResponseSuccess
+  | cancelEscalationHandlerResponseError;
+
+export const getCancelEscalationHandlerUrl = (id: string) => {
+  return `/escalations/${id}/cancel`;
+};
+
+export const cancelEscalationHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<cancelEscalationHandlerResponse> => {
+  const res = await fetch(getCancelEscalationHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: cancelEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as cancelEscalationHandlerResponse;
+};
+
+/**
+ * @summary Claim an open escalation (first claim wins).
+ */
+export type claimEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type claimEscalationHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type claimEscalationHandlerResponse409 = {
+  data: EscalationErrorBody;
+  status: 409;
+};
+
+export type claimEscalationHandlerResponseSuccess =
+  claimEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type claimEscalationHandlerResponseError = (
+  | claimEscalationHandlerResponse403
+  | claimEscalationHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type claimEscalationHandlerResponse =
+  | claimEscalationHandlerResponseSuccess
+  | claimEscalationHandlerResponseError;
+
+export const getClaimEscalationHandlerUrl = (id: string) => {
+  return `/escalations/${id}/claim`;
+};
+
+export const claimEscalationHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<claimEscalationHandlerResponse> => {
+  const res = await fetch(getClaimEscalationHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: claimEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as claimEscalationHandlerResponse;
+};
+
+/**
+ * @summary Reassign to another user or team queue, with a required reason.
+ */
+export type reassignEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type reassignEscalationHandlerResponse400 = {
+  data: EscalationErrorBody;
+  status: 400;
+};
+
+export type reassignEscalationHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type reassignEscalationHandlerResponseSuccess =
+  reassignEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type reassignEscalationHandlerResponseError = (
+  | reassignEscalationHandlerResponse400
+  | reassignEscalationHandlerResponse403
+) & {
+  headers: Headers;
+};
+
+export type reassignEscalationHandlerResponse =
+  | reassignEscalationHandlerResponseSuccess
+  | reassignEscalationHandlerResponseError;
+
+export const getReassignEscalationHandlerUrl = (id: string) => {
+  return `/escalations/${id}/reassign`;
+};
+
+export const reassignEscalationHandler = async (
+  id: string,
+  reassignRequest: ReassignRequest,
+  options?: RequestInit
+): Promise<reassignEscalationHandlerResponse> => {
+  const res = await fetch(getReassignEscalationHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reassignRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: reassignEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as reassignEscalationHandlerResponse;
+};
+
+/**
+ * @summary Resolve with an expert answer; resumes the agent runtime.
+ */
+export type resolveEscalationHandlerResponse200 = {
+  data: Escalation;
+  status: 200;
+};
+
+export type resolveEscalationHandlerResponse403 = {
+  data: EscalationErrorBody;
+  status: 403;
+};
+
+export type resolveEscalationHandlerResponse409 = {
+  data: EscalationErrorBody;
+  status: 409;
+};
+
+export type resolveEscalationHandlerResponseSuccess =
+  resolveEscalationHandlerResponse200 & {
+    headers: Headers;
+  };
+export type resolveEscalationHandlerResponseError = (
+  | resolveEscalationHandlerResponse403
+  | resolveEscalationHandlerResponse409
+) & {
+  headers: Headers;
+};
+
+export type resolveEscalationHandlerResponse =
+  | resolveEscalationHandlerResponseSuccess
+  | resolveEscalationHandlerResponseError;
+
+export const getResolveEscalationHandlerUrl = (id: string) => {
+  return `/escalations/${id}/resolve`;
+};
+
+export const resolveEscalationHandler = async (
+  id: string,
+  resolveRequest: ResolveRequest,
+  options?: RequestInit
+): Promise<resolveEscalationHandlerResponse> => {
+  const res = await fetch(getResolveEscalationHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(resolveRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: resolveEscalationHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as resolveEscalationHandlerResponse;
+};
+
+/**
+ * @summary An escalation's audited transition history.
+ */
+export type listTransitionsHandlerResponse200 = {
+  data: EscalationTransition[];
+  status: 200;
+};
+
+export type listTransitionsHandlerResponse404 = {
+  data: EscalationErrorBody;
+  status: 404;
+};
+
+export type listTransitionsHandlerResponseSuccess =
+  listTransitionsHandlerResponse200 & {
+    headers: Headers;
+  };
+export type listTransitionsHandlerResponseError =
+  listTransitionsHandlerResponse404 & {
+    headers: Headers;
+  };
+
+export type listTransitionsHandlerResponse =
+  | listTransitionsHandlerResponseSuccess
+  | listTransitionsHandlerResponseError;
+
+export const getListTransitionsHandlerUrl = (id: string) => {
+  return `/escalations/${id}/transitions`;
+};
+
+export const listTransitionsHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<listTransitionsHandlerResponse> => {
+  const res = await fetch(getListTransitionsHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listTransitionsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listTransitionsHandlerResponse;
+};
+
+/**
  * @summary Health check
  */
 export type healthHandlerResponse200 = {
@@ -1406,6 +3998,127 @@ export const getStateHandler = async (
     status: res.status,
     headers: res.headers,
   } as getStateHandlerResponse;
+};
+
+/**
+ * @summary The caller's unified review inbox across escalations, approvals, and
+skill proposals.
+ */
+export type listMyInboxHandlerResponse200 = {
+  data: UserInboxResponse;
+  status: 200;
+};
+
+export type listMyInboxHandlerResponseSuccess =
+  listMyInboxHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listMyInboxHandlerResponse = listMyInboxHandlerResponseSuccess;
+
+export const getListMyInboxHandlerUrl = () => {
+  return `/inbox/mine`;
+};
+
+export const listMyInboxHandler = async (
+  options?: RequestInit
+): Promise<listMyInboxHandlerResponse> => {
+  const res = await fetch(getListMyInboxHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listMyInboxHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listMyInboxHandlerResponse;
+};
+
+/**
+ * @summary Register a provider account.
+ */
+export type registerAccountHandlerResponse200 = {
+  data: ConnectorAccount;
+  status: 200;
+};
+
+export type registerAccountHandlerResponseSuccess =
+  registerAccountHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type registerAccountHandlerResponse =
+  registerAccountHandlerResponseSuccess;
+
+export const getRegisterAccountHandlerUrl = () => {
+  return `/lifecycle-connectors/accounts`;
+};
+
+export const registerAccountHandler = async (
+  registerAccountRequest: RegisterAccountRequest,
+  options?: RequestInit
+): Promise<registerAccountHandlerResponse> => {
+  const res = await fetch(getRegisterAccountHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(registerAccountRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: registerAccountHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as registerAccountHandlerResponse;
+};
+
+/**
+ * @summary Ingest a batch of provider records.
+ */
+export type ingestHandlerResponse200 = {
+  data: ConnectorRecord[];
+  status: 200;
+};
+
+export type ingestHandlerResponseSuccess = ingestHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type ingestHandlerResponse = ingestHandlerResponseSuccess;
+
+export const getIngestHandlerUrl = (id: string) => {
+  return `/lifecycle-connectors/accounts/${id}/ingest`;
+};
+
+export const ingestHandler = async (
+  id: string,
+  ingestRequest: IngestRequest,
+  options?: RequestInit
+): Promise<ingestHandlerResponse> => {
+  const res = await fetch(getIngestHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(ingestRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: ingestHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as ingestHandlerResponse;
 };
 
 /**
@@ -1976,6 +4689,257 @@ export const getBatchPreview = async (
 };
 
 /**
+ * @summary Record an eval run that may gate promotion. Internal callers.
+ */
+export type recordEvalHandlerResponse200 = {
+  data: SkillEvalRun;
+  status: 200;
+};
+
+export type recordEvalHandlerResponseSuccess = recordEvalHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type recordEvalHandlerResponse = recordEvalHandlerResponseSuccess;
+
+export const getRecordEvalHandlerUrl = () => {
+  return `/skill-evals`;
+};
+
+export const recordEvalHandler = async (
+  recordEvalRequest: RecordEvalRequest,
+  options?: RequestInit
+): Promise<recordEvalHandlerResponse> => {
+  const res = await fetch(getRecordEvalHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(recordEvalRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: recordEvalHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as recordEvalHandlerResponse;
+};
+
+/**
+ * @summary Personal inbox of skill proposals.
+ */
+export type listMyProposalsHandlerResponse200 = {
+  data: UserProposalsResponse;
+  status: 200;
+};
+
+export type listMyProposalsHandlerResponseSuccess =
+  listMyProposalsHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type listMyProposalsHandlerResponse =
+  listMyProposalsHandlerResponseSuccess;
+
+export const getListMyProposalsHandlerUrl = () => {
+  return `/skill-proposals/mine`;
+};
+
+export const listMyProposalsHandler = async (
+  options?: RequestInit
+): Promise<listMyProposalsHandlerResponse> => {
+  const res = await fetch(getListMyProposalsHandlerUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listMyProposalsHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as listMyProposalsHandlerResponse;
+};
+
+/**
+ * @summary Fetch one proposal visible to the caller.
+ */
+export type getProposalHandlerResponse200 = {
+  data: SkillProposal;
+  status: 200;
+};
+
+export type getProposalHandlerResponse404 = {
+  data: GovernanceErrorBody;
+  status: 404;
+};
+
+export type getProposalHandlerResponseSuccess =
+  getProposalHandlerResponse200 & {
+    headers: Headers;
+  };
+export type getProposalHandlerResponseError = getProposalHandlerResponse404 & {
+  headers: Headers;
+};
+
+export type getProposalHandlerResponse =
+  | getProposalHandlerResponseSuccess
+  | getProposalHandlerResponseError;
+
+export const getGetProposalHandlerUrl = (id: string) => {
+  return `/skill-proposals/${id}`;
+};
+
+export const getProposalHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<getProposalHandlerResponse> => {
+  const res = await fetch(getGetProposalHandlerUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getProposalHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as getProposalHandlerResponse;
+};
+
+/**
+ * @summary Approve or reject a pending proposal.
+ */
+export type decideProposalHandlerResponse200 = {
+  data: SkillProposal;
+  status: 200;
+};
+
+export type decideProposalHandlerResponseSuccess =
+  decideProposalHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type decideProposalHandlerResponse =
+  decideProposalHandlerResponseSuccess;
+
+export const getDecideProposalHandlerUrl = (id: string) => {
+  return `/skill-proposals/${id}/decide`;
+};
+
+export const decideProposalHandler = async (
+  id: string,
+  decideProposalRequest: DecideProposalRequest,
+  options?: RequestInit
+): Promise<decideProposalHandlerResponse> => {
+  const res = await fetch(getDecideProposalHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(decideProposalRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: decideProposalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as decideProposalHandlerResponse;
+};
+
+/**
+ * @summary Roll an approved proposal back to its snapshot.
+ */
+export type rollbackProposalHandlerResponse200 = {
+  data: SkillRecord;
+  status: 200;
+};
+
+export type rollbackProposalHandlerResponseSuccess =
+  rollbackProposalHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type rollbackProposalHandlerResponse =
+  rollbackProposalHandlerResponseSuccess;
+
+export const getRollbackProposalHandlerUrl = (id: string) => {
+  return `/skill-proposals/${id}/rollback`;
+};
+
+export const rollbackProposalHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<rollbackProposalHandlerResponse> => {
+  const res = await fetch(getRollbackProposalHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: rollbackProposalHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as rollbackProposalHandlerResponse;
+};
+
+/**
+ * @summary Ingest a trace-refinement job. Internal callers.
+ */
+export type refineHandlerResponse200 = {
+  data: TraceRefinement;
+  status: 200;
+};
+
+export type refineHandlerResponseSuccess = refineHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type refineHandlerResponse = refineHandlerResponseSuccess;
+
+export const getRefineHandlerUrl = () => {
+  return `/skill-refinements`;
+};
+
+export const refineHandler = async (
+  refineRequest: RefineRequest,
+  options?: RequestInit
+): Promise<refineHandlerResponse> => {
+  const res = await fetch(getRefineHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(refineRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: refineHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as refineHandlerResponse;
+};
+
+/**
  * This endpoint initiates a chat message and streams the response via the stream service.
 The client should subscribe to the returned stream_id via connection_gateway to receive chunks.
  * @summary Send a new chat message and stream the AI response.
@@ -2165,4 +5129,292 @@ export const structuredCompletion = async (
     status: res.status,
     headers: res.headers,
   } as structuredCompletionResponse;
+};
+
+/**
+ * @summary Register a draft extension.
+ */
+export type registerExtensionHandlerResponse200 = {
+  data: TenantExtension;
+  status: 200;
+};
+
+export type registerExtensionHandlerResponseSuccess =
+  registerExtensionHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type registerExtensionHandlerResponse =
+  registerExtensionHandlerResponseSuccess;
+
+export const getRegisterExtensionHandlerUrl = () => {
+  return `/tenant-extensions`;
+};
+
+export const registerExtensionHandler = async (
+  registerExtensionRequest: RegisterExtensionRequest,
+  options?: RequestInit
+): Promise<registerExtensionHandlerResponse> => {
+  const res = await fetch(getRegisterExtensionHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(registerExtensionRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: registerExtensionHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as registerExtensionHandlerResponse;
+};
+
+/**
+ * @summary Activate (candidate-set swap).
+ */
+export type activateExtensionHandlerResponse200 = {
+  data: TenantExtension;
+  status: 200;
+};
+
+export type activateExtensionHandlerResponseSuccess =
+  activateExtensionHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type activateExtensionHandlerResponse =
+  activateExtensionHandlerResponseSuccess;
+
+export const getActivateExtensionHandlerUrl = (id: string) => {
+  return `/tenant-extensions/${id}/activate`;
+};
+
+export const activateExtensionHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<activateExtensionHandlerResponse> => {
+  const res = await fetch(getActivateExtensionHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: activateExtensionHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as activateExtensionHandlerResponse;
+};
+
+/**
+ * @summary Delist kill switch.
+ */
+export type disableExtensionHandlerResponse200 = {
+  data: TenantExtension;
+  status: 200;
+};
+
+export type disableExtensionHandlerResponseSuccess =
+  disableExtensionHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type disableExtensionHandlerResponse =
+  disableExtensionHandlerResponseSuccess;
+
+export const getDisableExtensionHandlerUrl = (id: string) => {
+  return `/tenant-extensions/${id}/disable`;
+};
+
+export const disableExtensionHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<disableExtensionHandlerResponse> => {
+  const res = await fetch(getDisableExtensionHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: disableExtensionHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as disableExtensionHandlerResponse;
+};
+
+/**
+ * @summary Rollback to the latest snapshot.
+ */
+export type rollbackExtensionHandlerResponse200 = {
+  data: TenantExtension;
+  status: 200;
+};
+
+export type rollbackExtensionHandlerResponseSuccess =
+  rollbackExtensionHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type rollbackExtensionHandlerResponse =
+  rollbackExtensionHandlerResponseSuccess;
+
+export const getRollbackExtensionHandlerUrl = (id: string) => {
+  return `/tenant-extensions/${id}/rollback`;
+};
+
+export const rollbackExtensionHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<rollbackExtensionHandlerResponse> => {
+  const res = await fetch(getRollbackExtensionHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: rollbackExtensionHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as rollbackExtensionHandlerResponse;
+};
+
+/**
+ * @summary Upsert a Zendesk/Jira mirror.
+ */
+export type upsertMirrorHandlerResponse200 = {
+  data: TicketMirror;
+  status: 200;
+};
+
+export type upsertMirrorHandlerResponseSuccess =
+  upsertMirrorHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type upsertMirrorHandlerResponse = upsertMirrorHandlerResponseSuccess;
+
+export const getUpsertMirrorHandlerUrl = () => {
+  return `/ticket-mirrors`;
+};
+
+export const upsertMirrorHandler = async (
+  upsertMirrorRequest: UpsertMirrorRequest,
+  options?: RequestInit
+): Promise<upsertMirrorHandlerResponse> => {
+  const res = await fetch(getUpsertMirrorHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(upsertMirrorRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: upsertMirrorHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as upsertMirrorHandlerResponse;
+};
+
+/**
+ * @summary Disconnect a mirror without changing the native entity.
+ */
+export type disconnectMirrorHandlerResponse200 = {
+  data: TicketMirror;
+  status: 200;
+};
+
+export type disconnectMirrorHandlerResponseSuccess =
+  disconnectMirrorHandlerResponse200 & {
+    headers: Headers;
+  };
+
+export type disconnectMirrorHandlerResponse =
+  disconnectMirrorHandlerResponseSuccess;
+
+export const getDisconnectMirrorHandlerUrl = (id: string) => {
+  return `/ticket-mirrors/${id}/disconnect`;
+};
+
+export const disconnectMirrorHandler = async (
+  id: string,
+  options?: RequestInit
+): Promise<disconnectMirrorHandlerResponse> => {
+  const res = await fetch(getDisconnectMirrorHandlerUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: disconnectMirrorHandlerResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as disconnectMirrorHandlerResponse;
+};
+
+/**
+ * @summary Run a training-export projection.
+ */
+export type runExportHandlerResponse200 = {
+  data: RunExportResponse;
+  status: 200;
+};
+
+export type runExportHandlerResponseSuccess = runExportHandlerResponse200 & {
+  headers: Headers;
+};
+
+export type runExportHandlerResponse = runExportHandlerResponseSuccess;
+
+export const getRunExportHandlerUrl = () => {
+  return `/training-export`;
+};
+
+export const runExportHandler = async (
+  runExportRequest: RunExportRequest,
+  options?: RequestInit
+): Promise<runExportHandlerResponse> => {
+  const res = await fetch(getRunExportHandlerUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(runExportRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: runExportHandlerResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as runExportHandlerResponse;
 };

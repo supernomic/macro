@@ -1,4 +1,10 @@
-/// The main entry point: [`AgentLoop`] and [`Session`].
+//! The main entry point: [`AgentLoop`] and [`Session`].
+//!
+//! **Frozen surface.** Do not extend this loop with new agent products,
+//! channels, or scheduled workflows. New conversational agents belong in
+//! `apps/agents` (Flue). Bugfixes and safety patches only — see
+//! `docs/AGENT_LOOP_MIGRATION.md`.
+
 use crate::error::AgentError;
 use crate::hook::{RegisterFn, ToolRouter};
 use crate::model::PredefinedModel;
@@ -18,6 +24,11 @@ const DEFAULT_MAX_TURNS: usize = 16;
 const DEFAULT_MAX_TOKENS: u64 = 16_000;
 
 /// Factory for creating per-request agent sessions.
+///
+/// **Frozen surface.** Do not extend this loop with new agent products,
+/// channels, or scheduled workflows. New conversational agents belong in
+/// `apps/agents` (Flue). Bugfixes and safety patches only — see
+/// `docs/AGENT_LOOP_MIGRATION.md`.
 ///
 /// Routes each session to the provider serving the selected model id (see
 /// [`ModelRouter`]). The model is a
@@ -269,6 +280,10 @@ impl AgentLoop {
 }
 
 /// A single streaming conversation session.
+///
+/// Part of the frozen [`AgentLoop`] surface. New agent products belong in
+/// `apps/agents` (Flue); keep changes here to crash, authz, and usage
+/// recording fixes.
 pub struct Session {
     agent: ProviderAgent,
     history: Vec<Message>,

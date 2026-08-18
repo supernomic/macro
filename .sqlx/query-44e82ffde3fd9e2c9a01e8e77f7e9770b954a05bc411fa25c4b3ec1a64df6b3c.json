@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO entity_graph_nodes (\n                    id, org_id, node_type, display_name, attributes,\n                    native_entity_type, native_entity_id, created_at, updated_at\n                )\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n                ON CONFLICT (org_id, native_entity_type, native_entity_id)\n                    WHERE native_entity_type IS NOT NULL\n                DO UPDATE SET\n                    display_name = EXCLUDED.display_name,\n                    attributes = EXCLUDED.attributes,\n                    node_type = EXCLUDED.node_type,\n                    updated_at = EXCLUDED.updated_at\n                RETURNING id, org_id, node_type, display_name, attributes,\n                          native_entity_type, native_entity_id, created_at, updated_at\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "node_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "attributes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "native_entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "native_entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "44e82ffde3fd9e2c9a01e8e77f7e9770b954a05bc411fa25c4b3ec1a64df6b3c"
+}

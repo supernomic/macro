@@ -1,0 +1,138 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE escalations\n            SET assignee_user_id = $2,\n                assignee_team_id = COALESCE($3, assignee_team_id),\n                status = CASE WHEN $2::TEXT IS NULL THEN 'open' ELSE 'claimed' END,\n                claimed_at = CASE WHEN $2::TEXT IS NULL THEN NULL ELSE now() END\n            WHERE id = $1 AND status IN ('open', 'claimed')\n            RETURNING id, org_id, domain, session_id, requester_user_id,\n                      requester_display, source_channel, title, summary,\n                      tags, priority, status, assignee_user_id,\n                      assignee_team_id, callback_url, resolution,\n                      resolved_by, created_at, claimed_at, resolved_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "requester_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "requester_display",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "source_channel",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 10,
+        "name": "priority",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "assignee_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "assignee_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "callback_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "resolution",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "resolved_by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 18,
+        "name": "claimed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "resolved_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "1b87c7904c147deaa0282489c6f9f4acd5aa28d1b3c1f057c2cc59903c6a6de3"
+}

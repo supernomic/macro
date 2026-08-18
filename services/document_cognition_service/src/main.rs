@@ -536,6 +536,136 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("initialized memory service");
 
+    // Build the agent identity service (agent principals + scoped API tokens)
+    let agent_identity_service = Arc::new(
+        agent_identity::domain::service::AgentIdentityServiceImpl::new(
+            agent_identity::outbound::PgAgentIdentityRepo::new(db.clone()),
+        ),
+    );
+
+    tracing::info!("initialized agent identity service");
+
+    // Build the session ledger service and agent-facing facade
+    let agent_ledger_service = agent_ledger::domain::service::LedgerServiceImpl::new(
+        agent_ledger::outbound::PgLedgerRepo::new(db.clone()),
+    );
+    let agent_ledger_facade = Arc::new(agent_ledger::domain::facade::AgentLedgerFacade::new(
+        agent_ledger_service.clone(),
+        agent_ledger::outbound::PgSessionMappingRepo::new(db.clone()),
+    ));
+    let agent_ledger_service = Arc::new(agent_ledger_service);
+
+    tracing::info!("initialized agent ledger service");
+
+    // Build the escalation service (expert routing + inbox handoff) and the
+    // agent-facing facade.
+    let escalation_routing = Arc::new(escalations::outbound::PgRoutingRepo::new(db.clone()));
+    let escalation_callback_token =
+        crate::config::EscalationCallbackToken::new().and_then(|t| t.value().map(str::to_string));
+    let escalation_service = Arc::new(escalations::domain::service::EscalationServiceImpl::new(
+        escalations::outbound::PgEscalationRepo::new(db.clone()),
+        escalation_routing.as_ref().clone(),
+        escalations::outbound::PgTeamMembership::new(db.clone()),
+        escalations::outbound::HttpCallbackClient::new(escalation_callback_token.clone()),
+        escalations::outbound::NoopNotifier,
+    ));
+    let escalation_facade = Arc::new(escalations::domain::facade::AgentEscalationFacade::new(
+        escalation_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized escalation service");
+
+    // Build the approval-gate service (policy floor + pending requests)
+    // and the agent-facing facade. Reuses the same callback token as
+    // escalations so the runtime verifies both with one secret.
+    let approval_policies = Arc::new(approvals::outbound::PgPolicyRepo::new(db.clone()));
+    let approval_service = Arc::new(approvals::domain::service::ApprovalServiceImpl::new(
+        approvals::outbound::PgApprovalRepo::new(db.clone()),
+        approval_policies.as_ref().clone(),
+        approvals::outbound::PgTeamMembership::new(db.clone()),
+        approvals::outbound::HttpCallbackClient::new(escalation_callback_token),
+        approvals::outbound::NoopNotifier,
+        approvals::domain::model::PolicyFloor::builtin(),
+    ));
+    let approval_facade = Arc::new(approvals::domain::facade::AgentApprovalFacade::new(
+        approval_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized approval-gate service");
+
+    let skill_governance_service =
+        skill_governance::domain::service::SkillGovernanceServiceImpl::new(
+            skill_governance::outbound::PgSkillRepo::new(db.clone()),
+            skill_governance::outbound::PgProposalRepo::new(db.clone()),
+            skill_governance::outbound::PgTeamMembership::new(db.clone()),
+            skill_governance::outbound::NoopNotifier,
+        );
+    let skill_governance_facade = Arc::new(
+        skill_governance::domain::facade::AgentSkillFacade::new(skill_governance_service.clone()),
+    );
+    let skill_governance_service = Arc::new(skill_governance_service);
+
+    tracing::info!("initialized skill governance service");
+
+    let inbox_service = Arc::new(agent_inbox::domain::service::InboxServiceImpl::new(
+        escalation_service.as_ref().clone(),
+        approval_service.as_ref().clone(),
+        skill_governance_service.as_ref().clone(),
+    ));
+
+    tracing::info!("initialized agent inbox");
+
+    // Facade and connector ingest both take GraphService by value. Clone
+    // before wrapping the leftover in Arc so they share the same pool-backed
+    // repo rather than fighting over a moved value.
+    let graph_service = entity_graph::domain::service::GraphServiceImpl::new(
+        entity_graph::outbound::PgGraphRepo::new(db.clone()),
+    );
+    let graph_facade = Arc::new(entity_graph::domain::facade::AgentGraphFacade::new(
+        graph_service.clone(),
+    ));
+    let connector_service = Arc::new(
+        lifecycle_connectors::domain::service::ConnectorServiceImpl::new(
+            lifecycle_connectors::outbound::PgConnectorRepo::new(db.clone()),
+            lifecycle_connectors::outbound::EntityGraphIngest::new(graph_service.clone()),
+        ),
+    );
+    let graph_service = Arc::new(graph_service);
+
+    tracing::info!("initialized entity graph and lifecycle connectors");
+
+    let mirror_service = Arc::new(ticket_mirrors::domain::service::MirrorServiceImpl::new(
+        ticket_mirrors::outbound::PgMirrorRepo::new(db.clone()),
+        ticket_mirrors::outbound::NoopTicketClient,
+    ));
+
+    tracing::info!("initialized ticket mirrors");
+
+    let extension_service = Arc::new(
+        tenant_extensions::domain::service::ExtensionServiceImpl::new(
+            tenant_extensions::outbound::PgExtensionRepo::new(db.clone()),
+        ),
+    );
+
+    tracing::info!("initialized tenant extensions");
+
+    let export_service = Arc::new(training_export::domain::service::ExportServiceImpl::new(
+        training_export::outbound::LedgerServiceReader::new(agent_ledger_service.as_ref().clone()),
+        training_export::outbound::PgExportJobRepo::new(db.clone()),
+        training_export::outbound::PgConsentReader::new(db.clone()),
+    ));
+
+    tracing::info!("initialized training export");
+
+    let feedback_facade = Arc::new(agent_feedback::domain::facade::AgentFeedbackFacade::new(
+        agent_feedback::domain::service::FeedbackServiceImpl::new(
+            agent_feedback::outbound::PgRatingRepo::new(db.clone()),
+            agent_feedback::outbound::PgConsentRepo::new(db.clone()),
+        ),
+    ));
+
+    tracing::info!("initialized agent feedback sidecar");
+
     // Build the AI cost service. It backs both the admin query/pricing router
     // and the usage recorder threaded through the tool service context.
     let usage_service = Arc::new(ai_usage::domain::service::UsageServiceImpl::new(
@@ -664,6 +794,25 @@ async fn main() -> anyhow::Result<()> {
         stream_repo,
         document_tool_context,
         memory_service,
+        agent_identity_service,
+        agent_ledger_service,
+        agent_ledger_facade,
+        escalation_service,
+        escalation_facade,
+        escalation_routing,
+        approval_service,
+        approval_facade,
+        approval_policies,
+        skill_governance_service,
+        skill_governance_facade,
+        inbox_service,
+        graph_service,
+        graph_facade,
+        connector_service,
+        mirror_service,
+        extension_service,
+        export_service,
+        feedback_facade,
         usage_service,
         ai_projections_service,
         properties_tool_context,

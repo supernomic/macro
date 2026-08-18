@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id, seq, data, actor_kind, actor_id, org_id,\n                   occurred_at, source_event_seqs, prev_hash, hash\n            FROM agent_events\n            WHERE ($1::uuid IS NULL OR session_id = $1)\n              AND ($2::int IS NULL OR org_id = $2)\n              AND (cardinality($3::text[]) = 0 OR event_type = ANY($3))\n              AND ($4::text IS NULL OR actor_id = $4)\n              AND ($5::timestamptz IS NULL OR occurred_at >= $5)\n              AND ($6::timestamptz IS NULL OR occurred_at < $6)\n            ORDER BY occurred_at DESC, session_id, seq DESC\n            LIMIT $7\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "occurred_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "source_event_seqs",
+        "type_info": "Int8Array"
+      },
+      {
+        "ordinal": 8,
+        "name": "prev_hash",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 9,
+        "name": "hash",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "TextArray",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1efd1212abd4cae9bebf099674eafa489cb1306100fb0281f7eb2ec6120766b6"
+}

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMcpServerData, AddMcpServerErrors, AddMcpServerResponses, CallToolData, CallToolErrors, CallToolResponses, CompleteHandlerData, CompleteHandlerErrors, CompleteHandlerResponses, CopyChatData, CopyChatErrors, CopyChatResponses, CreateChatData, CreateChatErrors, CreateChatResponses, DeleteChatData, DeleteChatErrors, DeleteChatResponses, DeleteMcpServerData, DeleteMcpServerErrors, DeleteMcpServerResponses, DismissRunHandlerData, DismissRunHandlerErrors, DismissRunHandlerResponses, GetBatchPreviewData, GetBatchPreviewErrors, GetBatchPreviewResponses, GetChatData, GetChatErrors, GetChatHistoryBatchMessagesHandlerData, GetChatHistoryBatchMessagesHandlerErrors, GetChatHistoryBatchMessagesHandlerResponses, GetChatHistoryHandlerData, GetChatHistoryHandlerErrors, GetChatHistoryHandlerResponses, GetChatPermissionsData, GetChatPermissionsErrors, GetChatPermissionsResponses, GetChatResponses, GetChatsForAttachmentHandlerData, GetChatsForAttachmentHandlerErrors, GetChatsForAttachmentHandlerResponses, GetCitationHandlerData, GetCitationHandlerErrors, GetCitationHandlerResponses, GetMemoryHandlerData, GetMemoryHandlerErrors, GetMemoryHandlerResponses, GetStateHandler2Data, GetStateHandler2Errors, GetStateHandler2Responses, GetStateHandlerData, GetStateHandlerErrors, GetStateHandlerResponses, GetUsageHandlerData, GetUsageHandlerErrors, GetUsageHandlerResponses, HealthHandlerData, HealthHandlerResponses, ListMcpServersData, ListMcpServersErrors, ListMcpServersResponses, McpAuthCallbackData, McpAuthCallbackErrors, McpAuthCallbackResponses, McpOauthClientMetadataData, McpOauthClientMetadataResponses, PatchChatData, PatchChatErrors, PatchChatResponses, PermanentlyDeleteChatData, PermanentlyDeleteChatErrors, PermanentlyDeleteChatResponses, RejectToolCallData, RejectToolCallErrors, RejectToolCallResponses, RetryGatherHandlerData, RetryGatherHandlerErrors, RetryGatherHandlerResponses, RevertDeleteChatData, RevertDeleteChatErrors, RevertDeleteChatResponses, RunImportHandlerData, RunImportHandlerErrors, RunImportHandlerResponses, SendChatMessageData, SendChatMessageErrors, SendChatMessageResponses, SetPricingHandlerData, SetPricingHandlerErrors, SetPricingHandlerResponses, StartMcpAuthData, StartMcpAuthErrors, StartMcpAuthResponses, StopChatStreamData, StopChatStreamErrors, StopChatStreamResponses, StructuredCompletionData, StructuredCompletionErrors, StructuredCompletionResponses, UpdateMcpServerData, UpdateMcpServerErrors, UpdateMcpServerResponses, UpdateToolCallData, UpdateToolCallErrors, UpdateToolCallResponses, UpdateToolResponseData, UpdateToolResponseErrors, UpdateToolResponseResponses, UpsertAiProjectionData, UpsertAiProjectionErrors, UpsertAiProjectionResponses } from './types.gen';
+import type { ActivateExtensionHandlerData, ActivateExtensionHandlerResponses, AddMcpServerData, AddMcpServerErrors, AddMcpServerResponses, AgentCancelApprovalHandlerData, AgentCancelApprovalHandlerErrors, AgentCancelApprovalHandlerResponses, AgentCatalogHandlerData, AgentCatalogHandlerResponses, AgentCreateEscalationHandlerData, AgentCreateEscalationHandlerErrors, AgentCreateEscalationHandlerResponses, AgentGateHandlerData, AgentGateHandlerErrors, AgentGateHandlerResponses, AgentGetApprovalHandlerData, AgentGetApprovalHandlerErrors, AgentGetApprovalHandlerResponses, AgentGetConsentHandlerData, AgentGetConsentHandlerResponses, AgentGetEscalationHandlerData, AgentGetEscalationHandlerErrors, AgentGetEscalationHandlerResponses, AgentGetSkillHandlerData, AgentGetSkillHandlerResponses, AgentListRatingsHandlerData, AgentListRatingsHandlerResponses, AgentProposeHandlerData, AgentProposeHandlerResponses, AgentQueryEventsHandlerData, AgentQueryEventsHandlerErrors, AgentQueryEventsHandlerResponses, AgentRateHandlerData, AgentRateHandlerResponses, AppendEventsHandlerData, AppendEventsHandlerErrors, AppendEventsHandlerResponses, CallToolData, CallToolErrors, CallToolResponses, CancelEscalationHandlerData, CancelEscalationHandlerErrors, CancelEscalationHandlerResponses, ClaimEscalationHandlerData, ClaimEscalationHandlerErrors, ClaimEscalationHandlerResponses, CompleteHandlerData, CompleteHandlerErrors, CompleteHandlerResponses, CopyChatData, CopyChatErrors, CopyChatResponses, CreateChatData, CreateChatErrors, CreateChatResponses, CreatePrincipalHandlerData, CreatePrincipalHandlerErrors, CreatePrincipalHandlerResponses, DecideApprovalHandlerData, DecideApprovalHandlerErrors, DecideApprovalHandlerResponses, DecideProposalHandlerData, DecideProposalHandlerResponses, DeleteChatData, DeleteChatErrors, DeleteChatResponses, DeleteMcpServerData, DeleteMcpServerErrors, DeleteMcpServerResponses, DeletePolicyHandlerData, DeletePolicyHandlerErrors, DeletePolicyHandlerResponses, DeleteRuleHandlerData, DeleteRuleHandlerErrors, DeleteRuleHandlerResponses, DisableExtensionHandlerData, DisableExtensionHandlerResponses, DisablePrincipalHandlerData, DisablePrincipalHandlerResponses, DisconnectMirrorHandlerData, DisconnectMirrorHandlerResponses, DismissRunHandlerData, DismissRunHandlerErrors, DismissRunHandlerResponses, ExportEventsHandlerData, ExportEventsHandlerResponses, FindSessionByThreadHandlerData, FindSessionByThreadHandlerErrors, FindSessionByThreadHandlerResponses, GetApprovalHandlerData, GetApprovalHandlerErrors, GetApprovalHandlerResponses, GetBatchPreviewData, GetBatchPreviewErrors, GetBatchPreviewResponses, GetChatData, GetChatErrors, GetChatHistoryBatchMessagesHandlerData, GetChatHistoryBatchMessagesHandlerErrors, GetChatHistoryBatchMessagesHandlerResponses, GetChatHistoryHandlerData, GetChatHistoryHandlerErrors, GetChatHistoryHandlerResponses, GetChatPermissionsData, GetChatPermissionsErrors, GetChatPermissionsResponses, GetChatResponses, GetChatsForAttachmentHandlerData, GetChatsForAttachmentHandlerErrors, GetChatsForAttachmentHandlerResponses, GetCitationHandlerData, GetCitationHandlerErrors, GetCitationHandlerResponses, GetEscalationHandlerData, GetEscalationHandlerErrors, GetEscalationHandlerResponses, GetMemoryHandlerData, GetMemoryHandlerErrors, GetMemoryHandlerResponses, GetProposalHandlerData, GetProposalHandlerErrors, GetProposalHandlerResponses, GetStateHandler2Data, GetStateHandler2Errors, GetStateHandler2Responses, GetStateHandlerData, GetStateHandlerErrors, GetStateHandlerResponses, GetUsageHandlerData, GetUsageHandlerErrors, GetUsageHandlerResponses, HealthHandlerData, HealthHandlerResponses, IngestHandlerData, IngestHandlerResponses, ListApprovalTransitionsHandlerData, ListApprovalTransitionsHandlerErrors, ListApprovalTransitionsHandlerResponses, ListExpertsHandlerData, ListExpertsHandlerResponses, ListMcpServersData, ListMcpServersErrors, ListMcpServersResponses, ListMyApprovalsHandlerData, ListMyApprovalsHandlerResponses, ListMyEscalationsHandlerData, ListMyEscalationsHandlerResponses, ListMyInboxHandlerData, ListMyInboxHandlerResponses, ListMyProposalsHandlerData, ListMyProposalsHandlerResponses, ListPoliciesHandlerData, ListPoliciesHandlerResponses, ListPrincipalsHandlerData, ListPrincipalsHandlerResponses, ListRulesHandlerData, ListRulesHandlerResponses, ListSessionEventsHandlerData, ListSessionEventsHandlerErrors, ListSessionEventsHandlerResponses, ListTeamApprovalsHandlerData, ListTeamApprovalsHandlerErrors, ListTeamApprovalsHandlerResponses, ListTeamEscalationsHandlerData, ListTeamEscalationsHandlerErrors, ListTeamEscalationsHandlerResponses, ListTransitionsHandlerData, ListTransitionsHandlerErrors, ListTransitionsHandlerResponses, McpAuthCallbackData, McpAuthCallbackErrors, McpAuthCallbackResponses, McpOauthClientMetadataData, McpOauthClientMetadataResponses, MintTokenHandlerData, MintTokenHandlerErrors, MintTokenHandlerResponses, NeighborsHandlerData, NeighborsHandlerResponses, OpenSessionHandlerData, OpenSessionHandlerErrors, OpenSessionHandlerResponses, PatchChatData, PatchChatErrors, PatchChatResponses, PermanentlyDeleteChatData, PermanentlyDeleteChatErrors, PermanentlyDeleteChatResponses, QueryEventsHandlerData, QueryEventsHandlerResponses, ReassignApprovalHandlerData, ReassignApprovalHandlerErrors, ReassignApprovalHandlerResponses, ReassignEscalationHandlerData, ReassignEscalationHandlerErrors, ReassignEscalationHandlerResponses, RecordEvalHandlerData, RecordEvalHandlerResponses, RecordOutcomeHandlerData, RecordOutcomeHandlerErrors, RecordOutcomeHandlerResponses, RefineHandlerData, RefineHandlerResponses, RegisterAccountHandlerData, RegisterAccountHandlerResponses, RegisterExtensionHandlerData, RegisterExtensionHandlerResponses, RejectToolCallData, RejectToolCallErrors, RejectToolCallResponses, ResolveEscalationHandlerData, ResolveEscalationHandlerErrors, ResolveEscalationHandlerResponses, RetryGatherHandlerData, RetryGatherHandlerErrors, RetryGatherHandlerResponses, RevertDeleteChatData, RevertDeleteChatErrors, RevertDeleteChatResponses, RevokeTokenHandlerData, RevokeTokenHandlerResponses, RollbackExtensionHandlerData, RollbackExtensionHandlerResponses, RollbackProposalHandlerData, RollbackProposalHandlerResponses, RunExportHandlerData, RunExportHandlerResponses, RunImportHandlerData, RunImportHandlerErrors, RunImportHandlerResponses, SendChatMessageData, SendChatMessageErrors, SendChatMessageResponses, SetPricingHandlerData, SetPricingHandlerErrors, SetPricingHandlerResponses, StartMcpAuthData, StartMcpAuthErrors, StartMcpAuthResponses, StopChatStreamData, StopChatStreamErrors, StopChatStreamResponses, StructuredCompletionData, StructuredCompletionErrors, StructuredCompletionResponses, UpdateMcpServerData, UpdateMcpServerErrors, UpdateMcpServerResponses, UpdateToolCallData, UpdateToolCallErrors, UpdateToolCallResponses, UpdateToolResponseData, UpdateToolResponseErrors, UpdateToolResponseResponses, UpsertAiProjectionData, UpsertAiProjectionErrors, UpsertAiProjectionResponses, UpsertEdgeHandlerData, UpsertEdgeHandlerResponses, UpsertExpertHandlerData, UpsertExpertHandlerResponses, UpsertKnowledgeHandlerData, UpsertKnowledgeHandlerResponses, UpsertMirrorHandlerData, UpsertMirrorHandlerResponses, UpsertNodeHandlerData, UpsertNodeHandlerResponses, UpsertPolicyHandlerData, UpsertPolicyHandlerResponses, UpsertRuleHandlerData, UpsertRuleHandlerResponses, UserRateHandlerData, UserRateHandlerResponses, UserSetConsentHandlerData, UserSetConsentHandlerResponses, VerifyChainHandlerData, VerifyChainHandlerResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -58,6 +58,323 @@ export class Sdk extends HeyApiClient {
     }
     
     /**
+     * Gate a proposed tool call. Agent callers.
+     */
+    public agentGateHandler<ThrowOnError extends boolean = false>(options: Options<AgentGateHandlerData, ThrowOnError>): RequestResult<AgentGateHandlerResponses, AgentGateHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<AgentGateHandlerResponses, AgentGateHandlerErrors, ThrowOnError>({
+            url: '/agent-approvals/gate',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Poll one approval request. Agent callers.
+     */
+    public agentGetApprovalHandler<ThrowOnError extends boolean = false>(options: Options<AgentGetApprovalHandlerData, ThrowOnError>): RequestResult<AgentGetApprovalHandlerResponses, AgentGetApprovalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<AgentGetApprovalHandlerResponses, AgentGetApprovalHandlerErrors, ThrowOnError>({ url: '/agent-approvals/{id}', ...options });
+    }
+    
+    /**
+     * Cancel one of the agent's own pending requests. Agent callers.
+     */
+    public agentCancelApprovalHandler<ThrowOnError extends boolean = false>(options: Options<AgentCancelApprovalHandlerData, ThrowOnError>): RequestResult<AgentCancelApprovalHandlerResponses, AgentCancelApprovalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<AgentCancelApprovalHandlerResponses, AgentCancelApprovalHandlerErrors, ThrowOnError>({ url: '/agent-approvals/{id}/cancel', ...options });
+    }
+    
+    /**
+     * Create an escalation. Agent callers.
+     */
+    public agentCreateEscalationHandler<ThrowOnError extends boolean = false>(options: Options<AgentCreateEscalationHandlerData, ThrowOnError>): RequestResult<AgentCreateEscalationHandlerResponses, AgentCreateEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<AgentCreateEscalationHandlerResponses, AgentCreateEscalationHandlerErrors, ThrowOnError>({
+            url: '/agent-escalations',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Poll one escalation. Agent callers.
+     */
+    public agentGetEscalationHandler<ThrowOnError extends boolean = false>(options: Options<AgentGetEscalationHandlerData, ThrowOnError>): RequestResult<AgentGetEscalationHandlerResponses, AgentGetEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<AgentGetEscalationHandlerResponses, AgentGetEscalationHandlerErrors, ThrowOnError>({ url: '/agent-escalations/{id}', ...options });
+    }
+    
+    /**
+     * Read session consent. Agent callers.
+     */
+    public agentGetConsentHandler<ThrowOnError extends boolean = false>(options: Options<AgentGetConsentHandlerData, ThrowOnError>): RequestResult<AgentGetConsentHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).get<AgentGetConsentHandlerResponses, unknown, ThrowOnError>({ url: '/agent-feedback/{session_id}/consent', ...options });
+    }
+    
+    /**
+     * Set sharing consent. User callers.
+     */
+    public userSetConsentHandler<ThrowOnError extends boolean = false>(options: Options<UserSetConsentHandlerData, ThrowOnError>): RequestResult<UserSetConsentHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UserSetConsentHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-feedback/{session_id}/consent',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List sidecar ratings. Agent callers.
+     */
+    public agentListRatingsHandler<ThrowOnError extends boolean = false>(options: Options<AgentListRatingsHandlerData, ThrowOnError>): RequestResult<AgentListRatingsHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).get<AgentListRatingsHandlerResponses, unknown, ThrowOnError>({ url: '/agent-feedback/{session_id}/ratings', ...options });
+    }
+    
+    /**
+     * Rate a ledger event. Agent callers.
+     */
+    public agentRateHandler<ThrowOnError extends boolean = false>(options: Options<AgentRateHandlerData, ThrowOnError>): RequestResult<AgentRateHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<AgentRateHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-feedback/{session_id}/ratings',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Rate a ledger event. User callers.
+     */
+    public userRateHandler<ThrowOnError extends boolean = false>(options: Options<UserRateHandlerData, ThrowOnError>): RequestResult<UserRateHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UserRateHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-feedback/{session_id}/user-ratings',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upsert an edge.
+     */
+    public upsertEdgeHandler<ThrowOnError extends boolean = false>(options: Options<UpsertEdgeHandlerData, ThrowOnError>): RequestResult<UpsertEdgeHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UpsertEdgeHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-graph/edges',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upsert a knowledge document.
+     */
+    public upsertKnowledgeHandler<ThrowOnError extends boolean = false>(options: Options<UpsertKnowledgeHandlerData, ThrowOnError>): RequestResult<UpsertKnowledgeHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UpsertKnowledgeHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-graph/knowledge',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upsert a graph node.
+     */
+    public upsertNodeHandler<ThrowOnError extends boolean = false>(options: Options<UpsertNodeHandlerData, ThrowOnError>): RequestResult<UpsertNodeHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UpsertNodeHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-graph/nodes',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List neighbors of a node.
+     */
+    public neighborsHandler<ThrowOnError extends boolean = false>(options: Options<NeighborsHandlerData, ThrowOnError>): RequestResult<NeighborsHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).get<NeighborsHandlerResponses, unknown, ThrowOnError>({ url: '/agent-graph/nodes/{id}/neighbors', ...options });
+    }
+    
+    /**
+     * List agent principals for an org.
+     */
+    public listPrincipalsHandler<ThrowOnError extends boolean = false>(options?: Options<ListPrincipalsHandlerData, ThrowOnError>): RequestResult<ListPrincipalsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListPrincipalsHandlerResponses, unknown, ThrowOnError>({ url: '/agent-identity/principals', ...options });
+    }
+    
+    /**
+     * Create an agent principal. Internal callers only.
+     */
+    public createPrincipalHandler<ThrowOnError extends boolean = false>(options: Options<CreatePrincipalHandlerData, ThrowOnError>): RequestResult<CreatePrincipalHandlerResponses, CreatePrincipalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<CreatePrincipalHandlerResponses, CreatePrincipalHandlerErrors, ThrowOnError>({
+            url: '/agent-identity/principals',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Disable an agent principal (its tokens stop verifying). Internal callers
+     * only.
+     */
+    public disablePrincipalHandler<ThrowOnError extends boolean = false>(options: Options<DisablePrincipalHandlerData, ThrowOnError>): RequestResult<DisablePrincipalHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<DisablePrincipalHandlerResponses, unknown, ThrowOnError>({ url: '/agent-identity/principals/{principal_id}/disable', ...options });
+    }
+    
+    /**
+     * Mint a scoped API token for a principal. Internal callers only.
+     */
+    public mintTokenHandler<ThrowOnError extends boolean = false>(options: Options<MintTokenHandlerData, ThrowOnError>): RequestResult<MintTokenHandlerResponses, MintTokenHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<MintTokenHandlerResponses, MintTokenHandlerErrors, ThrowOnError>({
+            url: '/agent-identity/principals/{principal_id}/tokens',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Revoke an API token. Internal callers only.
+     */
+    public revokeTokenHandler<ThrowOnError extends boolean = false>(options: Options<RevokeTokenHandlerData, ThrowOnError>): RequestResult<RevokeTokenHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RevokeTokenHandlerResponses, unknown, ThrowOnError>({ url: '/agent-identity/tokens/{token_id}/revoke', ...options });
+    }
+    
+    /**
+     * Org-scoped audit query for agent callers (self-query over past attempts,
+     * approvals, escalations). The org filter is forced server-side.
+     */
+    public agentQueryEventsHandler<ThrowOnError extends boolean = false>(options?: Options<AgentQueryEventsHandlerData, ThrowOnError>): RequestResult<AgentQueryEventsHandlerResponses, AgentQueryEventsHandlerErrors, ThrowOnError> {
+        return (options?.client ?? this.client).get<AgentQueryEventsHandlerResponses, AgentQueryEventsHandlerErrors, ThrowOnError>({ url: '/agent-ledger/agent-events', ...options });
+    }
+    
+    /**
+     * Cross-session audit query. Internal callers.
+     */
+    public queryEventsHandler<ThrowOnError extends boolean = false>(options?: Options<QueryEventsHandlerData, ThrowOnError>): RequestResult<QueryEventsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<QueryEventsHandlerResponses, unknown, ThrowOnError>({ url: '/agent-ledger/events', ...options });
+    }
+    
+    /**
+     * Audit export as NDJSON (one event per line). Internal callers.
+     */
+    public exportEventsHandler<ThrowOnError extends boolean = false>(options?: Options<ExportEventsHandlerData, ThrowOnError>): RequestResult<ExportEventsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ExportEventsHandlerResponses, unknown, ThrowOnError>({ url: '/agent-ledger/export', ...options });
+    }
+    
+    /**
+     * Open (or resume) a session for a runtime conversation. Agent callers.
+     */
+    public openSessionHandler<ThrowOnError extends boolean = false>(options: Options<OpenSessionHandlerData, ThrowOnError>): RequestResult<OpenSessionHandlerResponses, OpenSessionHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<OpenSessionHandlerResponses, OpenSessionHandlerErrors, ThrowOnError>({
+            url: '/agent-ledger/sessions',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Find the session anchored to an external thread. Agent callers.
+     */
+    public findSessionByThreadHandler<ThrowOnError extends boolean = false>(options?: Options<FindSessionByThreadHandlerData, ThrowOnError>): RequestResult<FindSessionByThreadHandlerResponses, FindSessionByThreadHandlerErrors, ThrowOnError> {
+        return (options?.client ?? this.client).get<FindSessionByThreadHandlerResponses, FindSessionByThreadHandlerErrors, ThrowOnError>({ url: '/agent-ledger/sessions/by-thread', ...options });
+    }
+    
+    /**
+     * Replay a session's events in order. Agent callers.
+     */
+    public listSessionEventsHandler<ThrowOnError extends boolean = false>(options: Options<ListSessionEventsHandlerData, ThrowOnError>): RequestResult<ListSessionEventsHandlerResponses, ListSessionEventsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<ListSessionEventsHandlerResponses, ListSessionEventsHandlerErrors, ThrowOnError>({ url: '/agent-ledger/sessions/{session_id}/events', ...options });
+    }
+    
+    /**
+     * Append events to a session. Agent callers.
+     */
+    public appendEventsHandler<ThrowOnError extends boolean = false>(options: Options<AppendEventsHandlerData, ThrowOnError>): RequestResult<AppendEventsHandlerResponses, AppendEventsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<AppendEventsHandlerResponses, AppendEventsHandlerErrors, ThrowOnError>({
+            url: '/agent-ledger/sessions/{session_id}/events',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Record a session's terminal outcome. Agent callers.
+     */
+    public recordOutcomeHandler<ThrowOnError extends boolean = false>(options: Options<RecordOutcomeHandlerData, ThrowOnError>): RequestResult<RecordOutcomeHandlerResponses, RecordOutcomeHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<RecordOutcomeHandlerResponses, RecordOutcomeHandlerErrors, ThrowOnError>({
+            url: '/agent-ledger/sessions/{session_id}/outcome',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Verify a session's hash chain. Internal callers.
+     */
+    public verifyChainHandler<ThrowOnError extends boolean = false>(options: Options<VerifyChainHandlerData, ThrowOnError>): RequestResult<VerifyChainHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).get<VerifyChainHandlerResponses, unknown, ThrowOnError>({ url: '/agent-ledger/sessions/{session_id}/verify', ...options });
+    }
+    
+    /**
+     * List skills this agent may inject.
+     */
+    public agentCatalogHandler<ThrowOnError extends boolean = false>(options?: Options<AgentCatalogHandlerData, ThrowOnError>): RequestResult<AgentCatalogHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<AgentCatalogHandlerResponses, unknown, ThrowOnError>({ url: '/agent-skills', ...options });
+    }
+    
+    /**
+     * Open a staged skill proposal. Agent callers.
+     */
+    public agentProposeHandler<ThrowOnError extends boolean = false>(options: Options<AgentProposeHandlerData, ThrowOnError>): RequestResult<AgentProposeHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<AgentProposeHandlerResponses, unknown, ThrowOnError>({
+            url: '/agent-skills',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Fetch one skill. Agent callers.
+     */
+    public agentGetSkillHandler<ThrowOnError extends boolean = false>(options: Options<AgentGetSkillHandlerData, ThrowOnError>): RequestResult<AgentGetSkillHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).get<AgentGetSkillHandlerResponses, unknown, ThrowOnError>({ url: '/agent-skills/{id}', ...options });
+    }
+    
+    /**
      * Set the pricing for a model and recompute its recorded rows. Admin only.
      */
     public setPricingHandler<ThrowOnError extends boolean = false>(options: Options<SetPricingHandlerData, ThrowOnError>): RequestResult<SetPricingHandlerResponses, SetPricingHandlerErrors, ThrowOnError> {
@@ -98,6 +415,90 @@ export class Sdk extends HeyApiClient {
                 ...options.headers
             }
         });
+    }
+    
+    /**
+     * List tool policies. Internal callers only.
+     */
+    public listPoliciesHandler<ThrowOnError extends boolean = false>(options?: Options<ListPoliciesHandlerData, ThrowOnError>): RequestResult<ListPoliciesHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListPoliciesHandlerResponses, unknown, ThrowOnError>({ url: '/approval-policies', ...options });
+    }
+    
+    /**
+     * Insert or replace a tool policy. Internal callers only.
+     */
+    public upsertPolicyHandler<ThrowOnError extends boolean = false>(options: Options<UpsertPolicyHandlerData, ThrowOnError>): RequestResult<UpsertPolicyHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).put<UpsertPolicyHandlerResponses, unknown, ThrowOnError>({
+            url: '/approval-policies',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete a tool policy. Internal callers only.
+     */
+    public deletePolicyHandler<ThrowOnError extends boolean = false>(options: Options<DeletePolicyHandlerData, ThrowOnError>): RequestResult<DeletePolicyHandlerResponses, DeletePolicyHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).delete<DeletePolicyHandlerResponses, DeletePolicyHandlerErrors, ThrowOnError>({ url: '/approval-policies/{id}', ...options });
+    }
+    
+    /**
+     * The caller's personal inbox view: assigned plus team-queue items.
+     */
+    public listMyApprovalsHandler<ThrowOnError extends boolean = false>(options?: Options<ListMyApprovalsHandlerData, ThrowOnError>): RequestResult<ListMyApprovalsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListMyApprovalsHandlerResponses, unknown, ThrowOnError>({ url: '/approvals/mine', ...options });
+    }
+    
+    /**
+     * A team's full queue (members only).
+     */
+    public listTeamApprovalsHandler<ThrowOnError extends boolean = false>(options: Options<ListTeamApprovalsHandlerData, ThrowOnError>): RequestResult<ListTeamApprovalsHandlerResponses, ListTeamApprovalsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<ListTeamApprovalsHandlerResponses, ListTeamApprovalsHandlerErrors, ThrowOnError>({ url: '/approvals/teams/{team_id}', ...options });
+    }
+    
+    /**
+     * Fetch one approval request visible to the caller.
+     */
+    public getApprovalHandler<ThrowOnError extends boolean = false>(options: Options<GetApprovalHandlerData, ThrowOnError>): RequestResult<GetApprovalHandlerResponses, GetApprovalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<GetApprovalHandlerResponses, GetApprovalHandlerErrors, ThrowOnError>({ url: '/approvals/{id}', ...options });
+    }
+    
+    /**
+     * Approve or deny a pending request; resumes the agent runtime.
+     */
+    public decideApprovalHandler<ThrowOnError extends boolean = false>(options: Options<DecideApprovalHandlerData, ThrowOnError>): RequestResult<DecideApprovalHandlerResponses, DecideApprovalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<DecideApprovalHandlerResponses, DecideApprovalHandlerErrors, ThrowOnError>({
+            url: '/approvals/{id}/decide',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Reassign a pending request to another user or team ("this isn't mine").
+     */
+    public reassignApprovalHandler<ThrowOnError extends boolean = false>(options: Options<ReassignApprovalHandlerData, ThrowOnError>): RequestResult<ReassignApprovalHandlerResponses, ReassignApprovalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<ReassignApprovalHandlerResponses, ReassignApprovalHandlerErrors, ThrowOnError>({
+            url: '/approvals/{id}/reassign',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * An approval request's audited transition history.
+     */
+    public listApprovalTransitionsHandler<ThrowOnError extends boolean = false>(options: Options<ListApprovalTransitionsHandlerData, ThrowOnError>): RequestResult<ListApprovalTransitionsHandlerResponses, ListApprovalTransitionsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<ListApprovalTransitionsHandlerResponses, ListApprovalTransitionsHandlerErrors, ThrowOnError>({ url: '/approvals/{id}/transitions', ...options });
     }
     
     public getChatsForAttachmentHandler<ThrowOnError extends boolean = false>(options: Options<GetChatsForAttachmentHandlerData, ThrowOnError>): RequestResult<GetChatsForAttachmentHandlerResponses, GetChatsForAttachmentHandlerErrors, ThrowOnError> {
@@ -256,6 +657,126 @@ export class Sdk extends HeyApiClient {
     }
     
     /**
+     * List expert profiles. Internal callers only.
+     */
+    public listExpertsHandler<ThrowOnError extends boolean = false>(options?: Options<ListExpertsHandlerData, ThrowOnError>): RequestResult<ListExpertsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListExpertsHandlerResponses, unknown, ThrowOnError>({ url: '/escalation-routing/experts', ...options });
+    }
+    
+    /**
+     * Insert or replace an expert profile (availability, domains, tags).
+     * Internal callers only.
+     */
+    public upsertExpertHandler<ThrowOnError extends boolean = false>(options: Options<UpsertExpertHandlerData, ThrowOnError>): RequestResult<UpsertExpertHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).put<UpsertExpertHandlerResponses, unknown, ThrowOnError>({
+            url: '/escalation-routing/experts',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List routing rules. Internal callers only.
+     */
+    public listRulesHandler<ThrowOnError extends boolean = false>(options?: Options<ListRulesHandlerData, ThrowOnError>): RequestResult<ListRulesHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListRulesHandlerResponses, unknown, ThrowOnError>({ url: '/escalation-routing/rules', ...options });
+    }
+    
+    /**
+     * Insert or replace a routing rule. Internal callers only.
+     */
+    public upsertRuleHandler<ThrowOnError extends boolean = false>(options: Options<UpsertRuleHandlerData, ThrowOnError>): RequestResult<UpsertRuleHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).put<UpsertRuleHandlerResponses, unknown, ThrowOnError>({
+            url: '/escalation-routing/rules',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete a routing rule. Internal callers only.
+     */
+    public deleteRuleHandler<ThrowOnError extends boolean = false>(options: Options<DeleteRuleHandlerData, ThrowOnError>): RequestResult<DeleteRuleHandlerResponses, DeleteRuleHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).delete<DeleteRuleHandlerResponses, DeleteRuleHandlerErrors, ThrowOnError>({ url: '/escalation-routing/rules/{id}', ...options });
+    }
+    
+    /**
+     * The caller's personal inbox view: assigned plus claimable items.
+     */
+    public listMyEscalationsHandler<ThrowOnError extends boolean = false>(options?: Options<ListMyEscalationsHandlerData, ThrowOnError>): RequestResult<ListMyEscalationsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListMyEscalationsHandlerResponses, unknown, ThrowOnError>({ url: '/escalations/mine', ...options });
+    }
+    
+    /**
+     * A team's full queue (members only): unclaimed and claimed items.
+     */
+    public listTeamEscalationsHandler<ThrowOnError extends boolean = false>(options: Options<ListTeamEscalationsHandlerData, ThrowOnError>): RequestResult<ListTeamEscalationsHandlerResponses, ListTeamEscalationsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<ListTeamEscalationsHandlerResponses, ListTeamEscalationsHandlerErrors, ThrowOnError>({ url: '/escalations/teams/{team_id}', ...options });
+    }
+    
+    /**
+     * Fetch one escalation visible to the caller.
+     */
+    public getEscalationHandler<ThrowOnError extends boolean = false>(options: Options<GetEscalationHandlerData, ThrowOnError>): RequestResult<GetEscalationHandlerResponses, GetEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<GetEscalationHandlerResponses, GetEscalationHandlerErrors, ThrowOnError>({ url: '/escalations/{id}', ...options });
+    }
+    
+    /**
+     * Cancel without a resolution.
+     */
+    public cancelEscalationHandler<ThrowOnError extends boolean = false>(options: Options<CancelEscalationHandlerData, ThrowOnError>): RequestResult<CancelEscalationHandlerResponses, CancelEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<CancelEscalationHandlerResponses, CancelEscalationHandlerErrors, ThrowOnError>({ url: '/escalations/{id}/cancel', ...options });
+    }
+    
+    /**
+     * Claim an open escalation (first claim wins).
+     */
+    public claimEscalationHandler<ThrowOnError extends boolean = false>(options: Options<ClaimEscalationHandlerData, ThrowOnError>): RequestResult<ClaimEscalationHandlerResponses, ClaimEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<ClaimEscalationHandlerResponses, ClaimEscalationHandlerErrors, ThrowOnError>({ url: '/escalations/{id}/claim', ...options });
+    }
+    
+    /**
+     * Reassign to another user or team queue, with a required reason.
+     */
+    public reassignEscalationHandler<ThrowOnError extends boolean = false>(options: Options<ReassignEscalationHandlerData, ThrowOnError>): RequestResult<ReassignEscalationHandlerResponses, ReassignEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<ReassignEscalationHandlerResponses, ReassignEscalationHandlerErrors, ThrowOnError>({
+            url: '/escalations/{id}/reassign',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Resolve with an expert answer; resumes the agent runtime.
+     */
+    public resolveEscalationHandler<ThrowOnError extends boolean = false>(options: Options<ResolveEscalationHandlerData, ThrowOnError>): RequestResult<ResolveEscalationHandlerResponses, ResolveEscalationHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).post<ResolveEscalationHandlerResponses, ResolveEscalationHandlerErrors, ThrowOnError>({
+            url: '/escalations/{id}/resolve',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * An escalation's audited transition history.
+     */
+    public listTransitionsHandler<ThrowOnError extends boolean = false>(options: Options<ListTransitionsHandlerData, ThrowOnError>): RequestResult<ListTransitionsHandlerResponses, ListTransitionsHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<ListTransitionsHandlerResponses, ListTransitionsHandlerErrors, ThrowOnError>({ url: '/escalations/{id}/transitions', ...options });
+    }
+    
+    /**
      * Health check
      */
     public healthHandler<ThrowOnError extends boolean = false>(options?: Options<HealthHandlerData, ThrowOnError>): RequestResult<HealthHandlerResponses, unknown, ThrowOnError> {
@@ -296,6 +817,42 @@ export class Sdk extends HeyApiClient {
      */
     public getStateHandler<ThrowOnError extends boolean = false>(options?: Options<GetStateHandlerData, ThrowOnError>): RequestResult<GetStateHandlerResponses, GetStateHandlerErrors, ThrowOnError> {
         return (options?.client ?? this.client).get<GetStateHandlerResponses, GetStateHandlerErrors, ThrowOnError>({ url: '/import/state', ...options });
+    }
+    
+    /**
+     * The caller's unified review inbox across escalations, approvals, and
+     * skill proposals.
+     */
+    public listMyInboxHandler<ThrowOnError extends boolean = false>(options?: Options<ListMyInboxHandlerData, ThrowOnError>): RequestResult<ListMyInboxHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListMyInboxHandlerResponses, unknown, ThrowOnError>({ url: '/inbox/mine', ...options });
+    }
+    
+    /**
+     * Register a provider account.
+     */
+    public registerAccountHandler<ThrowOnError extends boolean = false>(options: Options<RegisterAccountHandlerData, ThrowOnError>): RequestResult<RegisterAccountHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RegisterAccountHandlerResponses, unknown, ThrowOnError>({
+            url: '/lifecycle-connectors/accounts',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Ingest a batch of provider records.
+     */
+    public ingestHandler<ThrowOnError extends boolean = false>(options: Options<IngestHandlerData, ThrowOnError>): RequestResult<IngestHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<IngestHandlerResponses, unknown, ThrowOnError>({
+            url: '/lifecycle-connectors/accounts/{id}/ingest',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
     }
     
     /**
@@ -416,6 +973,69 @@ export class Sdk extends HeyApiClient {
     }
     
     /**
+     * Record an eval run that may gate promotion. Internal callers.
+     */
+    public recordEvalHandler<ThrowOnError extends boolean = false>(options: Options<RecordEvalHandlerData, ThrowOnError>): RequestResult<RecordEvalHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RecordEvalHandlerResponses, unknown, ThrowOnError>({
+            url: '/skill-evals',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Personal inbox of skill proposals.
+     */
+    public listMyProposalsHandler<ThrowOnError extends boolean = false>(options?: Options<ListMyProposalsHandlerData, ThrowOnError>): RequestResult<ListMyProposalsHandlerResponses, unknown, ThrowOnError> {
+        return (options?.client ?? this.client).get<ListMyProposalsHandlerResponses, unknown, ThrowOnError>({ url: '/skill-proposals/mine', ...options });
+    }
+    
+    /**
+     * Fetch one proposal visible to the caller.
+     */
+    public getProposalHandler<ThrowOnError extends boolean = false>(options: Options<GetProposalHandlerData, ThrowOnError>): RequestResult<GetProposalHandlerResponses, GetProposalHandlerErrors, ThrowOnError> {
+        return (options.client ?? this.client).get<GetProposalHandlerResponses, GetProposalHandlerErrors, ThrowOnError>({ url: '/skill-proposals/{id}', ...options });
+    }
+    
+    /**
+     * Approve or reject a pending proposal.
+     */
+    public decideProposalHandler<ThrowOnError extends boolean = false>(options: Options<DecideProposalHandlerData, ThrowOnError>): RequestResult<DecideProposalHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<DecideProposalHandlerResponses, unknown, ThrowOnError>({
+            url: '/skill-proposals/{id}/decide',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Roll an approved proposal back to its snapshot.
+     */
+    public rollbackProposalHandler<ThrowOnError extends boolean = false>(options: Options<RollbackProposalHandlerData, ThrowOnError>): RequestResult<RollbackProposalHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RollbackProposalHandlerResponses, unknown, ThrowOnError>({ url: '/skill-proposals/{id}/rollback', ...options });
+    }
+    
+    /**
+     * Ingest a trace-refinement job. Internal callers.
+     */
+    public refineHandler<ThrowOnError extends boolean = false>(options: Options<RefineHandlerData, ThrowOnError>): RequestResult<RefineHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RefineHandlerResponses, unknown, ThrowOnError>({
+            url: '/skill-refinements',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
      * Send a new chat message and stream the AI response.
      *
      * This endpoint initiates a chat message and streams the response via the stream service.
@@ -453,6 +1073,76 @@ export class Sdk extends HeyApiClient {
     public structuredCompletion<ThrowOnError extends boolean = false>(options: Options<StructuredCompletionData, ThrowOnError>): RequestResult<StructuredCompletionResponses, StructuredCompletionErrors, ThrowOnError> {
         return (options.client ?? this.client).post<StructuredCompletionResponses, StructuredCompletionErrors, ThrowOnError>({
             url: '/structured-completion',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Register a draft extension.
+     */
+    public registerExtensionHandler<ThrowOnError extends boolean = false>(options: Options<RegisterExtensionHandlerData, ThrowOnError>): RequestResult<RegisterExtensionHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RegisterExtensionHandlerResponses, unknown, ThrowOnError>({
+            url: '/tenant-extensions',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Activate (candidate-set swap).
+     */
+    public activateExtensionHandler<ThrowOnError extends boolean = false>(options: Options<ActivateExtensionHandlerData, ThrowOnError>): RequestResult<ActivateExtensionHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<ActivateExtensionHandlerResponses, unknown, ThrowOnError>({ url: '/tenant-extensions/{id}/activate', ...options });
+    }
+    
+    /**
+     * Delist kill switch.
+     */
+    public disableExtensionHandler<ThrowOnError extends boolean = false>(options: Options<DisableExtensionHandlerData, ThrowOnError>): RequestResult<DisableExtensionHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<DisableExtensionHandlerResponses, unknown, ThrowOnError>({ url: '/tenant-extensions/{id}/disable', ...options });
+    }
+    
+    /**
+     * Rollback to the latest snapshot.
+     */
+    public rollbackExtensionHandler<ThrowOnError extends boolean = false>(options: Options<RollbackExtensionHandlerData, ThrowOnError>): RequestResult<RollbackExtensionHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RollbackExtensionHandlerResponses, unknown, ThrowOnError>({ url: '/tenant-extensions/{id}/rollback', ...options });
+    }
+    
+    /**
+     * Upsert a Zendesk/Jira mirror.
+     */
+    public upsertMirrorHandler<ThrowOnError extends boolean = false>(options: Options<UpsertMirrorHandlerData, ThrowOnError>): RequestResult<UpsertMirrorHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<UpsertMirrorHandlerResponses, unknown, ThrowOnError>({
+            url: '/ticket-mirrors',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Disconnect a mirror without changing the native entity.
+     */
+    public disconnectMirrorHandler<ThrowOnError extends boolean = false>(options: Options<DisconnectMirrorHandlerData, ThrowOnError>): RequestResult<DisconnectMirrorHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<DisconnectMirrorHandlerResponses, unknown, ThrowOnError>({ url: '/ticket-mirrors/{id}/disconnect', ...options });
+    }
+    
+    /**
+     * Run a training-export projection.
+     */
+    public runExportHandler<ThrowOnError extends boolean = false>(options: Options<RunExportHandlerData, ThrowOnError>): RequestResult<RunExportHandlerResponses, unknown, ThrowOnError> {
+        return (options.client ?? this.client).post<RunExportHandlerResponses, unknown, ThrowOnError>({
+            url: '/training-export',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

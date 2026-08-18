@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO approval_policies (\n                id, org_id, agent_slug, tool_name, decision,\n                approver_user_id, approver_team_id\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT (org_id, agent_slug, tool_name)\n            DO UPDATE SET decision = EXCLUDED.decision,\n                          approver_user_id = EXCLUDED.approver_user_id,\n                          approver_team_id = EXCLUDED.approver_team_id,\n                          updated_at = now()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3ddab16e3bf594d576dd3e8bef1540628a1f1672fc035690ca740f7f0cb48ce1"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE lifecycle_connector_accounts\n            SET last_synced_at = $2, last_cursor = $3\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c86cac2412dee377a025c82cc0c871d361aba1ca5f78faa74a60d5438085e1ec"
+}

@@ -1,0 +1,85 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, provider, native_entity_type, native_entity_id,\n                   foreign_id, foreign_url, summary, status, last_mirrored_at,\n                   disconnected_at\n            FROM ticket_mirrors\n            WHERE org_id IS NOT DISTINCT FROM $1\n              AND native_entity_type = $2\n              AND native_entity_id = $3\n              AND provider = $4\n              AND disconnected_at IS NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "native_entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "native_entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "foreign_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "foreign_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_mirrored_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "disconnected_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "a0a0c0a3627a9d128f2c76743349cf1eec77c62a73fd8d75e7cc4ac0d94ffbbf"
+}

@@ -237,6 +237,10 @@ const ROUTES: RouteDefinition[] = [
     component: LAYOUT_ROUTE.component,
   },
   {
+    path: '/agent-review',
+    component: LAYOUT_ROUTE.component,
+  },
+  {
     path: '/reminders',
     component: LAYOUT_ROUTE.component,
   },

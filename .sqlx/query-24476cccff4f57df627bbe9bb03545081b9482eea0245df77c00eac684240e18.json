@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, org_id, domain, position, tags, source_channel,\n                   min_priority, target_kind, target_user_id, target_team_id\n            FROM escalation_routing_rules\n            WHERE org_id IS NOT DISTINCT FROM $1\n            ORDER BY domain ASC, position ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "position",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "source_channel",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "min_priority",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "target_kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "target_user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "target_team_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "24476cccff4f57df627bbe9bb03545081b9482eea0245df77c00eac684240e18"
+}
