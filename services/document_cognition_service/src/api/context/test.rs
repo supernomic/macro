@@ -473,6 +473,7 @@ pub async fn test_api_context(pool: sqlx::Pool<sqlx::Postgres>) -> std::sync::Ar
             skill_governance::outbound::PgSkillRepo::new(pool.clone()),
             skill_governance::outbound::PgProposalRepo::new(pool.clone()),
             skill_governance::outbound::PgTeamMembership::new(pool.clone()),
+            skill_governance::outbound::NoopNotifier,
         );
     let skill_governance_facade = Arc::new(
         skill_governance::domain::facade::AgentSkillFacade::new(skill_governance_service.clone()),

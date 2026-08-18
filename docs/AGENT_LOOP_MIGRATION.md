@@ -25,7 +25,10 @@ If the flag is on but the base URL is missing or not a URL, DCS logs an error an
 
 When the flag is on and the base URL is set:
 
-1. DCS `chat_id` is the Flue conversation id (no new Macro table).
+1. DCS `chat_id` is the Flue conversation id. Flue maps it to a Macro
+   session via `apps/agents/src/sessions/map.ts`: `native_chat` keyed by
+   that id (`slack_thread` when the conversation started in Slack). No
+   extra `agent_chat_session_map` table.
 2. `POST {FLUENT_BASE_URL}/agents/super-agent/{chat_id}` with
    `{ "kind": "user", "body": "<user text>" }`.
 3. Long-poll `GET ...?view=updates&offset=...&live=long-poll` and map Flue

@@ -598,6 +598,7 @@ async fn main() -> anyhow::Result<()> {
             skill_governance::outbound::PgSkillRepo::new(db.clone()),
             skill_governance::outbound::PgProposalRepo::new(db.clone()),
             skill_governance::outbound::PgTeamMembership::new(db.clone()),
+            skill_governance::outbound::NoopNotifier,
         );
     let skill_governance_facade = Arc::new(
         skill_governance::domain::facade::AgentSkillFacade::new(skill_governance_service.clone()),

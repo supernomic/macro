@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use super::*;
 use crate::domain::model::{NewProposal, ProposalKind, ProposalStatus, SkillScope, content_hash};
-use crate::domain::ports::{ProposalFilter, SkillFilter};
+use crate::domain::ports::{ProposalFilter, SkillFilter, SkillNotifier};
 use chrono::Utc;
 use macro_uuid::Uuid;
 
@@ -194,20 +194,77 @@ impl TeamMembershipPort for FakeTeams {
             .cloned()
             .unwrap_or_default())
     }
+
+    async fn team_members(&self, team_id: Uuid) -> Result<Vec<String>> {
+        let mut members: Vec<String> = self
+            .membership
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(_, teams)| teams.contains(&team_id))
+            .map(|(user, _)| user.clone())
+            .collect();
+        members.sort();
+        Ok(members)
+    }
 }
 
-fn svc() -> SkillGovernanceServiceImpl<FakeSkills, FakeProposals, FakeTeams> {
+#[derive(Clone, Default)]
+struct Silent;
+
+impl SkillNotifier for Silent {
+    async fn notify_assigned(
+        &self,
+        _proposal: &SkillProposal,
+        _recipient_user_ids: &[String],
+    ) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+struct NotifyCall {
+    proposal_id: Uuid,
+    recipients: Vec<String>,
+}
+
+#[derive(Clone, Default)]
+struct FakeNotifier {
+    assigned: Arc<Mutex<Vec<NotifyCall>>>,
+}
+
+impl SkillNotifier for FakeNotifier {
+    async fn notify_assigned(
+        &self,
+        proposal: &SkillProposal,
+        recipient_user_ids: &[String],
+    ) -> Result<()> {
+        self.assigned.lock().unwrap().push(NotifyCall {
+            proposal_id: proposal.id,
+            recipients: recipient_user_ids.to_vec(),
+        });
+        Ok(())
+    }
+}
+
+fn svc() -> SkillGovernanceServiceImpl<FakeSkills, FakeProposals, FakeTeams, Silent> {
     SkillGovernanceServiceImpl::new(
         FakeSkills::default(),
         FakeProposals::default(),
         FakeTeams::default(),
+        Silent,
     )
 }
 
 fn svc_with_teams(
     teams: FakeTeams,
-) -> SkillGovernanceServiceImpl<FakeSkills, FakeProposals, FakeTeams> {
-    SkillGovernanceServiceImpl::new(FakeSkills::default(), FakeProposals::default(), teams)
+) -> SkillGovernanceServiceImpl<FakeSkills, FakeProposals, FakeTeams, Silent> {
+    SkillGovernanceServiceImpl::new(
+        FakeSkills::default(),
+        FakeProposals::default(),
+        teams,
+        Silent,
+    )
 }
 
 fn user_create(slug: &str) -> NewProposal {
@@ -776,4 +833,85 @@ async fn propose_same_pending_slug_returns_existing() {
         .unwrap();
     assert_eq!(first.id, second.id);
     assert_eq!(first.status, ProposalStatus::Pending);
+}
+
+#[tokio::test]
+async fn propose_notifies_direct_assignee() {
+    let notifier = FakeNotifier::default();
+    let svc = SkillGovernanceServiceImpl::new(
+        FakeSkills::default(),
+        FakeProposals::default(),
+        FakeTeams::default(),
+        notifier.clone(),
+    );
+    let mut proposal = org_create("vpn-reset");
+    proposal.assignee_user_id = Some("alice".into());
+    let row = svc
+        .propose(Some(1), proposal, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+    let assigned = notifier.assigned.lock().unwrap().clone();
+    assert_eq!(assigned.len(), 1);
+    assert_eq!(assigned[0].proposal_id, row.id);
+    assert_eq!(assigned[0].recipients, vec!["alice".to_string()]);
+}
+
+#[tokio::test]
+async fn propose_notifies_team_members_when_unassigned() {
+    let team_id = macro_uuid::generate_uuid_v7();
+    let teams = FakeTeams::with_member("bob", team_id);
+    let notifier = FakeNotifier::default();
+    let svc = SkillGovernanceServiceImpl::new(
+        FakeSkills::default(),
+        FakeProposals::default(),
+        teams,
+        notifier.clone(),
+    );
+    let mut proposal = org_create("sso");
+    proposal.assignee_team_id = Some(team_id);
+    let row = svc
+        .propose(Some(1), proposal, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+    let assigned = notifier.assigned.lock().unwrap().clone();
+    assert_eq!(assigned.len(), 1);
+    assert_eq!(assigned[0].proposal_id, row.id);
+    assert_eq!(assigned[0].recipients, vec!["bob".to_string()]);
+}
+
+#[tokio::test]
+async fn auto_applied_personal_create_does_not_notify() {
+    let notifier = FakeNotifier::default();
+    let svc = SkillGovernanceServiceImpl::new(
+        FakeSkills::default(),
+        FakeProposals::default(),
+        FakeTeams::default(),
+        notifier.clone(),
+    );
+    let row = svc
+        .propose(Some(1), user_create("mine"), None, Some("user-1".into()))
+        .await
+        .unwrap();
+    assert_eq!(row.status, ProposalStatus::Approved);
+    assert!(notifier.assigned.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn propose_same_pending_slug_does_not_notify_again() {
+    let notifier = FakeNotifier::default();
+    let svc = SkillGovernanceServiceImpl::new(
+        FakeSkills::default(),
+        FakeProposals::default(),
+        FakeTeams::default(),
+        notifier.clone(),
+    );
+    let mut proposal = org_create("trace-refine-xyz");
+    proposal.assignee_user_id = Some("alice".into());
+    svc.propose(Some(1), proposal.clone(), Some("agent-1".into()), None)
+        .await
+        .unwrap();
+    svc.propose(Some(1), proposal, Some("agent-1".into()), None)
+        .await
+        .unwrap();
+    assert_eq!(notifier.assigned.lock().unwrap().len(), 1);
 }

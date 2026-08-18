@@ -34,4 +34,19 @@ impl TeamMembershipPort for PgTeamMembership {
         .await?;
         Ok(rows.into_iter().map(|r| r.team_id).collect())
     }
+
+    #[tracing::instrument(skip(self), err)]
+    async fn team_members(&self, team_id: Uuid) -> Result<Vec<String>> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT user_id FROM team_user
+            WHERE team_id = $1
+            ORDER BY user_id
+            "#,
+            team_id,
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows.into_iter().map(|r| r.user_id).collect())
+    }
 }

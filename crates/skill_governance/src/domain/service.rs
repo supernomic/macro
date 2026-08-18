@@ -12,7 +12,9 @@ use super::model::{
     SkillCatalogEntry, SkillEvalRun, SkillProposal, SkillRecord, SkillScope, SkillSnapshot,
     TraceRefinement, TrustTier, content_hash,
 };
-use super::ports::{ProposalFilter, ProposalRepo, SkillFilter, SkillRepo, TeamMembershipPort};
+use super::ports::{
+    ProposalFilter, ProposalRepo, SkillFilter, SkillNotifier, SkillRepo, TeamMembershipPort,
+};
 
 const DEFAULT_LIST_LIMIT: i64 = 100;
 
@@ -117,24 +119,54 @@ pub trait SkillGovernanceService: Send + Sync + 'static {
 
 /// Concrete governance service over the storage ports.
 #[derive(Debug, Clone)]
-pub struct SkillGovernanceServiceImpl<S, P, T> {
+pub struct SkillGovernanceServiceImpl<S, P, T, N> {
     skills: S,
     proposals: P,
     teams: T,
+    notifier: N,
 }
 
-impl<S, P, T> SkillGovernanceServiceImpl<S, P, T>
+impl<S, P, T, N> SkillGovernanceServiceImpl<S, P, T, N>
 where
     S: SkillRepo,
     P: ProposalRepo,
     T: TeamMembershipPort,
+    N: SkillNotifier,
 {
     /// Build the service over its ports.
-    pub fn new(skills: S, proposals: P, teams: T) -> Self {
+    pub fn new(skills: S, proposals: P, teams: T, notifier: N) -> Self {
         Self {
             skills,
             proposals,
             teams,
+            notifier,
+        }
+    }
+
+    async fn notify(&self, proposal: &SkillProposal, recipients: &[String]) {
+        if recipients.is_empty() {
+            return;
+        }
+        let _ = self
+            .notifier
+            .notify_assigned(proposal, recipients)
+            .await
+            .inspect_err(|e| {
+                tracing::error!(
+                    error = ?e,
+                    proposal_id = %proposal.id,
+                    "skill proposal notification failed"
+                )
+            });
+    }
+
+    async fn recipients_for(&self, proposal: &SkillProposal) -> Vec<String> {
+        if let Some(user) = &proposal.assignee_user_id {
+            vec![user.clone()]
+        } else if let Some(team) = proposal.assignee_team_id {
+            self.teams.team_members(team).await.unwrap_or_default()
+        } else {
+            Vec::new()
         }
     }
 
@@ -331,11 +363,12 @@ fn visible_in_catalog(
         && in_caller_tenancy(skill, org_id, user_id, team_ids)
 }
 
-impl<S, P, T> SkillGovernanceService for SkillGovernanceServiceImpl<S, P, T>
+impl<S, P, T, N> SkillGovernanceService for SkillGovernanceServiceImpl<S, P, T, N>
 where
     S: SkillRepo,
     P: ProposalRepo,
     T: TeamMembershipPort,
+    N: SkillNotifier,
 {
     #[tracing::instrument(skip(self), err)]
     async fn catalog_for(
@@ -475,6 +508,10 @@ where
         }
 
         self.proposals.insert(&row).await?;
+        if row.status == ProposalStatus::Pending {
+            let recipients = self.recipients_for(&row).await;
+            self.notify(&row, &recipients).await;
+        }
         Ok(row)
     }
 

@@ -25,6 +25,7 @@ import {
   sessionContextFor,
   superAgentRuntimeInstance,
 } from '../sessions/macro-session.ts';
+import { externalThreadFor } from '../sessions/map.ts';
 import { mountGovernedSkills } from '../skills/mount.ts';
 import { readDocument } from '../tools/documents/read-document.ts';
 import { createEscalation } from '../tools/escalations/create-escalation.ts';
@@ -93,12 +94,7 @@ export function SuperAgent({ id }: { id: string }) {
   const session = sessionContextFor({
     runtime: superAgentRuntimeInstance(),
     conversationId: id,
-    externalThread: slack
-      ? {
-          kind: 'slack_thread',
-          key: `${slack.channelId}:${slack.threadTs}`,
-        }
-      : undefined,
+    externalThread: externalThreadFor(id, slack),
   });
 
   const tools: MacroToolDef[] = [

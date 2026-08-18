@@ -105,4 +105,18 @@ pub trait ProposalRepo: Send + Sync + 'static {
 pub trait TeamMembershipPort: Send + Sync + 'static {
     /// Team ids the user belongs to.
     fn user_teams(&self, user_id: &str) -> impl Future<Output = Result<Vec<Uuid>>> + Send;
+
+    /// Member user ids of a team, in a stable order.
+    fn team_members(&self, team_id: Uuid) -> impl Future<Output = Result<Vec<String>>> + Send;
+}
+
+/// Port for notifying humans about skill-proposal activity. A no-op
+/// implementation is valid where notifications are not wired.
+pub trait SkillNotifier: Send + Sync + 'static {
+    /// Notify users that a proposal needs their attention.
+    fn notify_assigned(
+        &self,
+        proposal: &SkillProposal,
+        recipient_user_ids: &[String],
+    ) -> impl Future<Output = Result<()>> + Send;
 }

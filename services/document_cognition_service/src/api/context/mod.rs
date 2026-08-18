@@ -125,6 +125,7 @@ pub type DcsSkillGovernanceService = skill_governance::domain::service::SkillGov
     skill_governance::outbound::PgSkillRepo,
     skill_governance::outbound::PgProposalRepo,
     skill_governance::outbound::PgTeamMembership,
+    skill_governance::outbound::NoopNotifier,
 >;
 
 /// Agent-facing skills facade (scope + tenancy policy).
