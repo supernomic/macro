@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE \"User\"\n        SET workos_user_id = $2\n        WHERE email = $1\n          AND (workos_user_id IS NULL OR workos_user_id = $2)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0539045f15aeba6d373a491b460b565815645e7288516ebdba9e083e705c0363"
+}

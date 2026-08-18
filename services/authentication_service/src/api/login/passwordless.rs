@@ -67,6 +67,34 @@ pub async fn handler(
         }
     };
 
+    if ctx.workos_client.is_configured() {
+        match macro_db_client::user::organization::organization_requires_workos_sso(
+            &ctx.db,
+            &lowercase_email,
+        )
+        .await
+        {
+            Ok(true) => {
+                return Ok((
+                    StatusCode::ACCEPTED,
+                    Json(SsoRequiredResponse {
+                        idp_id: authentication_service::service::workos::WORKOS_IDP_ID.to_string(),
+                    }),
+                )
+                    .into_response());
+            }
+            Ok(false) => {}
+            Err(e) => {
+                tracing::error!(error=?e, "unable to check WorkOS organization matching");
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "unable to lookup identity providers",
+                )
+                    .into_response());
+            }
+        }
+    }
+
     let blocked_email_without_alias = email_validator::remove_email_alias(&lowercase_email)
         .unwrap_or(Cow::Borrowed(lowercase_email.as_str()))
         .to_string();

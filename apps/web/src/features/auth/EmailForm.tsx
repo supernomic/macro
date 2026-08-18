@@ -77,9 +77,14 @@ export const sendEmailCode = action(async (formData: FormData) => {
     ) {
       throw new Error('Unable to start SSO login for this email.');
     }
-    const ssoUrl = new URL(`${SERVER_HOSTS['auth-service']}/login/sso`);
-    ssoUrl.searchParams.set('idp_id', body.idp_id);
-    ssoUrl.searchParams.set('login_hint', email);
+    const authPath = body.idp_id === 'workos' ? '/login/workos' : '/login/sso';
+    const ssoUrl = new URL(`${SERVER_HOSTS['auth-service']}${authPath}`);
+    if (body.idp_id === 'workos') {
+      ssoUrl.searchParams.set('login_hint', email);
+    } else {
+      ssoUrl.searchParams.set('idp_id', body.idp_id);
+      ssoUrl.searchParams.set('login_hint', email);
+    }
     if (referral_code) ssoUrl.searchParams.set('referral_code', referral_code);
     window.location.href = ssoUrl.toString();
     return false; // passwordless login flow is not reached

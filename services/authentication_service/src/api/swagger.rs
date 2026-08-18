@@ -38,6 +38,7 @@ use crate::api::user::post_get_names_with_email::GetNamesWithEmailRequestBody;
 use crate::api::user::stripe::StripeSessionResponse;
 use crate::api::user::stripe::create_checkout_session_v2::CreateCheckoutSessionV2Request;
 use crate::api::user::stripe::create_portal_session::CreatePortalSessionRequest;
+use crate::api::user::workos_portal::WorkOsPortalResponse;
 use crate::api::{
     email, github_pull_requests, health, jwt, link, login, logout, merge, mobile_welcome_email,
     oauth, oauth2, permissions, session, user,
@@ -68,6 +69,8 @@ use model::user::{
                 /// /login
                 login::passwordless::handler,
                 login::sso::handler,
+                login::workos::login_handler,
+                login::workos::callback_handler,
                 login::password::handler,
                 login::apple::handler,
 
@@ -110,6 +113,7 @@ use model::user::{
                 user::post_get_names_with_email::handler,
                 user::get_user_link_exists::handler,
                 user::get_user_organization::handler,
+                user::workos_portal::handler,
                 user::get_user_quota::handler,
                 user::get_legacy_user_permissions::handler,
                 user::patch_tutorial::handler,
@@ -196,6 +200,7 @@ use model::user::{
 
                         UserQuota,
                         UserOrganizationResponse,
+                        WorkOsPortalResponse,
                         GetLegacyUserPermissionsResponse,
                         PatchUserTutorialRequest,
 

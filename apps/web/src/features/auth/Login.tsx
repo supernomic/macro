@@ -52,7 +52,7 @@ import {
 } from './EmailForm';
 import { OtpInput } from './OtpInput';
 import { Stage } from './Shared';
-import { useSsoLogin } from './useSsoLogin';
+import { useSsoLogin, useWorkosLogin } from './useSsoLogin';
 
 function PostLoginRedirect() {
   const navigate = useNavigate();
@@ -109,6 +109,7 @@ function LoginPicker(props: {
 }) {
   const analytics = useAnalytics();
   const startSsoLogin = useSsoLogin({ signupMode: props.signupMode });
+  const startWorkosLogin = useWorkosLogin({ signupMode: props.signupMode });
   // Apple sign-in is iOS-only: it's required there for App Store review,
   // and intentionally absent on desktop.
   const showApple = getNativeMobilePlatform() === 'ios';
@@ -129,6 +130,10 @@ function LoginPicker(props: {
       >
         <IconGoogle />
         Continue with Google
+      </Button>
+
+      <Button variant="base" class="bg-surface" onClick={startWorkosLogin}>
+        Continue with SSO
       </Button>
 
       <Show when={showApple}>

@@ -47,6 +47,9 @@ maybe_env_vars! {
     pub struct PosthogApiKey;
     pub struct PosthogHost;
     pub struct LoopsApiKey;
+    pub struct WorkosApiKey;
+    pub struct WorkosClientId;
+    pub struct WorkosRedirectUri;
 }
 
 /// The configuration parameters for the application.
@@ -121,6 +124,14 @@ pub struct Config {
     /// Loops API key (optional). When set, Macro sign-ups are added to our
     /// Loops audience.
     pub loops_api_key: LoopsApiKey,
+    /// WorkOS API key (optional). When set with `workos_client_id`, company
+    /// SSO goes through our WorkOS environment.
+    pub workos_api_key: WorkosApiKey,
+    /// WorkOS client id (optional).
+    pub workos_client_id: WorkosClientId,
+    /// WorkOS AuthKit redirect URI (optional). Defaults to
+    /// `{BASE_URL}/login/workos/callback`.
+    pub workos_redirect_uri: WorkosRedirectUri,
     /// The stripe price id
     pub stripe_price_id: StripePriceId,
     /// The internal api key

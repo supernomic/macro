@@ -61,6 +61,7 @@ use teams::{
         team_analytics::AnalyticsClientTeamAnalytics, team_repo::TeamRepositoryImpl,
     },
 };
+use workos_client::WorkOsClient;
 
 use referral::{
     domain::service::ReferralServiceImpl,
@@ -304,6 +305,36 @@ async fn main() -> anyhow::Result<()> {
     };
     tracing::trace!("initialized loops client");
 
+    let workos_client = match (
+        config
+            .workos_api_key
+            .value()
+            .filter(|v| !v.trim().is_empty()),
+        config
+            .workos_client_id
+            .value()
+            .filter(|v| !v.trim().is_empty()),
+    ) {
+        (Some(api_key), Some(client_id)) => {
+            let redirect_uri = config
+                .workos_redirect_uri
+                .value()
+                .filter(|v| !v.trim().is_empty())
+                .map(str::to_string)
+                .unwrap_or_else(|| format!("{}/login/workos/callback", *crate::config::BASE_URL));
+            tracing::info!("configuring WorkOS AuthKit");
+            WorkOsClient::new(api_key.to_string(), client_id.to_string(), redirect_uri)
+        }
+        (None, None) => WorkOsClient::noop(),
+        _ => {
+            tracing::warn!(
+                "WORKOS_API_KEY and WORKOS_CLIENT_ID must both be set; WorkOS login disabled"
+            );
+            WorkOsClient::noop()
+        }
+    };
+    tracing::trace!("initialized workos client");
+
     let user_roles_and_permissions_macro_db = MacroDB::new(db.clone());
 
     let user_roles_and_permissions_service = UserRolesAndPermissionsServiceImpl::new(
@@ -457,6 +488,7 @@ async fn main() -> anyhow::Result<()> {
                 },
             }),
             loops_client: Arc::new(loops_client),
+            workos_client: Arc::new(workos_client),
             analytics_client,
             stripe_price_id: config.stripe_price_id.to_string(),
         },

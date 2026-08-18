@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![recursion_limit = "512"]
 
 mod api;
 mod config;

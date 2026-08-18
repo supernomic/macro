@@ -14,6 +14,7 @@ pub(in crate::api) mod apple;
 pub(in crate::api) mod password;
 pub(in crate::api) mod passwordless;
 pub(in crate::api) mod sso;
+pub(in crate::api) mod workos;
 
 pub fn router(state: ApiContext) -> Router<ApiContext> {
     Router::new()
@@ -35,4 +36,9 @@ pub fn router(state: ApiContext) -> Router<ApiContext> {
             post(apple::handler).layer(ServiceBuilder::new().layer(CookieManagerLayer::new())),
         )
         .route("/sso", get(sso::handler))
+        .route("/workos", get(workos::login_handler))
+        .route(
+            "/workos/callback",
+            get(workos::callback_handler).layer(CookieManagerLayer::new()),
+        )
 }

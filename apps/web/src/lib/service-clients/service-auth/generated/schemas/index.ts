@@ -128,3 +128,5 @@ export * from './userProfilePicture';
 export * from './userProfilePictureChecksum';
 export * from './userQuota';
 export * from './userTokensResponse';
+export * from './workOsPortalResponse';
+export * from './workosLoginParams';

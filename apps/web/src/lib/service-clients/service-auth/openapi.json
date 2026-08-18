@@ -1113,6 +1113,130 @@
         }
       }
     },
+    "/login/workos": {
+      "get": {
+        "tags": ["login::workos"],
+        "summary": "Initiates a WorkOS AuthKit login. Customer companies sign in here and are\nmatched to an organization in our WorkOS environment.",
+        "operationId": "workos_login",
+        "parameters": [
+          {
+            "name": "login_hint",
+            "in": "query",
+            "description": "**OPTIONAL**. Prefill the AuthKit email field.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "original_url",
+            "in": "query",
+            "description": "**OPTIONAL**. The original url you came from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_mobile",
+            "in": "query",
+            "description": "**OPTIONAL**. If the authentication request is from a mobile device.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referral_code",
+            "in": "query",
+            "description": "**OPTIONAL**. If the user opened a link with a referral code.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "signup",
+            "in": "query",
+            "description": "**OPTIONAL**. Show the AuthKit sign-up screen first.",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/workos/callback": {
+      "get": {
+        "tags": ["login::workos"],
+        "summary": "Completes a WorkOS AuthKit login and issues Macro session cookies.",
+        "operationId": "workos_callback",
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "307": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/logout": {
       "post": {
         "tags": ["logout"],
@@ -3528,6 +3652,65 @@
           }
         }
       }
+    },
+    "/user/workos/portal": {
+      "post": {
+        "tags": ["user::workos_portal"],
+        "summary": "Creates (or reuses) a WorkOS organization for the caller's Macro tenant and\nreturns an Admin Portal link so that company can configure SSO against us.",
+        "operationId": "generate_workos_portal_link",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOsPortalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4770,6 +4953,20 @@
           "refresh_token": {
             "type": "string",
             "description": "The users refresh token"
+          }
+        }
+      },
+      "WorkOsPortalResponse": {
+        "type": "object",
+        "required": ["url", "workosOrganizationId"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "One-time WorkOS Admin Portal URL for SSO setup."
+          },
+          "workosOrganizationId": {
+            "type": "string",
+            "description": "WorkOS organization id linked to the caller's Macro organization."
           }
         }
       }

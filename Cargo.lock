@@ -1145,6 +1145,7 @@ dependencies = [
  "foreign_entity",
  "fusionauth",
  "futures",
+ "generic_email_domains",
  "github",
  "http-body-util",
  "jsonwebtoken 10.3.0",
@@ -1211,6 +1212,7 @@ dependencies = [
  "utoipa",
  "utoipa-swagger-ui",
  "uuid",
+ "workos_client",
  "workspace-hack",
 ]
 
@@ -16938,6 +16940,21 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "workos_client"
+version = "0.1.0"
+dependencies = [
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "url",
+ "wiremock",
  "workspace-hack",
 ]
 
