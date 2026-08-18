@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT workos_organization_id as \"workos_organization_id?\"\n        FROM \"Organization\"\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "workos_organization_id?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "004ce010ca3bea68c14ce46ed0e8eeb49b84f4b0fb466f0660c46053c9df58b6"
+}

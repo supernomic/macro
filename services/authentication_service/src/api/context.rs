@@ -134,6 +134,7 @@ pub(crate) struct ApiContext {
     pub native_app_service: Arc<NativeAppServiceImpl<DefaultBundleFetcher>>,
     pub analytics_client: Arc<AnalyticsClient>,
     pub loops_client: Arc<LoopsClient>,
+    pub workos_client: Arc<workos_client::WorkOsClient>,
     pub referral_service: Arc<ReferralServiceType>,
     pub rate_limit_service: RateLimiter,
     /// The stripe price id

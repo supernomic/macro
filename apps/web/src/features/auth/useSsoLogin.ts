@@ -12,20 +12,17 @@ import { authServiceClient } from '@service-auth/client';
 import { useLocation } from '@solidjs/router';
 import { invoke } from '@tauri-apps/api/core';
 
-export function useSsoLogin(opts?: { signupMode?: boolean }) {
+function useAuthRedirect(opts?: { signupMode?: boolean }) {
   const analytics = useAnalytics();
   const location = useLocation<RedirectLocation>();
   const { initEmailLink } = useEmailLinks();
 
-  return async (idp_name: string) => {
+  return async (authUrl: URL, method: string) => {
     // Both events are pre-redirect *intent*. The authoritative sign_up (and
     // the ad conversions) fire post-auth when the backend marks the session
     // as a freshly created account — see lib/analytics/signupCompletion.ts.
     const analyticsEvent = opts?.signupMode ? 'sign_up_click' : 'login';
     const analyticsProviders: AnalyticsProvider[] = ['posthog'];
-
-    const authUrl = new URL(`${SERVER_HOSTS['auth-service']}/login/sso`);
-    authUrl.searchParams.set('idp_name', idp_name);
 
     const referral_code =
       new URL(window.location.href).searchParams.get('referral_code') ??
@@ -88,7 +85,7 @@ export function useSsoLogin(opts?: { signupMode?: boolean }) {
         toast.failure('Sign-in failed. Please try again.');
       }
 
-      analytics.track(analyticsEvent, { method: idp_name }, analyticsProviders);
+      analytics.track(analyticsEvent, { method }, analyticsProviders);
 
       return;
     }
@@ -104,8 +101,29 @@ export function useSsoLogin(opts?: { signupMode?: boolean }) {
       authUrl.searchParams.set('original_url', window.location.href);
     }
 
-    analytics.track(analyticsEvent, { method: idp_name }, analyticsProviders);
+    analytics.track(analyticsEvent, { method }, analyticsProviders);
 
     window.location.href = authUrl.toString();
+  };
+}
+
+export function useSsoLogin(opts?: { signupMode?: boolean }) {
+  const redirect = useAuthRedirect(opts);
+
+  return async (idp_name: string) => {
+    const authUrl = new URL(`${SERVER_HOSTS['auth-service']}/login/sso`);
+    authUrl.searchParams.set('idp_name', idp_name);
+    await redirect(authUrl, idp_name);
+  };
+}
+
+/** Sign in through Macro's WorkOS environment so companies match to our orgs. */
+export function useWorkosLogin(opts?: { signupMode?: boolean }) {
+  const redirect = useAuthRedirect(opts);
+
+  return async () => {
+    const authUrl = new URL(`${SERVER_HOSTS['auth-service']}/login/workos`);
+    if (opts?.signupMode) authUrl.searchParams.set('signup', 'true');
+    await redirect(authUrl, 'workos');
   };
 }

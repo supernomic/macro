@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE \"User\"\n        SET \"organizationId\" = $2\n        WHERE email = $1\n          AND \"organizationId\" IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a26557cdc241f0bcb8f7fe9e99cf58763e3ad2c2c6a2bfc995a10669850fa562"
+}

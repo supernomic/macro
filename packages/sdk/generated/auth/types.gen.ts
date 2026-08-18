@@ -939,6 +939,17 @@ export type UserTokensResponse = {
     refresh_token: string;
 };
 
+export type WorkOsPortalResponse = {
+    /**
+     * One-time WorkOS Admin Portal URL for SSO setup.
+     */
+    url: string;
+    /**
+     * WorkOS organization id linked to the caller's Macro organization.
+     */
+    workosOrganizationId: string;
+};
+
 export type VerifyFusionauthUserEmailData = {
     body?: never;
     path: {
@@ -1392,6 +1403,60 @@ export type SsoLoginErrors = {
 export type SsoLoginError = SsoLoginErrors[keyof SsoLoginErrors];
 
 export type SsoLoginResponses = {
+    200: unknown;
+};
+
+export type WorkosLoginData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * **OPTIONAL**. Prefill the AuthKit email field.
+         */
+        login_hint: string;
+        /**
+         * **OPTIONAL**. The original url you came from.
+         */
+        original_url: string;
+        /**
+         * **OPTIONAL**. If the authentication request is from a mobile device.
+         */
+        is_mobile: string;
+        /**
+         * **OPTIONAL**. If the user opened a link with a referral code.
+         */
+        referral_code: string;
+        /**
+         * **OPTIONAL**. Show the AuthKit sign-up screen first.
+         */
+        signup: boolean;
+    };
+    url: '/login/workos';
+};
+
+export type WorkosLoginErrors = {
+    400: ErrorResponse;
+    503: ErrorResponse;
+};
+
+export type WorkosLoginError = WorkosLoginErrors[keyof WorkosLoginErrors];
+
+export type WorkosCallbackData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/login/workos/callback';
+};
+
+export type WorkosCallbackErrors = {
+    400: ErrorResponse;
+    500: ErrorResponse;
+    503: ErrorResponse;
+};
+
+export type WorkosCallbackError = WorkosCallbackErrors[keyof WorkosCallbackErrors];
+
+export type WorkosCallbackResponses = {
     200: unknown;
 };
 
@@ -2398,3 +2463,25 @@ export type PatchUserTutorialResponses = {
 };
 
 export type PatchUserTutorialResponse = PatchUserTutorialResponses[keyof PatchUserTutorialResponses];
+
+export type GenerateWorkosPortalLinkData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/user/workos/portal';
+};
+
+export type GenerateWorkosPortalLinkErrors = {
+    400: ErrorResponse;
+    401: string;
+    403: ErrorResponse;
+    503: ErrorResponse;
+};
+
+export type GenerateWorkosPortalLinkError = GenerateWorkosPortalLinkErrors[keyof GenerateWorkosPortalLinkErrors];
+
+export type GenerateWorkosPortalLinkResponses = {
+    200: WorkOsPortalResponse;
+};
+
+export type GenerateWorkosPortalLinkResponse = GenerateWorkosPortalLinkResponses[keyof GenerateWorkosPortalLinkResponses];

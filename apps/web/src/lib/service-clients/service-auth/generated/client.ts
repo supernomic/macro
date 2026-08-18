@@ -67,6 +67,8 @@ import type {
   UserOrganizationResponse,
   UserQuota,
   UserTokensResponse,
+  WorkOsPortalResponse,
+  WorkosLoginParams,
 } from './schemas';
 
 /**
@@ -1293,6 +1295,135 @@ export const ssoLogin = async (
 
   const data: ssoLoginResponse['data'] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as ssoLoginResponse;
+};
+
+/**
+ * @summary Initiates a WorkOS AuthKit login. Customer companies sign in here and are
+matched to an organization in our WorkOS environment.
+ */
+export type workosLoginResponse307 = {
+  data: void;
+  status: 307;
+};
+
+export type workosLoginResponse400 = {
+  data: ErrorResponse;
+  status: 400;
+};
+
+export type workosLoginResponse503 = {
+  data: ErrorResponse;
+  status: 503;
+};
+export type workosLoginResponseError = (
+  | workosLoginResponse307
+  | workosLoginResponse400
+  | workosLoginResponse503
+) & {
+  headers: Headers;
+};
+
+export type workosLoginResponse = workosLoginResponseError;
+
+export const getWorkosLoginUrl = (params: WorkosLoginParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/login/workos?${stringifiedParams}`
+    : `/login/workos`;
+};
+
+export const workosLogin = async (
+  params: WorkosLoginParams,
+  options?: RequestInit
+): Promise<workosLoginResponse> => {
+  const res = await fetch(getWorkosLoginUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: workosLoginResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as workosLoginResponse;
+};
+
+/**
+ * @summary Completes a WorkOS AuthKit login and issues Macro session cookies.
+ */
+export type workosCallbackResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type workosCallbackResponse307 = {
+  data: void;
+  status: 307;
+};
+
+export type workosCallbackResponse400 = {
+  data: ErrorResponse;
+  status: 400;
+};
+
+export type workosCallbackResponse500 = {
+  data: ErrorResponse;
+  status: 500;
+};
+
+export type workosCallbackResponse503 = {
+  data: ErrorResponse;
+  status: 503;
+};
+
+export type workosCallbackResponseSuccess = workosCallbackResponse200 & {
+  headers: Headers;
+};
+export type workosCallbackResponseError = (
+  | workosCallbackResponse307
+  | workosCallbackResponse400
+  | workosCallbackResponse500
+  | workosCallbackResponse503
+) & {
+  headers: Headers;
+};
+
+export type workosCallbackResponse =
+  | workosCallbackResponseSuccess
+  | workosCallbackResponseError;
+
+export const getWorkosCallbackUrl = () => {
+  return `/login/workos/callback`;
+};
+
+export const workosCallback = async (
+  options?: RequestInit
+): Promise<workosCallbackResponse> => {
+  const res = await fetch(getWorkosCallbackUrl(), {
+    ...options,
+    method: 'GET',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: workosCallbackResponse['data'] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as workosCallbackResponse;
 };
 
 /**
@@ -4196,4 +4327,74 @@ export const patchUserTutorial = async (
     status: res.status,
     headers: res.headers,
   } as patchUserTutorialResponse;
+};
+
+/**
+ * @summary Creates (or reuses) a WorkOS organization for the caller's Macro tenant and
+returns an Admin Portal link so that company can configure SSO against us.
+ */
+export type generateWorkosPortalLinkResponse200 = {
+  data: WorkOsPortalResponse;
+  status: 200;
+};
+
+export type generateWorkosPortalLinkResponse400 = {
+  data: ErrorResponse;
+  status: 400;
+};
+
+export type generateWorkosPortalLinkResponse401 = {
+  data: string;
+  status: 401;
+};
+
+export type generateWorkosPortalLinkResponse403 = {
+  data: ErrorResponse;
+  status: 403;
+};
+
+export type generateWorkosPortalLinkResponse503 = {
+  data: ErrorResponse;
+  status: 503;
+};
+
+export type generateWorkosPortalLinkResponseSuccess =
+  generateWorkosPortalLinkResponse200 & {
+    headers: Headers;
+  };
+export type generateWorkosPortalLinkResponseError = (
+  | generateWorkosPortalLinkResponse400
+  | generateWorkosPortalLinkResponse401
+  | generateWorkosPortalLinkResponse403
+  | generateWorkosPortalLinkResponse503
+) & {
+  headers: Headers;
+};
+
+export type generateWorkosPortalLinkResponse =
+  | generateWorkosPortalLinkResponseSuccess
+  | generateWorkosPortalLinkResponseError;
+
+export const getGenerateWorkosPortalLinkUrl = () => {
+  return `/user/workos/portal`;
+};
+
+export const generateWorkosPortalLink = async (
+  options?: RequestInit
+): Promise<generateWorkosPortalLinkResponse> => {
+  const res = await fetch(getGenerateWorkosPortalLinkUrl(), {
+    ...options,
+    method: 'POST',
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: generateWorkosPortalLinkResponse['data'] = body
+    ? JSON.parse(body)
+    : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as generateWorkosPortalLinkResponse;
 };

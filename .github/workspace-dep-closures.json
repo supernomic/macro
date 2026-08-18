@@ -491,6 +491,7 @@
       "crates/teams",
       "crates/unfurl",
       "crates/user_quota",
+      "crates/workos_client",
       "crates/workspace-hack",
       "services/authentication_service"
     ],
@@ -6558,6 +6559,10 @@
       "crates/macro_env_var",
       "crates/workspace-hack",
       "services/worker_trigger"
+    ],
+    "workos_client": [
+      "crates/workos_client",
+      "crates/workspace-hack"
     ],
     "workspace-hack": [
       "crates/workspace-hack"

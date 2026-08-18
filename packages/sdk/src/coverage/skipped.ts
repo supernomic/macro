@@ -38,6 +38,7 @@ export const authExcluded = [
   'deleteUser',
   'enrichGithubPullRequests',
   'generateEmailLink',
+  'generateWorkosPortalLink',
   'getLegacyUserPermissions',
   'getPermissions',
   'getReferralCode',
@@ -83,6 +84,8 @@ export const authExcluded = [
   'verifyEmailLink',
   'verifyFusionauthUserEmail',
   'verifyMergeRequest',
+  'workosCallback',
+  'workosLogin',
 ] as const satisfies readonly (keyof AuthSdk)[];
 
 export const authBacklog = [

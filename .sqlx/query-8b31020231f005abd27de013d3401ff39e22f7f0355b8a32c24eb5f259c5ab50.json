@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE \"Organization\"\n        SET workos_organization_id = $2\n        WHERE id = $1\n          AND (workos_organization_id IS NULL OR workos_organization_id = $2)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b31020231f005abd27de013d3401ff39e22f7f0355b8a32c24eb5f259c5ab50"
+}

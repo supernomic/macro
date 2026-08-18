@@ -25,6 +25,7 @@ pub(in crate::api) mod post_profile_pictures;
 pub(in crate::api) mod put_name;
 pub(in crate::api) mod put_profile_picture;
 pub(in crate::api) mod stripe;
+pub(in crate::api) mod workos_portal;
 
 pub fn router() -> Router<ApiContext> {
     Router::new()
@@ -66,6 +67,7 @@ fn router_with_auth() -> Router<ApiContext> {
             get(get_legacy_user_permissions::handler),
         )
         .route("/organization", get(get_user_organization::handler))
+        .route("/workos/portal", post(workos_portal::handler))
         .route("/group", patch(patch_user_group::handler))
         .route("/onboarding", patch(patch_user_onboarding::handler))
         .layer(CookieManagerLayer::new())
