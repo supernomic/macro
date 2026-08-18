@@ -218,6 +218,7 @@ export const contactsBacklog =
 export const emailExcluded = [
   'cancelBackfillGmail',
   'deleteLink',
+  'disableLinkCalendar',
   'disableSync',
   'getBackfillGmail',
   'getBackfillGmailActive',
@@ -344,7 +345,6 @@ export const storageExcluded = [
   'jobProcessingResultHandler',
   'leaveOrEndCall',
   'patchViewHandler',
-  'postChannelBotWebhook',
   'postChannelMessages',
   'postItemsSoup',
   'postItemsSoupAst',

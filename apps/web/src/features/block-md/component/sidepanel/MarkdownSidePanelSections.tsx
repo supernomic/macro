@@ -238,7 +238,7 @@ function HistorySkeleton() {
       aria-hidden="true"
       class="hidden min-w-0 flex-col gap-2.5 overflow-hidden md:flex"
     >
-      <div class="skeleton-shimmer h-12 w-full rounded-md bg-ink/3" />
+      <div class="skeleton-shimmer h-12 w-full rounded-md bg-skeleton" />
     </div>
   );
 }
@@ -393,7 +393,7 @@ function FolderLink(props: { projectId: string; projectName: string }) {
   return (
     <span
       {...navHandlers}
-      class="pointer-events-auto min-w-0 truncate py-0.5 rounded-xs hover:bg-hover focus:bg-active"
+      class="pointer-events-auto min-w-0 truncate py-0.5 rounded-xs text-link hover:text-link-hover hover:bg-hover focus:bg-active"
     >
       <span class="relative top-[0.125em] size-[1em] inline-flex mx-1">
         <EntityIcon targetType="project" size="fill" />
