@@ -313,3 +313,52 @@ don't inject it directly into the error message.
 ### DB Crate Changes
 
 - When making changes to a db crate you should always update tests, and run prepare
+
+## Cursor Cloud specific instructions
+
+This VM has no `systemd` (PID 1 is `tini`). Nix and Docker are installed into the VM
+snapshot, but their daemons do not auto-start on boot. The startup/update script starts
+`nix-daemon` and `dockerd` (backgrounded) before each session; if you ever hit
+`cannot connect to socket ... /nix/var/nix/daemon-socket/socket` or
+`Cannot connect to the Docker daemon`, start them yourself (idempotent):
+
+```bash
+sudo sh -c 'pgrep -x nix-daemon >/dev/null || nohup /nix/var/nix/profiles/default/bin/nix-daemon >/var/log/nix-daemon.log 2>&1 &'
+sudo sh -c 'pgrep -x dockerd     >/dev/null || nohup dockerd >/var/log/dockerd.log 2>&1 &'
+sudo chmod 666 /var/run/docker.sock   # dockerd resets socket perms on each start
+```
+
+All dev tooling (`just`, `cargo`, `bun`, `sqlx`, `zig`, `cargo-zigbuild`, `docker-compose`,
+`pulumi`, `biome`, `cargo-nextest`, ...) comes only from the Nix dev shell. Run repo commands
+via `nix develop --command <cmd>` from the repo root, or enter `nix develop` first. Outside the
+dev shell only rustup's `cargo` and system `node` are on PATH. See `docs/RUNNING_LOCALLY.md` for
+the human guide; the notes below are the non-obvious gotchas.
+
+- Run the app (agents should prefer headless): `nix develop --command just stack up --no-doppler`.
+  It builds the service binaries (host `cargo zigbuild`), builds the static frontend, brings up the
+  full Docker stack, and returns when ready. Frontend/proxy is `http://localhost:8090/app/`
+  (Caddy), FusionAuth `:9011`, Mailpit `http://localhost:8090/mailpit/`. Manage with
+  `just stack status` / `just stack update` / `just stack down`. Interactive `just run_local
+  --no-doppler` instead blocks on an `r`/`q` hotkey loop (needs a TTY) and serves the Vite dev
+  server on `:3000` with Mailpit at `:8025`.
+- GOTCHA (blocks `stack up`/`run_local`): the local stack starts an "SDK webhook relay" that shells
+  out to `ssh`/`ssh-keygen` from PATH. The dev shell's `LD_LIBRARY_PATH` (Nix glibc 2.42) breaks the
+  system `ssh-keygen` (`GLIBC_ABI_DT_X86_64_PLT not found`), so the run aborts at
+  `ssh-keygen failed for the SDK webhook relay`. Fix: put a Nix `openssh` on PATH first (a
+  gc-rooted one is installed via `nix profile add nixpkgs#openssh`):
+  `export PATH="$(nix build --no-link --print-out-paths nixpkgs#openssh | grep -v -- '-man')/bin:$PATH"`
+  then run `just stack up --no-doppler` in that same shell.
+- GOTCHA (sccache): the dev shell sets `RUSTC_WRAPPER=sccache`, whose background server keeps
+  stdout/stderr open. Piping a Rust build/`just` command into `tail`/`head` can look like a hang
+  after it already finished. Redirect to a file (`> out.log 2>&1`) instead of piping.
+- Login + seed: no accounts exist by default; passwordless login emails a one-time code to Mailpit
+  (`http://localhost:8090/mailpit/` in stack mode, `:8025` in run_local). Seed a demo world:
+  `nix develop --command just seed-scenario apply --file seed/scenarios/team-perms.json` (personas
+  `alice`/`bob`/`carol`/`dave`/`erin`/`eve` `@seed.macro.local`). The printed login links use port
+  3000 (the run_local default); in headless `stack` mode use 8090, e.g.
+  `http://alice.localhost:8090/app/login?email=alice@seed.macro.local`.
+- Preflight after starting daemons: `nix develop --command just doctor-local`.
+- Tests hit the live local Postgres and must NOT use `SQLX_OFFLINE=true` (see above). With the stack
+  up, `nix develop --command cargo test -p <crate>` works (dev shell sets `DATABASE_URL`).
+- Ports: frontend/proxy 8090, FusionAuth 9011, Postgres 5432, Redis 6379, Kafka 9092,
+  OpenSearch 9200, LocalStack 4566.
