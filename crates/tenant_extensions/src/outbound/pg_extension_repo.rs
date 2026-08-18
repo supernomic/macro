@@ -8,6 +8,7 @@ use crate::domain::model::{
     ExtensionError, ExtensionSnapshot, ExtensionStatus, Result, TenantExtension,
 };
 use crate::domain::ports::ExtensionRepo;
+use crate::domain::service::catalog_json;
 
 /// Postgres-backed extension repo.
 #[derive(Debug, Clone)]
@@ -245,6 +246,54 @@ impl ExtensionRepo for PgExtensionRepo {
         )
         .execute(&self.pool)
         .await?;
+        Ok(())
+    }
+
+    #[tracing::instrument(skip(self, ext), err)]
+    async fn merge_catalog(&self, ext: &TenantExtension, actor: &str) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+        let empty = serde_json::json!({ "extensions": [] });
+        sqlx::query!(
+            r#"
+            INSERT INTO tenant_extension_catalogs (org_id, catalog, updated_at, updated_by)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (org_id) DO NOTHING
+            "#,
+            ext.org_id,
+            empty,
+            Utc::now(),
+            actor,
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        let existing = sqlx::query!(
+            r#"
+            SELECT catalog
+            FROM tenant_extension_catalogs
+            WHERE org_id = $1
+            FOR UPDATE
+            "#,
+            ext.org_id,
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .catalog;
+
+        sqlx::query!(
+            r#"
+            UPDATE tenant_extension_catalogs
+            SET catalog = $2, updated_at = $3, updated_by = $4
+            WHERE org_id = $1
+            "#,
+            ext.org_id,
+            catalog_json(Some(existing), ext),
+            Utc::now(),
+            actor,
+        )
+        .execute(&mut *tx)
+        .await?;
+        tx.commit().await?;
         Ok(())
     }
 }

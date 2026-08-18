@@ -22,6 +22,10 @@ impl PgProposalRepo {
     }
 }
 
+fn is_unique_violation(err: &sqlx::Error) -> bool {
+    matches!(err, sqlx::Error::Database(db) if db.is_unique_violation())
+}
+
 struct ProposalRow {
     id: Uuid,
     org_id: Option<i32>,
@@ -359,7 +363,7 @@ impl ProposalRepo for PgProposalRepo {
 
     #[tracing::instrument(skip(self, job), err)]
     async fn insert_refinement(&self, job: &TraceRefinement) -> Result<()> {
-        sqlx::query!(
+        let result = sqlx::query!(
             r#"
             INSERT INTO agent_trace_refinements (
                 id, org_id, proposal_id, session_id, window_start, window_end,
@@ -377,7 +381,11 @@ impl ProposalRepo for PgProposalRepo {
             job.created_at,
         )
         .execute(&self.pool)
-        .await?;
-        Ok(())
+        .await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(err) if is_unique_violation(&err) => Ok(()),
+            Err(err) => Err(err.into()),
+        }
     }
 }

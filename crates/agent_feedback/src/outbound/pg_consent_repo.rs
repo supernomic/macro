@@ -95,4 +95,32 @@ impl ConsentRepo for PgConsentRepo {
         })
         .transpose()
     }
+
+    #[tracing::instrument(skip(self, session_ids), err)]
+    async fn list_for_sessions(&self, session_ids: &[Uuid]) -> Result<Vec<ConsentRecord>> {
+        if session_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let rows = sqlx::query!(
+            r#"
+            SELECT session_id, org_id, sharing_mode, set_by, updated_at
+            FROM agent_session_consent
+            WHERE session_id = ANY($1)
+            "#,
+            session_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        rows.into_iter()
+            .map(|r| {
+                parse_row(
+                    r.session_id,
+                    r.org_id,
+                    r.sharing_mode,
+                    r.set_by,
+                    r.updated_at,
+                )
+            })
+            .collect()
+    }
 }

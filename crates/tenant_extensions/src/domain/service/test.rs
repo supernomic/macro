@@ -88,6 +88,17 @@ impl ExtensionRepo for Fake {
             .push((org_id, catalog, updated_by.to_string()));
         Ok(())
     }
+
+    async fn merge_catalog(&self, ext: &TenantExtension, actor: &str) -> Result<()> {
+        let mut catalogs = self.catalogs.lock().unwrap();
+        let existing = catalogs
+            .iter()
+            .rev()
+            .find(|(id, _, _)| *id == ext.org_id)
+            .map(|(_, catalog, _)| catalog.clone());
+        catalogs.push((ext.org_id, catalog_json(existing, ext), actor.to_string()));
+        Ok(())
+    }
 }
 
 fn svc() -> ExtensionServiceImpl<Fake> {

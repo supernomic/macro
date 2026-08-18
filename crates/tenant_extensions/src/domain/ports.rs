@@ -48,4 +48,11 @@ pub trait ExtensionRepo: Send + Sync + 'static {
         catalog: serde_json::Value,
         updated_by: &str,
     ) -> impl Future<Output = Result<()>> + Send;
+
+    /// Merge `ext` into the org catalog by slug under a row lock.
+    fn merge_catalog(
+        &self,
+        ext: &TenantExtension,
+        actor: &str,
+    ) -> impl Future<Output = Result<()>> + Send;
 }

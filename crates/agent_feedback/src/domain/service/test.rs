@@ -1,5 +1,6 @@
 use super::*;
 use crate::domain::ports::{ConsentRepo, RatingRepo};
+use chrono::Utc;
 use macro_uuid::Uuid;
 use std::sync::Mutex;
 
@@ -36,6 +37,17 @@ impl ConsentRepo for MemConsent {
             .iter()
             .find(|c| c.session_id == session_id)
             .cloned())
+    }
+
+    async fn list_for_sessions(&self, session_ids: &[Uuid]) -> Result<Vec<ConsentRecord>> {
+        Ok(self
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|c| session_ids.contains(&c.session_id))
+            .cloned()
+            .collect())
     }
 }
 
@@ -106,4 +118,27 @@ async fn upserts_sidecar_rating_without_touching_a_ledger() {
     assert_eq!(rec.rating, RatingValue::Up);
     assert_eq!(rec.rated_by, "user-1");
     assert_eq!(rec.note.as_deref(), Some("note"));
+}
+
+#[tokio::test]
+async fn list_for_sessions_omits_missing_rows() {
+    let consents = MemConsent(Mutex::new(vec![]));
+    let present = macro_uuid::generate_uuid_v7();
+    let missing = macro_uuid::generate_uuid_v7();
+    consents
+        .upsert(&ConsentRecord {
+            session_id: present,
+            org_id: Some(1),
+            sharing_mode: FeedbackSharingMode::Full,
+            set_by: "u".into(),
+            updated_at: Utc::now(),
+        })
+        .await
+        .unwrap();
+    let listed = consents
+        .list_for_sessions(&[present, missing])
+        .await
+        .unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].session_id, present);
 }

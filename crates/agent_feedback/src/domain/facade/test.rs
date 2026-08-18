@@ -51,6 +51,17 @@ impl ConsentRepo for MemConsent {
             .find(|c| c.session_id == session_id)
             .cloned())
     }
+
+    async fn list_for_sessions(&self, session_ids: &[Uuid]) -> Result<Vec<ConsentRecord>> {
+        Ok(self
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|c| session_ids.contains(&c.session_id))
+            .cloned()
+            .collect())
+    }
 }
 
 fn agent(scopes: &[&str]) -> VerifiedAgent {

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT catalog\n            FROM tenant_extension_catalogs\n            WHERE org_id = $1\n            FOR UPDATE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "catalog",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cdb3651c5ceaaa62456e98c1dd6b70561474971ff4d2eac795f839f7086b52f2"
+}

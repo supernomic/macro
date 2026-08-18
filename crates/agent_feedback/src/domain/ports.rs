@@ -23,4 +23,12 @@ pub trait ConsentRepo: Send + Sync + 'static {
 
     /// Fetch consent.
     fn get(&self, session_id: Uuid) -> impl Future<Output = Result<Option<ConsentRecord>>> + Send;
+
+    /// Fetch consent for many sessions in one round trip.
+    ///
+    /// Sessions with no row are omitted from the result.
+    fn list_for_sessions(
+        &self,
+        session_ids: &[Uuid],
+    ) -> impl Future<Output = Result<Vec<ConsentRecord>>> + Send;
 }

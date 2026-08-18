@@ -51,20 +51,22 @@ fn map_feedback_error(error: FeedbackError) -> ExportError {
 impl ConsentReader for PgConsentReader {
     #[tracing::instrument(skip(self, session_ids), err)]
     async fn sharing_modes(&self, session_ids: &[Uuid]) -> Result<HashMap<Uuid, SharingMode>> {
-        let mut out = HashMap::with_capacity(session_ids.len());
-        for session_id in session_ids {
-            if out.contains_key(session_id) {
-                continue;
-            }
-            if let Some(record) = self
-                .inner
-                .get(*session_id)
-                .await
-                .map_err(map_feedback_error)?
-            {
-                out.insert(*session_id, sharing_mode_from_feedback(record.sharing_mode));
-            }
+        if session_ids.is_empty() {
+            return Ok(HashMap::new());
         }
-        Ok(out)
+        let records = self
+            .inner
+            .list_for_sessions(session_ids)
+            .await
+            .map_err(map_feedback_error)?;
+        Ok(records
+            .into_iter()
+            .map(|record| {
+                (
+                    record.session_id,
+                    sharing_mode_from_feedback(record.sharing_mode),
+                )
+            })
+            .collect())
     }
 }

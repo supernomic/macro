@@ -60,10 +60,7 @@ impl<R: ExtensionRepo> ExtensionServiceImpl<R> {
     /// Load the org catalog, upsert this slug, persist the merged document.
     #[tracing::instrument(skip(self, ext), err)]
     async fn write_merged_catalog(&self, ext: &TenantExtension, actor: &str) -> Result<()> {
-        let existing = self.repo.get_catalog(ext.org_id).await?;
-        self.repo
-            .upsert_catalog(ext.org_id, catalog_json(existing, ext), actor)
-            .await
+        self.repo.merge_catalog(ext, actor).await
     }
 }
 
@@ -79,7 +76,10 @@ fn catalog_entry(ext: &TenantExtension) -> serde_json::Value {
 }
 
 /// Full org catalog: `{ "extensions": [ ...all slugs... ] }`. Upserts `ext` by slug.
-fn catalog_json(existing: Option<serde_json::Value>, ext: &TenantExtension) -> serde_json::Value {
+pub(crate) fn catalog_json(
+    existing: Option<serde_json::Value>,
+    ext: &TenantExtension,
+) -> serde_json::Value {
     let mut extensions = existing
         .as_ref()
         .and_then(|catalog| catalog.get("extensions"))
